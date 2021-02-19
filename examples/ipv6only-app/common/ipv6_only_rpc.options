@@ -1,0 +1,2 @@
+chip.rpc.PingTestConfig.ipv6addr_of_counterparty max_size:46
+chip.rpc.PingTestResponse.message max_size:256

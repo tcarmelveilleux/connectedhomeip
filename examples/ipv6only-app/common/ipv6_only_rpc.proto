@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package chip.rpc;
+
+message PingTestConfig {
+  uint32 interval_sec = 1;
+  string ipv6addr_of_counterparty = 2;
+}
+
+message PingTestResponse {
+  string message = 1;
+}
+
+service TestService {
+  rpc PingTest(PingTestConfig) returns (stream PingTestResponse) {}
+}
