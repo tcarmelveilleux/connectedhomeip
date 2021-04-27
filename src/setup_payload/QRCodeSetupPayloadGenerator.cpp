@@ -23,7 +23,7 @@
  */
 
 #include "QRCodeSetupPayloadGenerator.h"
-#include "Base41.h"
+#include "Base38.h"
 
 #include <core/CHIPCore.h>
 #include <core/CHIPTLV.h>
@@ -138,47 +138,27 @@ CHIP_ERROR QRCodeSetupPayloadGenerator::generateTLVFromOptionalData(SetupPayload
 
     TLV::TLVWriter rootWriter;
     rootWriter.Init(tlvDataStart, maxLen);
-    rootWriter.ImplicitProfileId = chip::Protocols::kProtocol_ServiceProvisioning;
 
-    // The cost (in bytes) of the top-level container is amortized as soon as there is at least 4 optionals elements.
-    if ((optionalData.size() + optionalExtensionData.size()) >= 4)
+    TLV::TLVWriter innerStructureWriter;
+
+    err = rootWriter.OpenContainer(TLV::AnonymousTag, TLV::kTLVType_Structure, innerStructureWriter);
+    SuccessOrExit(err);
+
+    for (OptionalQRCodeInfo info : optionalData)
     {
-
-        TLV::TLVWriter innerStructureWriter;
-
-        err = rootWriter.OpenContainer(TLV::ProfileTag(rootWriter.ImplicitProfileId, kTag_QRCodeExensionDescriptor),
-                                       TLV::kTLVType_Structure, innerStructureWriter);
-        SuccessOrExit(err);
-
-        for (OptionalQRCodeInfo info : optionalData)
-        {
-            err = writeTag(innerStructureWriter, TLV::ContextTag(info.tag), info);
-            SuccessOrExit(err);
-        }
-
-        for (OptionalQRCodeInfoExtension info : optionalExtensionData)
-        {
-            err = writeTag(innerStructureWriter, TLV::ContextTag(info.tag), info);
-            SuccessOrExit(err);
-        }
-
-        err = rootWriter.CloseContainer(innerStructureWriter);
+        err = writeTag(innerStructureWriter, TLV::ContextTag(info.tag), info);
         SuccessOrExit(err);
     }
-    else
-    {
-        for (OptionalQRCodeInfo info : optionalData)
-        {
-            err = writeTag(rootWriter, TLV::ProfileTag(rootWriter.ImplicitProfileId, info.tag), info);
-            SuccessOrExit(err);
-        }
 
-        for (OptionalQRCodeInfoExtension info : optionalExtensionData)
-        {
-            err = writeTag(rootWriter, TLV::ProfileTag(rootWriter.ImplicitProfileId, info.tag), info);
-            SuccessOrExit(err);
-        }
+    for (OptionalQRCodeInfoExtension info : optionalExtensionData)
+    {
+        err = writeTag(innerStructureWriter, TLV::ContextTag(info.tag), info);
+        SuccessOrExit(err);
     }
+
+    err = rootWriter.CloseContainer(innerStructureWriter);
+    SuccessOrExit(err);
+
     err = rootWriter.Finalize();
     SuccessOrExit(err);
 
@@ -197,7 +177,7 @@ static CHIP_ERROR generateBitSet(SetupPayload & payload, uint8_t * bits, uint8_t
     err = populateBits(bits, offset, payload.vendorID, kVendorIDFieldLengthInBits, kTotalPayloadDataSizeInBits);
     err = populateBits(bits, offset, payload.productID, kProductIDFieldLengthInBits, kTotalPayloadDataSizeInBits);
     err = populateBits(bits, offset, payload.requiresCustomFlow, kCustomFlowRequiredFieldLengthInBits, kTotalPayloadDataSizeInBits);
-    err = populateBits(bits, offset, static_cast<uint16_t>(payload.rendezvousInformation), kRendezvousInfoFieldLengthInBits,
+    err = populateBits(bits, offset, payload.rendezvousInformation.Raw(), kRendezvousInfoFieldLengthInBits,
                        kTotalPayloadDataSizeInBits);
     err = populateBits(bits, offset, payload.discriminator, kPayloadDiscriminatorFieldLengthInBits, kTotalPayloadDataSizeInBits);
     err = populateBits(bits, offset, payload.setUpPINCode, kSetupPINCodeFieldLengthInBits, kTotalPayloadDataSizeInBits);
@@ -206,13 +186,13 @@ static CHIP_ERROR generateBitSet(SetupPayload & payload, uint8_t * bits, uint8_t
     return err;
 }
 
-// TODO: issue #3663 - Unbounded stack in payloadBase41RepresentationWithTLV()
+// TODO: issue #3663 - Unbounded stack in payloadBase38RepresentationWithTLV()
 #if !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstack-usage="
 #endif
 
-static CHIP_ERROR payloadBase41RepresentationWithTLV(SetupPayload & setupPayload, std::string & base41Representation,
+static CHIP_ERROR payloadBase38RepresentationWithTLV(SetupPayload & setupPayload, std::string & base38Representation,
                                                      size_t bitsetSize, uint8_t * tlvDataStart, size_t tlvDataLengthInBytes)
 {
     uint8_t bits[bitsetSize];
@@ -221,21 +201,21 @@ static CHIP_ERROR payloadBase41RepresentationWithTLV(SetupPayload & setupPayload
     CHIP_ERROR err = generateBitSet(setupPayload, bits, tlvDataStart, tlvDataLengthInBytes);
     SuccessOrExit(err);
 
-    encodedPayload = base41Encode(bits, ArraySize(bits));
+    encodedPayload = base38Encode(bits, ArraySize(bits));
     encodedPayload.insert(0, kQRCodePrefix);
-    base41Representation = encodedPayload;
+    base38Representation = encodedPayload;
 exit:
     return err;
 }
 
-CHIP_ERROR QRCodeSetupPayloadGenerator::payloadBase41Representation(std::string & base41Representation)
+CHIP_ERROR QRCodeSetupPayloadGenerator::payloadBase38Representation(std::string & base38Representation)
 {
     // 6.1.2.2. Table: Packed Binary Data Structure
     // The TLV Data should be 0 length if TLV is not included.
-    return payloadBase41Representation(base41Representation, nullptr, 0);
+    return payloadBase38Representation(base38Representation, nullptr, 0);
 }
 
-CHIP_ERROR QRCodeSetupPayloadGenerator::payloadBase41Representation(std::string & base41Representation, uint8_t * tlvDataStart,
+CHIP_ERROR QRCodeSetupPayloadGenerator::payloadBase38Representation(std::string & base38Representation, uint8_t * tlvDataStart,
                                                                     uint32_t tlvDataStartSize)
 {
     CHIP_ERROR err              = CHIP_NO_ERROR;
@@ -245,7 +225,7 @@ CHIP_ERROR QRCodeSetupPayloadGenerator::payloadBase41Representation(std::string 
     err = generateTLVFromOptionalData(mPayload, tlvDataStart, tlvDataStartSize, tlvDataLengthInBytes);
     SuccessOrExit(err);
 
-    err = payloadBase41RepresentationWithTLV(mPayload, base41Representation, kTotalPayloadDataSizeInBytes + tlvDataLengthInBytes,
+    err = payloadBase38RepresentationWithTLV(mPayload, base38Representation, kTotalPayloadDataSizeInBytes + tlvDataLengthInBytes,
                                              tlvDataStart, tlvDataLengthInBytes);
     SuccessOrExit(err);
 

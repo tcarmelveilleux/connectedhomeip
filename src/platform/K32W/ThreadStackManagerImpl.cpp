@@ -34,6 +34,8 @@
 #include <platform/FreeRTOS/GenericThreadStackManagerImpl_FreeRTOS.cpp>
 #include <platform/OpenThread/GenericThreadStackManagerImpl_OpenThread_LwIP.cpp>
 
+#include <support/CHIPPlatformMemory.h>
+
 namespace chip {
 namespace DeviceLayer {
 
@@ -89,4 +91,31 @@ extern "C" void otSysEventSignalPending(void)
 {
     BaseType_t yieldRequired = ThreadStackMgrImpl().SignalThreadActivityPendingFromISR();
     portYIELD_FROM_ISR(yieldRequired);
+}
+
+extern "C" void * pvPortCallocRtos(size_t num, size_t size)
+{
+    size_t totalAllocSize = (size_t)(num * size);
+
+    if (size && totalAllocSize / size != num)
+        return nullptr;
+
+    void * p = pvPortMalloc(totalAllocSize);
+
+    if (p)
+    {
+        memset(p, 0, totalAllocSize);
+    }
+
+    return p;
+}
+
+extern "C" void * otPlatCAlloc(size_t aNum, size_t aSize)
+{
+    return CHIPPlatformMemoryCalloc(aNum, aSize);
+}
+
+extern "C" void otPlatFree(void * aPtr)
+{
+    return CHIPPlatformMemoryFree(aPtr);
 }

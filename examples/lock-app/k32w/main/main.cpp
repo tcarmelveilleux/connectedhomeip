@@ -22,15 +22,16 @@
 
 #include "openthread/platform/logging.h"
 #include "openthread/platform/uart.h"
+#include <mbedtls/platform.h>
 #include <openthread-system.h>
 #include <openthread/cli.h>
 #include <openthread/error.h>
-#include <openthread/heap.h>
 
 #include <core/CHIPError.h>
 #include <platform/CHIPDeviceLayer.h>
 #include <platform/ThreadStackManager.h>
 #include <support/CHIPMem.h>
+#include <support/CHIPPlatformMemory.h>
 #include <support/logging/CHIPLogging.h>
 
 #include "FreeRtosMbedtlsUtils.h"
@@ -42,8 +43,6 @@ using namespace ::chip;
 using namespace ::chip::Inet;
 using namespace ::chip::DeviceLayer;
 using namespace ::chip::Logging;
-
-extern "C" void * pvPortCallocRtos(size_t num, size_t size);
 
 #include <AppTask.h>
 
@@ -65,6 +64,8 @@ extern "C" void main_task(void const * argument)
         (*pFunc)();
     }
 
+    mbedtls_platform_set_calloc_free(CHIPPlatformMemoryCalloc, CHIPPlatformMemoryFree);
+
     /* Used for HW initializations */
     otSysInit(0, NULL);
 
@@ -74,10 +75,6 @@ extern "C" void main_task(void const * argument)
     otPlatUartEnable();
 
     K32W_LOG("Welcome to NXP ELock Demo App");
-
-    /* Using OT Heap is deprecated so use instead the FreeRTOS
-     * allocation system - which is also thread-safe */
-    otHeapSetCAllocFree(pvPortCallocRtos, vPortFree);
 
     /* Mbedtls Threading support is needed because both
      * Thread and Weave tasks are using it */

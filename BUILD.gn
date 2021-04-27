@@ -20,14 +20,15 @@ import("//build_overrides/nlio.gni")
 import("//build_overrides/nlunit_test.gni")
 import("//build_overrides/pigweed.gni")
 
+import("//src/lwip/lwip.gni")
 import("//src/platform/device.gni")
 import("$dir_pw_build/python.gni")
 
 # This build file should not be used in superproject builds.
 assert(chip_root == "//")
 
-import("${build_root}/chip/tests.gni")
-import("${build_root}/chip/tools.gni")
+import("${chip_root}/build/chip/tests.gni")
+import("${chip_root}/build/chip/tools.gni")
 
 if (current_toolchain != "${dir_pw_toolchain}/dummy:dummy") {
   declare_args() {
@@ -52,6 +53,7 @@ if (current_toolchain != "${dir_pw_toolchain}/dummy:dummy") {
       "$dir_pw_unit_test/py",
       "$dir_pw_watch/py",
       "integrations/mobly:chip_mobly",
+      "scripts:requirements",
       "third_party/happy",
     ]
   }
@@ -61,6 +63,7 @@ if (current_toolchain != "${dir_pw_toolchain}/dummy:dummy") {
     deps = [
       "${chip_root}/src/app",
       "${chip_root}/src/ble",
+      "${chip_root}/src/channel",
       "${chip_root}/src/controller",
       "${chip_root}/src/credentials",
       "${chip_root}/src/crypto",
@@ -70,7 +73,6 @@ if (current_toolchain != "${dir_pw_toolchain}/dummy:dummy") {
       "${chip_root}/src/lib/core",
       "${chip_root}/src/lib/shell",
       "${chip_root}/src/lib/support",
-      "${chip_root}/src/lwip:all",
       "${chip_root}/src/messaging",
       "${chip_root}/src/protocols",
       "${chip_root}/src/setup_payload",
@@ -90,8 +92,13 @@ if (current_toolchain != "${dir_pw_toolchain}/dummy:dummy") {
       deps += [ "//src:tests" ]
     }
 
+    if (chip_with_lwip) {
+      deps += [ "${chip_root}/src/lwip:all" ]
+    }
+
     if (chip_build_tools) {
       deps += [
+        ":certification",
         "${chip_root}/examples/shell/standalone:chip-shell",
         "${chip_root}/src/app/tests/integration:chip-im-initiator",
         "${chip_root}/src/app/tests/integration:chip-im-responder",
@@ -113,6 +120,18 @@ if (current_toolchain != "${dir_pw_toolchain}/dummy:dummy") {
     }
   }
 
+  if (chip_build_tools) {
+    group("certification") {
+      data_deps = [ "${chip_root}/examples/chip-tool" ]
+
+      if (chip_enable_python_modules) {
+        data_deps += [ "${chip_root}/src/controller/python" ]
+      }
+
+      write_runtime_deps = "${root_out_dir}/certification.runtime_deps"
+    }
+  }
+
   group("check") {
     if (chip_link_tests) {
       deps = [ "//src:tests_run" ]
@@ -129,7 +148,7 @@ if (current_toolchain != "${dir_pw_toolchain}/dummy:dummy") {
   }
 } else {
   # This is the unified build. Configure various real toolchains.
-  import("${build_root}/chip/chip_build.gni")
+  import("${chip_root}/build/chip/chip_build.gni")
   declare_args() {
     # Set this to false to disable all builds by default.
     enable_default_builds = true
@@ -138,7 +157,7 @@ if (current_toolchain != "${dir_pw_toolchain}/dummy:dummy") {
     enable_android_builds = false
 
     # Set this to true to enable TI builds by default.
-    enable_cc13x2_26x2_builds = false
+    enable_ti_simplelink_builds = false
 
     # Set this to true to enable efr32 builds by default.
     enable_efr32_builds = false
@@ -164,6 +183,10 @@ if (current_toolchain != "${dir_pw_toolchain}/dummy:dummy") {
     enable_standalone_chip_tool_build =
         enable_default_builds && host_os != "win"
 
+    # Build the chip-tool-darwin example.
+    enable_standalone_chip_tool_darwin_build =
+        enable_default_builds && host_os == "mac"
+
     # Build the shell example.
     enable_standalone_shell_build = enable_default_builds && host_os != "win"
 
@@ -179,8 +202,8 @@ if (current_toolchain != "${dir_pw_toolchain}/dummy:dummy") {
     enable_linux_lighting_app_build =
         enable_default_builds && (host_os == "linux" || host_os == "mac")
 
-    # Build the cc13x2_26x2 lock app example.
-    enable_cc13x2_26x2_lock_app_build = enable_cc13x2_26x2_builds
+    # Build the cc13x2x7_26x2x7 lock app example.
+    enable_cc13x2x7_26x2x7_lock_app_build = enable_ti_simplelink_builds
 
     # Build the efr32 lock app example.
     enable_efr32_lock_app_build = enable_efr32_builds
@@ -190,6 +213,9 @@ if (current_toolchain != "${dir_pw_toolchain}/dummy:dummy") {
 
     # Build the efr32 lighting app example.
     enable_efr32_lighting_app_build = enable_efr32_builds
+
+    # Build the efr32 window app example.
+    enable_efr32_window_app_build = enable_efr32_builds
 
     # Build the k32w lock app example.
     enable_k32w_lock_app_build = enable_k32w_builds
@@ -240,9 +266,16 @@ if (current_toolchain != "${dir_pw_toolchain}/dummy:dummy") {
     }
   }
 
-  if (enable_cc13x2_26x2_lock_app_build) {
-    group("cc13x2_26x2_lock_app") {
-      deps = [ "${chip_root}/examples/lock-app/cc13x2_26x2(${chip_root}/config/cc13x2_26x2/toolchain:cc13x2_26x2_lock_app)" ]
+  if (enable_standalone_chip_tool_darwin_build) {
+    group("standalone_chip_tool_darwin") {
+      deps =
+          [ "${chip_root}/examples/chip-tool-darwin(${standalone_toolchain})" ]
+    }
+  }
+
+  if (enable_cc13x2x7_26x2x7_lock_app_build) {
+    group("cc13x2x7_26x2x7_lock_app") {
+      deps = [ "${chip_root}/examples/lock-app/cc13x2x7_26x2x7(${chip_root}/config/cc13x2_26x2/toolchain:cc13x2x7_26x2x7_lock_app)" ]
     }
   }
 
@@ -294,6 +327,12 @@ if (current_toolchain != "${dir_pw_toolchain}/dummy:dummy") {
     }
   }
 
+  if (enable_efr32_window_app_build) {
+    group("efr32_window_app") {
+      deps = [ "${chip_root}/examples/window-app/efr32(${chip_root}/config/efr32/toolchain:efr32_window_app)" ]
+    }
+  }
+
   if (enable_k32w_lock_app_build) {
     group("k32w_lock_app") {
       deps = [ "${chip_root}/examples/lock-app/k32w(${chip_root}/config/k32w/toolchain:k32w_lock_app)" ]
@@ -322,6 +361,9 @@ if (current_toolchain != "${dir_pw_toolchain}/dummy:dummy") {
     if (enable_standalone_chip_tool_build) {
       deps += [ ":standalone_chip_tool" ]
     }
+    if (enable_standalone_chip_tool_darwin_build) {
+      deps += [ ":standalone_chip_tool_darwin" ]
+    }
     if (enable_standalone_shell_build) {
       deps += [ ":standalone_shell" ]
     }
@@ -340,14 +382,17 @@ if (current_toolchain != "${dir_pw_toolchain}/dummy:dummy") {
     if (enable_efr32_lighting_app_build) {
       deps += [ ":efr32_lighting_app" ]
     }
+    if (enable_efr32_window_app_build) {
+      deps += [ ":efr32_window_app" ]
+    }
     if (enable_k32w_lock_app_build) {
       deps += [ ":k32w_lock_app" ]
     }
     if (enable_qpg6100_lock_app_build) {
       deps += [ ":qpg6100_lock_app" ]
     }
-    if (enable_cc13x2_26x2_lock_app_build) {
-      deps += [ ":cc13x2_26x2_lock_app" ]
+    if (enable_cc13x2x7_26x2x7_lock_app_build) {
+      deps += [ ":cc13x2x7_26x2x7_lock_app" ]
     }
   }
 

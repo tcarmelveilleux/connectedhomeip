@@ -19,11 +19,11 @@
 #include <platform/CHIPDeviceLayer.h>
 #include <platform/PlatformManager.h>
 
-#include "af.h"
 #include "gen/attribute-id.h"
 #include "gen/cluster-id.h"
 #include <app/chip-zcl-zpro-codec.h>
 #include <app/util/af-types.h>
+#include <app/util/af.h>
 #include <app/util/attribute-storage.h>
 #include <app/util/util.h>
 #include <core/CHIPError.h>
@@ -34,7 +34,7 @@
 
 #include "LightingManager.h"
 #include "Options.h"
-#include "Server.h"
+#include <app/server/Server.h>
 
 #include <cassert>
 #include <iostream>
@@ -122,7 +122,7 @@ CHIP_ERROR PrintQRCodeContent()
     err = ConfigurationMgr().GetProductId(productId);
     SuccessOrExit(err);
 
-    payload.version       = 1;
+    payload.version       = 0;
     payload.vendorID      = vendorId;
     payload.productID     = productId;
     payload.setUpPINCode  = setUpPINCode;
@@ -131,7 +131,7 @@ CHIP_ERROR PrintQRCodeContent()
     // Wrap it so SuccessOrExit can work
     {
         chip::QRCodeSetupPayloadGenerator generator(payload);
-        err = generator.payloadBase41Representation(result);
+        err = generator.payloadBase38Representation(result);
         SuccessOrExit(err);
     }
 
@@ -168,7 +168,9 @@ int main(int argc, char * argv[])
 
     chip::DeviceLayer::ConnectivityMgr().SetBLEDeviceName(nullptr); // Use default device name (CHIP-XXXX)
 
+#if CONFIG_NETWORK_LAYER_BLE
     chip::DeviceLayer::Internal::BLEMgrImpl().ConfigureBle(LinuxDeviceOptions::GetInstance().mBleDevice, false);
+#endif
 
     chip::DeviceLayer::ConnectivityMgr().SetBLEAdvertisingEnabled(true);
 

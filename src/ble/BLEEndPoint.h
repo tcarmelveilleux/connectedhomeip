@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2020 Project CHIP Authors
+ *    Copyright (c) 2020-2021 Project CHIP Authors
  *    Copyright (c) 2014-2017 Nest Labs, Inc.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,9 +27,10 @@
 
 #pragma once
 
+#include <system/SystemLayer.h>
 #include <system/SystemMutex.h>
 
-#include <ble/BleLayer.h>
+#include <ble/BleRole.h>
 #include <ble/BtpEngine.h>
 #if CHIP_ENABLE_CHIPOBLE_TEST
 #include <ble/BtpEngineTest.h>
@@ -49,11 +50,13 @@ enum
 // Forward declarations
 class BleLayer;
 class BleEndPointPool;
+// BLEEndPoint holds a pointer to BleLayerDelegate for messages, while BleLayerDelegate functions also accepts BLEEndPoint.
+class BleLayerDelegate;
 #if CHIP_ENABLE_CHIPOBLE_TEST
 class BtpEngineTest;
 #endif
 
-class DLL_EXPORT BLEEndPoint : public BleLayerObject
+class DLL_EXPORT BLEEndPoint
 {
     friend class BleLayer;
     friend class BleEndPointPool;
@@ -106,27 +109,35 @@ public:
     void Abort();
 
 private:
+    BleLayer * mBle; ///< [READ-ONLY] Pointer to the BleLayer object that owns this object.
+    BleLayerDelegate * mBleTransport;
+
+    uint32_t mRefCount;
+
+    void AddRef() { mRefCount++; }
+    void Release();
+
     // Private data members:
-    enum ConnectionStateFlags
+    enum class ConnectionStateFlag : uint8_t
     {
-        kConnState_AutoClose                = 0x01, // End point should close underlying BLE conn on BTP close.
-        kConnState_CapabilitiesConfReceived = 0x02, // GATT confirmation received for sent capabilities req/resp.
-        kConnState_CapabilitiesMsgReceived  = 0x04, // Capabilities request or response message received.
-        kConnState_DidBeginSubscribe        = 0x08, // GATT subscribe request sent; must unsubscribe on close.
-        kConnState_StandAloneAckInFlight    = 0x10, // Stand-alone ack in flight, awaiting GATT confirmation.
-        kConnState_GattOperationInFlight    = 0x20  // GATT write, indication, subscribe, or unsubscribe in flight,
-                                                    // awaiting GATT confirmation.
+        kAutoClose                = 0x01, // End point should close underlying BLE conn on BTP close.
+        kCapabilitiesConfReceived = 0x02, // GATT confirmation received for sent capabilities req/resp.
+        kCapabilitiesMsgReceived  = 0x04, // Capabilities request or response message received.
+        kDidBeginSubscribe        = 0x08, // GATT subscribe request sent; must unsubscribe on close.
+        kStandAloneAckInFlight    = 0x10, // Stand-alone ack in flight, awaiting GATT confirmation.
+        kGattOperationInFlight    = 0x20  // GATT write, indication, subscribe, or unsubscribe in flight,
+                                          // awaiting GATT confirmation.
     };
 
-    enum TimerStateFlags
+    enum class TimerStateFlag : uint8_t
     {
-        kTimerState_ConnectTimerRunning           = 0x01, // BTP connect completion timer running.
-        kTimerState_ReceiveConnectionTimerRunning = 0x02, // BTP receive connection completion timer running.
-        kTimerState_AckReceivedTimerRunning       = 0x04, // Ack received timer running due to unacked sent fragment.
-        kTimerState_SendAckTimerRunning           = 0x08, // Send ack timer running; indicates pending ack to send.
-        kTimerState_UnsubscribeTimerRunning       = 0x10, // Unsubscribe completion timer running.
+        kConnectTimerRunning           = 0x01, // BTP connect completion timer running.
+        kReceiveConnectionTimerRunning = 0x02, // BTP receive connection completion timer running.
+        kAckReceivedTimerRunning       = 0x04, // Ack received timer running due to unacked sent fragment.
+        kSendAckTimerRunning           = 0x08, // Send ack timer running; indicates pending ack to send.
+        kUnsubscribeTimerRunning       = 0x10, // Unsubscribe completion timer running.
 #if CHIP_ENABLE_CHIPOBLE_TEST
-        kTimerState_UnderTestTimerRunnung = 0x80 // running throughput Tx test
+        kUnderTestTimerRunnung = 0x80 // running throughput Tx test
 #endif
     };
 
@@ -147,8 +158,8 @@ private:
 
     BtpEngine mBtpEngine;
     BleRole mRole;
-    uint8_t mConnStateFlags;
-    uint8_t mTimerStateFlags;
+    BitFlags<ConnectionStateFlag> mConnStateFlags;
+    BitFlags<TimerStateFlag> mTimerStateFlags;
     SequenceNumber_t mLocalReceiveWindowSize;
     SequenceNumber_t mRemoteReceiveWindowSize;
     SequenceNumber_t mReceiveWindowMaxSize;

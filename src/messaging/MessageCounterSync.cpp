@@ -29,9 +29,9 @@
 #include <messaging/Flags.h>
 #include <messaging/MessageCounterSync.h>
 #include <protocols/Protocols.h>
+#include <protocols/secure_channel/Constants.h>
 #include <support/BufferWriter.h>
 #include <support/CodeUtils.h>
-#include <support/ReturnMacros.h>
 #include <support/logging/CHIPLogging.h>
 
 namespace chip {
@@ -39,24 +39,18 @@ namespace Messaging {
 
 CHIP_ERROR MessageCounterSyncMgr::Init(Messaging::ExchangeManager * exchangeMgr)
 {
-    CHIP_ERROR err = CHIP_NO_ERROR;
-
-    VerifyOrReturnError(exchangeMgr != nullptr, err = CHIP_ERROR_INCORRECT_STATE);
+    VerifyOrReturnError(exchangeMgr != nullptr, CHIP_ERROR_INCORRECT_STATE);
     mExchangeMgr = exchangeMgr;
 
-    // Register to receive unsolicited Secure Channel Request messages from the exchange manager.
-    err = mExchangeMgr->RegisterUnsolicitedMessageHandlerForProtocol(Protocols::kProtocol_SecureChannel, this);
-
-    ReturnErrorOnFailure(err);
-
-    return err;
+    // Register to receive unsolicited Message Counter Synchronization Request messages from the exchange manager.
+    return mExchangeMgr->RegisterUnsolicitedMessageHandlerForType(Protocols::SecureChannel::MsgType::MsgCounterSyncReq, this);
 }
 
 void MessageCounterSyncMgr::Shutdown()
 {
     if (mExchangeMgr != nullptr)
     {
-        mExchangeMgr->UnregisterUnsolicitedMessageHandlerForProtocol(Protocols::kProtocol_SecureChannel);
+        mExchangeMgr->UnregisterUnsolicitedMessageHandlerForType(Protocols::SecureChannel::MsgType::MsgCounterSyncReq);
         mExchangeMgr = nullptr;
     }
 }
@@ -76,9 +70,156 @@ void MessageCounterSyncMgr::OnMessageReceived(Messaging::ExchangeContext * excha
 
 void MessageCounterSyncMgr::OnResponseTimeout(Messaging::ExchangeContext * exchangeContext)
 {
+    Transport::PeerConnectionState * state =
+        mExchangeMgr->GetSessionMgr()->GetPeerConnectionState(exchangeContext->GetSecureSessionHandle());
+
+    if (state != nullptr)
+    {
+        state->SetMsgCounterSyncInProgress(false);
+    }
+    else
+    {
+        ChipLogError(ExchangeManager, "Timed out! Failed to clear message counter synchronization status.");
+    }
+
     // Close the exchange if MsgCounterSyncRsp is not received before kMsgCounterSyncTimeout.
     if (exchangeContext != nullptr)
+    {
+        chip::Platform::MemoryFree(exchangeContext->GetAppState());
+        exchangeContext->SetAppState(nullptr);
         exchangeContext->Close();
+    }
+}
+
+CHIP_ERROR MessageCounterSyncMgr::AddToRetransmissionTable(Protocols::Id protocolId, uint8_t msgType, const SendFlags & sendFlags,
+                                                           System::PacketBufferHandle msgBuf,
+                                                           Messaging::ExchangeContext * exchangeContext)
+{
+    bool added     = false;
+    CHIP_ERROR err = CHIP_NO_ERROR;
+
+    VerifyOrReturnError(exchangeContext != nullptr, err = CHIP_ERROR_INVALID_ARGUMENT);
+
+    for (RetransTableEntry & entry : mRetransTable)
+    {
+        // Entries are in use if they have an exchangeContext.
+        if (entry.exchangeContext == nullptr)
+        {
+            entry.protocolId      = protocolId;
+            entry.msgType         = msgType;
+            entry.msgBuf          = std::move(msgBuf);
+            entry.exchangeContext = exchangeContext;
+            entry.exchangeContext->Retain();
+            added = true;
+
+            break;
+        }
+    }
+
+    if (!added)
+    {
+        ChipLogError(ExchangeManager, "MCSP RetransTable Already Full");
+        err = CHIP_ERROR_NO_MEMORY;
+    }
+
+    return err;
+}
+
+/**
+ *  Retransmit all pending messages that were encrypted with application
+ *  group key and were addressed to the specified node.
+ *
+ *  @param[in] peerNodeId    Node ID of the destination node.
+ *
+ */
+void MessageCounterSyncMgr::RetransPendingGroupMsgs(NodeId peerNodeId)
+{
+    // Find all retransmit entries matching peerNodeId.  Note that everything in
+    // this table was using an application group key; that's why it was added.
+    for (RetransTableEntry & entry : mRetransTable)
+    {
+        if (entry.exchangeContext != nullptr && entry.exchangeContext->GetSecureSession().GetPeerNodeId() == peerNodeId)
+        {
+            // Retramsmit message.
+            CHIP_ERROR err =
+                entry.exchangeContext->SendMessage(entry.protocolId, entry.msgType, std::move(entry.msgBuf), entry.sendFlags);
+
+            if (err != CHIP_NO_ERROR)
+            {
+                ChipLogError(ExchangeManager, "Failed to resend cached group message to node: %d with error:%s", peerNodeId,
+                             ErrorStr(err));
+            }
+
+            entry.exchangeContext->Release();
+            entry.exchangeContext = nullptr;
+        }
+    }
+}
+
+CHIP_ERROR MessageCounterSyncMgr::AddToReceiveTable(System::PacketBufferHandle msgBuf)
+{
+    bool added     = false;
+    CHIP_ERROR err = CHIP_NO_ERROR;
+
+    for (ReceiveTableEntry & entry : mReceiveTable)
+    {
+        // Entries are in use if they have a message buffer.
+        if (entry.msgBuf.IsNull())
+        {
+            entry.msgBuf = std::move(msgBuf);
+            added        = true;
+            break;
+        }
+    }
+
+    if (!added)
+    {
+        ChipLogError(ExchangeManager, "MCSP ReceiveTable Already Full");
+        err = CHIP_ERROR_NO_MEMORY;
+    }
+
+    return err;
+}
+
+/**
+ *  Reprocess all pending messages that were encrypted with application
+ *  group key and were addressed to the specified node id.
+ *
+ *  @param[in] peerNodeId    Node ID of the destination node.
+ *
+ */
+void MessageCounterSyncMgr::ProcessPendingGroupMsgs(NodeId peerNodeId)
+{
+    // Find all receive entries matching peerNodeId.  Note that everything in
+    // this table was using an application group key; that's why it was added.
+    for (ReceiveTableEntry & entry : mReceiveTable)
+    {
+        if (!entry.msgBuf.IsNull())
+        {
+            PacketHeader packetHeader;
+            uint16_t headerSize = 0;
+
+            if (packetHeader.Decode((entry.msgBuf)->Start(), (entry.msgBuf)->DataLength(), &headerSize) != CHIP_NO_ERROR)
+            {
+                ChipLogError(ExchangeManager, "ProcessPendingGroupMsgs::Failed to decode PacketHeader");
+                break;
+            }
+
+            if (packetHeader.GetSourceNodeId().HasValue() && packetHeader.GetSourceNodeId().Value() == peerNodeId)
+            {
+                (entry.msgBuf)->ConsumeHead(headerSize);
+
+                // Reprocess message.
+                mExchangeMgr->GetSessionMgr()->HandleGroupMessageReceived(packetHeader, std::move(entry.msgBuf));
+
+                // Explicitly free any buffer owned by this handle.  The
+                // HandleGroupMessageReceived() call should really handle this, but
+                // just in case it messes up we don't want to get confused about
+                // wheter the entry is in use.
+                entry.msgBuf = nullptr;
+            }
+        }
+    }
 }
 
 // Create and initialize new exchange for the message counter synchronization request/response messages.
@@ -99,11 +240,17 @@ CHIP_ERROR MessageCounterSyncMgr::NewMsgCounterSyncExchange(SecureSessionHandle 
 
 CHIP_ERROR MessageCounterSyncMgr::SendMsgCounterSyncReq(SecureSessionHandle session)
 {
-    CHIP_ERROR err                               = CHIP_NO_ERROR;
+    CHIP_ERROR err = CHIP_NO_ERROR;
+
     Messaging::ExchangeContext * exchangeContext = nullptr;
+    Transport::PeerConnectionState * state       = nullptr;
     System::PacketBufferHandle msgBuf;
     Messaging::SendFlags sendFlags;
-    uint8_t challenge[kMsgCounterChallengeSize];
+    void * challenge = chip::Platform::MemoryAlloc(kMsgCounterChallengeSize);
+    VerifyOrExit(challenge != nullptr, err = CHIP_ERROR_NO_MEMORY);
+
+    state = mExchangeMgr->GetSessionMgr()->GetPeerConnectionState(session);
+    VerifyOrExit(state != nullptr, err = CHIP_ERROR_NOT_CONNECTED);
 
     // Create and initialize new exchange.
     err = NewMsgCounterSyncExchange(session, exchangeContext);
@@ -114,28 +261,32 @@ CHIP_ERROR MessageCounterSyncMgr::SendMsgCounterSyncReq(SecureSessionHandle sess
     VerifyOrExit(!msgBuf.IsNull(), err = CHIP_ERROR_NO_MEMORY);
 
     // Generate a 64-bit random number to uniquely identify the request.
-    err = DRBG_get_bytes(challenge, kMsgCounterChallengeSize);
+    err = Crypto::DRBG_get_bytes(static_cast<uint8_t *>(challenge), kMsgCounterChallengeSize);
     SuccessOrExit(err);
 
     // Store generated Challenge value to ExchangeContext to resolve synchronization response.
-    exchangeContext->SetChallenge(challenge);
-
+    exchangeContext->SetAppState(challenge);
     memcpy(msgBuf->Start(), challenge, kMsgCounterChallengeSize);
     msgBuf->SetDataLength(kMsgCounterChallengeSize);
+    challenge = nullptr;
 
-    // TODO:(#4641) We shall also set the C flag in the packet header, this will be used for message protection later.
     sendFlags.Set(Messaging::SendMessageFlags::kNoAutoRequestAck, true).Set(Messaging::SendMessageFlags::kExpectResponse, true);
 
     // Arm a timer to enforce that a MsgCounterSyncRsp is received before kMsgCounterSyncTimeout.
     exchangeContext->SetResponseTimeout(kMsgCounterSyncTimeout);
 
     // Send the message counter synchronization request in a Secure Channel Protocol::MsgCounterSyncReq message.
-    err = exchangeContext->SendMessage(Protocols::SecureChannel::MsgType::MsgCounterSyncReq, std::move(msgBuf), sendFlags);
+    err = exchangeContext->SendMessageImpl(Protocols::SecureChannel::Id,
+                                           static_cast<uint8_t>(Protocols::SecureChannel::MsgType::MsgCounterSyncReq),
+                                           std::move(msgBuf), sendFlags);
     SuccessOrExit(err);
+
+    state->SetMsgCounterSyncInProgress(true);
 
 exit:
     if (err != CHIP_NO_ERROR)
     {
+        chip::Platform::MemoryFree(challenge);
         ChipLogError(ExchangeManager, "Failed to send message counter synchronization request with error:%s", ErrorStr(err));
     }
 
@@ -166,7 +317,7 @@ CHIP_ERROR MessageCounterSyncMgr::SendMsgCounterSyncResp(Messaging::ExchangeCont
         bbuf.Put32(state->GetSendMessageIndex());
 
         // Fill in the random value
-        bbuf.Put(exchangeContext->GetChallenge(), kMsgCounterChallengeSize);
+        bbuf.Put(exchangeContext->GetAppState(), kMsgCounterChallengeSize);
 
         VerifyOrExit(bbuf.Fit(), err = CHIP_ERROR_NO_MEMORY);
     }
@@ -175,8 +326,9 @@ CHIP_ERROR MessageCounterSyncMgr::SendMsgCounterSyncResp(Messaging::ExchangeCont
     msgBuf->SetDataLength(kMsgCounterSyncRespMsgSize);
 
     // Send message counter synchronization response message.
-    err = exchangeContext->SendMessage(Protocols::SecureChannel::MsgType::MsgCounterSyncRsp, std::move(msgBuf),
-                                       Messaging::SendFlags(Messaging::SendMessageFlags::kNoAutoRequestAck));
+    err = exchangeContext->SendMessageImpl(Protocols::SecureChannel::Id,
+                                           static_cast<uint8_t>(Protocols::SecureChannel::MsgType::MsgCounterSyncRsp),
+                                           std::move(msgBuf), Messaging::SendFlags(Messaging::SendMessageFlags::kNoAutoRequestAck));
 
 exit:
     if (err != CHIP_NO_ERROR)
@@ -192,8 +344,9 @@ void MessageCounterSyncMgr::HandleMsgCounterSyncReq(Messaging::ExchangeContext *
 {
     CHIP_ERROR err = CHIP_NO_ERROR;
 
-    const uint8_t * req = msgBuf->Start();
-    size_t reqlen       = msgBuf->DataLength();
+    void * challenge = nullptr;
+    uint8_t * req    = msgBuf->Start();
+    size_t reqlen    = msgBuf->DataLength();
 
     ChipLogDetail(ExchangeManager, "Received MsgCounterSyncReq request");
 
@@ -202,8 +355,12 @@ void MessageCounterSyncMgr::HandleMsgCounterSyncReq(Messaging::ExchangeContext *
     VerifyOrExit(req != nullptr, err = CHIP_ERROR_MESSAGE_INCOMPLETE);
     VerifyOrExit(reqlen == kMsgCounterChallengeSize, err = CHIP_ERROR_INVALID_MESSAGE_LENGTH);
 
+    challenge = chip::Platform::MemoryAlloc(kMsgCounterChallengeSize);
+    VerifyOrExit(challenge != nullptr, err = CHIP_ERROR_NO_MEMORY);
+    memcpy(challenge, req, kMsgCounterChallengeSize);
+
     // Store the 64-bit value sent in the Challenge filed of the MsgCounterSyncReq.
-    exchangeContext->SetChallenge(req);
+    exchangeContext->SetAppState(challenge);
 
     // Respond with MsgCounterSyncResp
     err = SendMsgCounterSyncResp(exchangeContext, { packetHeader.GetSourceNodeId().Value(), packetHeader.GetEncryptionKeyID(), 0 });
@@ -215,7 +372,11 @@ exit:
     }
 
     if (exchangeContext != nullptr)
+    {
+        chip::Platform::MemoryFree(exchangeContext->GetAppState());
+        exchangeContext->SetAppState(nullptr);
         exchangeContext->Close();
+    }
 
     return;
 }
@@ -225,13 +386,21 @@ void MessageCounterSyncMgr::HandleMsgCounterSyncResp(Messaging::ExchangeContext 
 {
     CHIP_ERROR err = CHIP_NO_ERROR;
 
-    uint32_t syncCounter = 0;
+    Transport::PeerConnectionState * state = nullptr;
+    NodeId peerNodeId                      = 0;
+    uint32_t syncCounter                   = 0;
     uint8_t challenge[kMsgCounterChallengeSize];
 
     const uint8_t * resp = msgBuf->Start();
     size_t resplen       = msgBuf->DataLength();
 
     ChipLogDetail(ExchangeManager, "Received MsgCounterSyncResp response");
+
+    // Find an active connection to the specified peer node
+    state = mExchangeMgr->GetSessionMgr()->GetPeerConnectionState(exchangeContext->GetSecureSessionHandle());
+    VerifyOrExit(state != nullptr, err = CHIP_ERROR_NOT_CONNECTED);
+
+    state->SetMsgCounterSyncInProgress(false);
 
     VerifyOrExit(msgBuf->DataLength() == kMsgCounterSyncRespMsgSize, err = CHIP_ERROR_INVALID_MESSAGE_LENGTH);
     VerifyOrExit(ChipKeyId::IsAppGroupKey(packetHeader.GetEncryptionKeyID()), err = CHIP_ERROR_WRONG_KEY_TYPE);
@@ -241,14 +410,20 @@ void MessageCounterSyncMgr::HandleMsgCounterSyncResp(Messaging::ExchangeContext 
     VerifyOrExit(resplen == kMsgCounterSyncRespMsgSize, err = CHIP_ERROR_INVALID_MESSAGE_LENGTH);
 
     syncCounter = chip::Encoding::LittleEndian::Read32(resp);
+    VerifyOrExit(syncCounter != 0, err = CHIP_ERROR_READ_FAILED);
+
     memcpy(challenge, resp, kMsgCounterChallengeSize);
 
     // Verify that the response field matches the expected Challenge field for the exchange.
-    VerifyOrExit(memcmp(exchangeContext->GetChallenge(), challenge, kMsgCounterChallengeSize) == 0,
+    VerifyOrExit(memcmp(exchangeContext->GetAppState(), challenge, kMsgCounterChallengeSize) == 0,
                  err = CHIP_ERROR_INVALID_SIGNATURE);
 
-    // ToDo:(#4628)Initialize/synchronize peer's message counter to FabricState.
-    VerifyOrExit(syncCounter != 0, err = CHIP_ERROR_READ_FAILED);
+    VerifyOrExit(packetHeader.GetSourceNodeId().HasValue(), err = CHIP_ERROR_INVALID_ARGUMENT);
+    peerNodeId = packetHeader.GetSourceNodeId().Value();
+
+    // Process all queued ougoing and incomming group messages after message counter synchronization is completed.
+    RetransPendingGroupMsgs(peerNodeId);
+    ProcessPendingGroupMsgs(peerNodeId);
 
 exit:
     if (err != CHIP_NO_ERROR)
@@ -257,7 +432,11 @@ exit:
     }
 
     if (exchangeContext != nullptr)
+    {
+        chip::Platform::MemoryFree(exchangeContext->GetAppState());
+        exchangeContext->SetAppState(nullptr);
         exchangeContext->Close();
+    }
 
     return;
 }

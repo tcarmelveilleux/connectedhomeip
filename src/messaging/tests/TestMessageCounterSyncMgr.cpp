@@ -24,12 +24,12 @@
 #include "TestMessagingLayer.h"
 
 #include <core/CHIPCore.h>
+#include <core/CHIPKeyIds.h>
 #include <messaging/ReliableMessageContext.h>
 #include <messaging/ReliableMessageMgr.h>
 #include <protocols/Protocols.h>
 #include <protocols/echo/Echo.h>
 #include <support/CodeUtils.h>
-#include <support/ReturnMacros.h>
 #include <transport/SecureSessionMgr.h>
 #include <transport/TransportMgr.h>
 
@@ -56,10 +56,12 @@ using TestContext = chip::Test::MessagingContext;
 
 TestContext sContext;
 
-constexpr NodeId kSourceNodeId              = 123654;
-constexpr NodeId kDestinationNodeId         = 111222333;
-constexpr chip::NodeId kTestPeerGroupKeyId  = 0x4000;
-constexpr chip::NodeId kTestLocalGroupKeyId = 0x5000;
+constexpr NodeId kSourceNodeId        = 123654;
+constexpr NodeId kDestinationNodeId   = 111222333;
+constexpr NodeId kTestPeerGroupKeyId  = 0x4000;
+constexpr NodeId kTestLocalGroupKeyId = 0x5000;
+
+const char PAYLOAD[] = "Hello!";
 
 class LoopbackTransport : public Transport::Base
 {
@@ -69,11 +71,7 @@ public:
 
     CHIP_ERROR SendMessage(const PacketHeader & header, const PeerAddress & address, System::PacketBufferHandle msgBuf) override
     {
-        // We need to change the peerKeyId to local Key Id to be received by itself.
-        PacketHeader tmpHeader = header;
-
-        tmpHeader.SetEncryptionKeyID(kTestLocalGroupKeyId);
-        HandleMessageReceived(tmpHeader, address, std::move(msgBuf));
+        HandleMessageReceived(header, address, std::move(msgBuf));
 
         return CHIP_NO_ERROR;
     }
@@ -85,7 +83,8 @@ class TestExchangeMgr : public SecureSessionMgrDelegate
 {
 public:
     void OnMessageReceived(const PacketHeader & header, const PayloadHeader & payloadHeader, SecureSessionHandle session,
-                           System::PacketBufferHandle msgBuf, SecureSessionMgr * mgr) override
+                           const Transport::PeerAddress & source, System::PacketBufferHandle msgBuf,
+                           SecureSessionMgr * mgr) override
     {
         NL_TEST_ASSERT(mSuite, header.GetSourceNodeId() == Optional<NodeId>::Value(kSourceNodeId));
         NL_TEST_ASSERT(mSuite, header.GetDestinationNodeId() == Optional<NodeId>::Value(kDestinationNodeId));
@@ -102,6 +101,51 @@ public:
     int ReceiveHandlerCallCount = 0;
 };
 
+class TestSessMgrCallback : public SecureSessionMgrDelegate
+{
+public:
+    void OnMessageReceived(const PacketHeader & header, const PayloadHeader & payloadHeader, SecureSessionHandle session,
+                           const Transport::PeerAddress & source, System::PacketBufferHandle msgBuf,
+                           SecureSessionMgr * mgr) override
+    {}
+
+    void OnNewConnection(SecureSessionHandle session, SecureSessionMgr * mgr) override
+    {
+        if (NewConnectionHandlerCallCount == 0)
+        {
+            mRemoteToLocalSession = session;
+        }
+
+        if (NewConnectionHandlerCallCount == 1)
+        {
+            mLocalToRemoteSession = session;
+        }
+        NewConnectionHandlerCallCount++;
+    }
+
+    void OnConnectionExpired(SecureSessionHandle session, SecureSessionMgr * mgr) override {}
+
+    CHIP_ERROR QueueReceivedMessageAndSync(Transport::PeerConnectionState * state, System::PacketBufferHandle msgBuf) override
+    {
+        PacketHeader packetHeader;
+        uint16_t headerSize = 0;
+
+        CHIP_ERROR err = packetHeader.Decode(msgBuf->Start(), msgBuf->DataLength(), &headerSize);
+        NL_TEST_ASSERT(mSuite, err == CHIP_NO_ERROR);
+        NL_TEST_ASSERT(mSuite, ChipKeyId::IsAppGroupKey(packetHeader.GetEncryptionKeyID()) == true);
+
+        ReceiveHandlerCallCount++;
+
+        return CHIP_NO_ERROR;
+    }
+
+    nlTestSuite * mSuite = nullptr;
+    SecureSessionHandle mRemoteToLocalSession;
+    SecureSessionHandle mLocalToRemoteSession;
+    int ReceiveHandlerCallCount       = 0;
+    int NewConnectionHandlerCallCount = 0;
+};
+
 class MockAppDelegate : public ExchangeDelegate
 {
 public:
@@ -114,6 +158,8 @@ public:
         NL_TEST_ASSERT(mSuite, packetHeader.GetSourceNodeId() == Optional<NodeId>::Value(kSourceNodeId));
         NL_TEST_ASSERT(mSuite, packetHeader.GetDestinationNodeId() == Optional<NodeId>::Value(kDestinationNodeId));
         NL_TEST_ASSERT(mSuite, msgBuf->DataLength() == kMsgCounterChallengeSize);
+
+        ec->Close();
     }
 
     void OnResponseTimeout(ExchangeContext * ec) override {}
@@ -144,15 +190,13 @@ void CheckSendMsgCounterSyncReq(nlTestSuite * inSuite, void * inContext)
 
     Optional<Transport::PeerAddress> peer(Transport::PeerAddress::UDP(addr, CHIP_PORT));
 
-    SecurePairingUsingTestSecret pairingLocalToPeer(Optional<NodeId>::Value(kDestinationNodeId), kTestPeerGroupKeyId,
-                                                    kTestLocalGroupKeyId);
+    SecurePairingUsingTestSecret pairingLocalToPeer(kTestPeerGroupKeyId, kTestLocalGroupKeyId);
 
     err = ctx.GetSecureSessionManager().NewPairing(peer, kDestinationNodeId, &pairingLocalToPeer,
                                                    SecureSessionMgr::PairingDirection::kInitiator, 0);
     NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
 
-    SecurePairingUsingTestSecret pairingPeerToLocal(Optional<NodeId>::Value(kSourceNodeId), kTestLocalGroupKeyId,
-                                                    kTestPeerGroupKeyId);
+    SecurePairingUsingTestSecret pairingPeerToLocal(kTestLocalGroupKeyId, kTestPeerGroupKeyId);
 
     err = ctx.GetSecureSessionManager().NewPairing(peer, kSourceNodeId, &pairingPeerToLocal,
                                                    SecureSessionMgr::PairingDirection::kResponder, 1);
@@ -186,21 +230,19 @@ void CheckReceiveMsgCounterSyncReq(nlTestSuite * inSuite, void * inContext)
     NL_TEST_ASSERT(inSuite, sm != nullptr);
 
     // Register to receive unsolicited Secure Channel Request messages from the exchange manager.
-    err =
-        ctx.GetExchangeManager().RegisterUnsolicitedMessageHandlerForProtocol(Protocols::kProtocol_SecureChannel, &mockAppDelegate);
+    err = ctx.GetExchangeManager().RegisterUnsolicitedMessageHandlerForType(Protocols::SecureChannel::MsgType::MsgCounterSyncReq,
+                                                                            &mockAppDelegate);
     NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
 
     Optional<Transport::PeerAddress> peer(Transport::PeerAddress::UDP(addr, CHIP_PORT));
 
-    SecurePairingUsingTestSecret pairingLocalToPeer(Optional<NodeId>::Value(kDestinationNodeId), kTestPeerGroupKeyId,
-                                                    kTestLocalGroupKeyId);
+    SecurePairingUsingTestSecret pairingLocalToPeer(kTestPeerGroupKeyId, kTestLocalGroupKeyId);
 
     err = ctx.GetSecureSessionManager().NewPairing(peer, kDestinationNodeId, &pairingLocalToPeer,
                                                    SecureSessionMgr::PairingDirection::kInitiator, 0);
     NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
 
-    SecurePairingUsingTestSecret pairingPeerToLocal(Optional<NodeId>::Value(kSourceNodeId), kTestLocalGroupKeyId,
-                                                    kTestPeerGroupKeyId);
+    SecurePairingUsingTestSecret pairingPeerToLocal(kTestLocalGroupKeyId, kTestPeerGroupKeyId);
 
     err = ctx.GetSecureSessionManager().NewPairing(peer, kSourceNodeId, &pairingPeerToLocal,
                                                    SecureSessionMgr::PairingDirection::kResponder, 1);
@@ -213,6 +255,114 @@ void CheckReceiveMsgCounterSyncReq(nlTestSuite * inSuite, void * inContext)
     NL_TEST_ASSERT(inSuite, mockAppDelegate.IsOnMessageReceivedCalled == true);
 }
 
+void CheckAddRetransTable(nlTestSuite * inSuite, void * inContext)
+{
+    TestContext & ctx = *reinterpret_cast<TestContext *>(inContext);
+
+    ctx.GetInetLayer().SystemLayer()->Init(nullptr);
+
+    MockAppDelegate mockAppDelegate;
+    ExchangeContext * exchange = ctx.NewExchangeToPeer(&mockAppDelegate);
+    NL_TEST_ASSERT(inSuite, exchange != nullptr);
+
+    MessageCounterSyncMgr * sm = ctx.GetExchangeManager().GetMessageCounterSyncMgr();
+    NL_TEST_ASSERT(inSuite, sm != nullptr);
+
+    System::PacketBufferHandle buffer = MessagePacketBuffer::NewWithData(PAYLOAD, sizeof(PAYLOAD));
+    NL_TEST_ASSERT(inSuite, !buffer.IsNull());
+
+    CHIP_ERROR err =
+        sm->AddToRetransmissionTable(Protocols::Echo::Id, static_cast<uint8_t>(Protocols::Echo::MsgType::EchoRequest),
+                                     Messaging::SendFlags(Messaging::SendMessageFlags::kNone), std::move(buffer), exchange);
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+}
+
+void CheckAddToReceiveTable(nlTestSuite * inSuite, void * inContext)
+{
+    TestContext & ctx = *reinterpret_cast<TestContext *>(inContext);
+
+    ctx.GetInetLayer().SystemLayer()->Init(nullptr);
+
+    MessageCounterSyncMgr * sm = ctx.GetExchangeManager().GetMessageCounterSyncMgr();
+    NL_TEST_ASSERT(inSuite, sm != nullptr);
+
+    System::PacketBufferHandle buffer = MessagePacketBuffer::NewWithData(PAYLOAD, sizeof(PAYLOAD));
+    NL_TEST_ASSERT(inSuite, !buffer.IsNull());
+
+    CHIP_ERROR err = sm->AddToReceiveTable(std::move(buffer));
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+}
+
+TestSessMgrCallback callback;
+
+void CheckReceiveMessage(nlTestSuite * inSuite, void * inContext)
+{
+    TestContext & ctx = *reinterpret_cast<TestContext *>(inContext);
+
+    uint16_t payload_len = sizeof(PAYLOAD);
+
+    ctx.GetInetLayer().SystemLayer()->Init(nullptr);
+
+    chip::System::PacketBufferHandle buffer = chip::MessagePacketBuffer::NewWithData(PAYLOAD, payload_len);
+    NL_TEST_ASSERT(inSuite, !buffer.IsNull());
+
+    IPAddress addr;
+    IPAddress::FromString("127.0.0.1", addr);
+    CHIP_ERROR err = CHIP_NO_ERROR;
+
+    TransportMgr<LoopbackTransport> transportMgr;
+    SecureSessionMgr secureSessionMgr;
+
+    err = transportMgr.Init("LOOPBACK");
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+
+    Transport::AdminPairingTable admins;
+    err = secureSessionMgr.Init(kSourceNodeId, ctx.GetInetLayer().SystemLayer(), &transportMgr, &admins);
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+
+    callback.mSuite = inSuite;
+
+    secureSessionMgr.SetDelegate(&callback);
+
+    Optional<Transport::PeerAddress> peer(Transport::PeerAddress::UDP(addr, CHIP_PORT));
+
+    Transport::AdminPairingInfo * admin = admins.AssignAdminId(0, kSourceNodeId);
+    NL_TEST_ASSERT(inSuite, admin != nullptr);
+
+    admin = admins.AssignAdminId(1, kDestinationNodeId);
+    NL_TEST_ASSERT(inSuite, admin != nullptr);
+
+    SecurePairingUsingTestSecret pairingPeerToLocal(kTestLocalGroupKeyId, kTestPeerGroupKeyId);
+
+    err = secureSessionMgr.NewPairing(peer, kSourceNodeId, &pairingPeerToLocal, SecureSessionMgr::PairingDirection::kInitiator, 1);
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+
+    SecurePairingUsingTestSecret pairingLocalToPeer(kTestPeerGroupKeyId, kTestLocalGroupKeyId);
+    err = secureSessionMgr.NewPairing(peer, kDestinationNodeId, &pairingLocalToPeer, SecureSessionMgr::PairingDirection::kResponder,
+                                      0);
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+
+    SecureSessionHandle localToRemoteSession = callback.mLocalToRemoteSession;
+
+    // Should be able to send a message to itself by just calling send.
+    callback.ReceiveHandlerCallCount = 0;
+
+    PayloadHeader payloadHeader;
+
+    // Set the exchange ID for this header.
+    payloadHeader.SetExchangeID(0);
+
+    // Set the protocol ID and message type for this header.
+    payloadHeader.SetMessageType(chip::Protocols::Echo::MsgType::EchoRequest);
+
+    err = secureSessionMgr.SendMessage(localToRemoteSession, payloadHeader, std::move(buffer));
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+
+    ctx.DriveIOUntil(1000 /* ms */, []() { return callback.ReceiveHandlerCallCount != 0; });
+
+    NL_TEST_ASSERT(inSuite, callback.ReceiveHandlerCallCount == 1);
+}
+
 // Test Suite
 
 /**
@@ -223,6 +373,9 @@ const nlTest sTests[] =
 {
     NL_TEST_DEF("Test MessageCounterSyncMgr::ReceiveMsgCounterSyncReq", CheckReceiveMsgCounterSyncReq),
     NL_TEST_DEF("Test MessageCounterSyncMgr::SendMsgCounterSyncReq", CheckSendMsgCounterSyncReq),
+    NL_TEST_DEF("Test MessageCounterSyncMgr::AddToRetransTable", CheckAddRetransTable),
+    NL_TEST_DEF("Test MessageCounterSyncMgr::AddToReceiveTable", CheckAddToReceiveTable),
+    NL_TEST_DEF("Test MessageCounterSyncMgr::ReceiveMessage", CheckReceiveMessage),
     NL_TEST_SENTINEL()
 };
 // clang-format on
@@ -245,7 +398,11 @@ nlTestSuite sSuite =
  */
 int Initialize(void * aContext)
 {
-    CHIP_ERROR err = gTransportMgr.Init("LOOPBACK");
+    CHIP_ERROR err = chip::Platform::MemoryInit();
+    if (err != CHIP_NO_ERROR)
+        return FAILURE;
+
+    err = gTransportMgr.Init("LOOPBACK");
     if (err != CHIP_NO_ERROR)
         return FAILURE;
 

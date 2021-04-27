@@ -16,23 +16,12 @@ import("//build_overrides/chip.gni")
 import("//build_overrides/pigweed.gni")
 import("$dir_pw_build/target_types.gni")
 
-config("cpp17") {
-  cflags_cc = [ "-std=gnu++17" ]
-  cflags_c = [ "-std=gnu11" ]
-  cflags_objc = [ "-std=gnu11" ]
-  cflags_objcc = [ "-std=gnu++17" ]
-}
-
-config("std_cpp17") {
-  configs = [ ":cpp17" ]
-}
-
 static_library("pw_rpc") {
   output_name = "libPwRpc"
 
   public_configs = [ "${dir_pigweed}/pw_hdlc:default_config" ]
 
-  deps = [
+  public_deps = [
     "$dir_pw_rpc:server",
     "$dir_pw_rpc/nanopb:echo_service",
     "${chip_root}/examples/platform/efr32/pw_sys_io:pw_sys_io_efr32",

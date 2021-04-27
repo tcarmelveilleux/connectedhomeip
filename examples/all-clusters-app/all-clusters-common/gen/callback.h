@@ -21,8 +21,11 @@
 #pragma once
 
 #include "af-structs.h"
-#include "af-types.h"
-#include "basic-types.h"
+#include <app/util/af-types.h>
+#include <app/util/basic-types.h>
+
+#include <app/Command.h>
+#include <lib/support/Span.h>
 
 /** @brief Cluster Init
  *
@@ -36,6 +39,14 @@
 void emberAfClusterInitCallback(chip::EndpointId endpoint, chip::ClusterId clusterId);
 
 // Cluster Init Functions
+
+/** @brief Application Basic Cluster Init
+ *
+ * Cluster Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfApplicationBasicClusterInitCallback(chip::EndpointId endpoint);
 
 /** @brief Barrier Control Cluster Init
  *
@@ -69,6 +80,14 @@ void emberAfBindingClusterInitCallback(chip::EndpointId endpoint);
  */
 void emberAfColorControlClusterInitCallback(chip::EndpointId endpoint);
 
+/** @brief Descriptor Cluster Init
+ *
+ * Cluster Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfDescriptorClusterInitCallback(chip::EndpointId endpoint);
+
 /** @brief Door Lock Cluster Init
  *
  * Cluster Init
@@ -76,6 +95,22 @@ void emberAfColorControlClusterInitCallback(chip::EndpointId endpoint);
  * @param endpoint    Endpoint that is being initialized
  */
 void emberAfDoorLockClusterInitCallback(chip::EndpointId endpoint);
+
+/** @brief General Commissioning Cluster Init
+ *
+ * Cluster Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfGeneralCommissioningClusterInitCallback(chip::EndpointId endpoint);
+
+/** @brief Group Key Management Cluster Init
+ *
+ * Cluster Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfGroupKeyManagementClusterInitCallback(chip::EndpointId endpoint);
 
 /** @brief Groups Cluster Init
  *
@@ -109,13 +144,37 @@ void emberAfIdentifyClusterInitCallback(chip::EndpointId endpoint);
  */
 void emberAfLevelControlClusterInitCallback(chip::EndpointId endpoint);
 
-/** @brief Media Playback Cluster Init
+/** @brief Low Power Cluster Init
  *
  * Cluster Init
  *
  * @param endpoint    Endpoint that is being initialized
  */
-void emberAfMediaPlaybackClusterInitCallback(chip::EndpointId endpoint);
+void emberAfLowPowerClusterInitCallback(chip::EndpointId endpoint);
+
+/** @brief Network Commissioning Cluster Init
+ *
+ * Cluster Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfNetworkCommissioningClusterInitCallback(chip::EndpointId endpoint);
+
+/** @brief OTA Software Update Client Cluster Init
+ *
+ * Cluster Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfOtaSoftwareUpdateClientClusterInitCallback(chip::EndpointId endpoint);
+
+/** @brief OTA Software Update Server Cluster Init
+ *
+ * Cluster Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfOtaSoftwareUpdateServerClusterInitCallback(chip::EndpointId endpoint);
 
 /** @brief On/off Cluster Init
  *
@@ -124,6 +183,14 @@ void emberAfMediaPlaybackClusterInitCallback(chip::EndpointId endpoint);
  * @param endpoint    Endpoint that is being initialized
  */
 void emberAfOnOffClusterInitCallback(chip::EndpointId endpoint);
+
+/** @brief Operational Credentials Cluster Init
+ *
+ * Cluster Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfOperationalCredentialsClusterInitCallback(chip::EndpointId endpoint);
 
 /** @brief Scenes Cluster Init
  *
@@ -141,7 +208,86 @@ void emberAfScenesClusterInitCallback(chip::EndpointId endpoint);
  */
 void emberAfTemperatureMeasurementClusterInitCallback(chip::EndpointId endpoint);
 
+/** @brief Thermostat Cluster Init
+ *
+ * Cluster Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfThermostatClusterInitCallback(chip::EndpointId endpoint);
+
 // Cluster Server/Client Init Functions
+
+//
+// Application Basic Cluster server
+//
+
+/** @brief Application Basic Cluster Server Init
+ *
+ * Server Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfApplicationBasicClusterServerInitCallback(chip::EndpointId endpoint);
+
+/** @brief Application Basic Cluster Server Attribute Changed
+ *
+ * Server Attribute Changed
+ *
+ * @param endpoint    Endpoint that is being initialized
+ * @param attributeId Attribute that changed
+ */
+void emberAfApplicationBasicClusterServerAttributeChangedCallback(chip::EndpointId endpoint, chip::AttributeId attributeId);
+
+/** @brief Application Basic Cluster Server Manufacturer Specific Attribute Changed
+ *
+ * Server Manufacturer Specific Attribute Changed
+ *
+ * @param endpoint          Endpoint that is being initialized
+ * @param attributeId       Attribute that changed
+ * @param manufacturerCode  Manufacturer Code of the attribute that changed
+ */
+void emberAfApplicationBasicClusterServerManufacturerSpecificAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                                      chip::AttributeId attributeId,
+                                                                                      uint16_t manufacturerCode);
+
+/** @brief Application Basic Cluster Server Message Sent
+ *
+ * Server Message Sent
+ *
+ * @param type               The type of message sent
+ * @param indexOrDestination The destination or address to which the message was sent
+ * @param apsFrame           The APS frame for the message
+ * @param msgLen             The length of the message
+ * @param message            The message that was sent
+ * @param status             The status of the sent message
+ */
+void emberAfApplicationBasicClusterServerMessageSentCallback(EmberOutgoingMessageType type, uint64_t indexOrDestination,
+                                                             EmberApsFrame * apsFrame, uint16_t msgLen, uint8_t * message,
+                                                             EmberStatus status);
+
+/** @brief Application Basic Cluster Server Pre Attribute Changed
+ *
+ * server Pre Attribute Changed
+ *
+ * @param endpoint      Endpoint that is being initialized
+ * @param attributeId   Attribute to be changed
+ * @param attributeType Attribute type
+ * @param size          Attribute size
+ * @param value         Attribute value
+ */
+EmberAfStatus emberAfApplicationBasicClusterServerPreAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                              chip::AttributeId attributeId,
+                                                                              EmberAfAttributeType attributeType, uint8_t size,
+                                                                              uint8_t * value);
+
+/** @brief Application Basic Cluster Server Tick
+ *
+ * server Tick
+ *
+ * @param endpoint  Endpoint that is being served
+ */
+void emberAfApplicationBasicClusterServerTickCallback(chip::EndpointId endpoint);
 
 //
 // Barrier Control Cluster server
@@ -423,6 +569,76 @@ EmberAfStatus emberAfColorControlClusterServerPreAttributeChangedCallback(chip::
 void emberAfColorControlClusterServerTickCallback(chip::EndpointId endpoint);
 
 //
+// Descriptor Cluster server
+//
+
+/** @brief Descriptor Cluster Server Init
+ *
+ * Server Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfDescriptorClusterServerInitCallback(chip::EndpointId endpoint);
+
+/** @brief Descriptor Cluster Server Attribute Changed
+ *
+ * Server Attribute Changed
+ *
+ * @param endpoint    Endpoint that is being initialized
+ * @param attributeId Attribute that changed
+ */
+void emberAfDescriptorClusterServerAttributeChangedCallback(chip::EndpointId endpoint, chip::AttributeId attributeId);
+
+/** @brief Descriptor Cluster Server Manufacturer Specific Attribute Changed
+ *
+ * Server Manufacturer Specific Attribute Changed
+ *
+ * @param endpoint          Endpoint that is being initialized
+ * @param attributeId       Attribute that changed
+ * @param manufacturerCode  Manufacturer Code of the attribute that changed
+ */
+void emberAfDescriptorClusterServerManufacturerSpecificAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                                chip::AttributeId attributeId,
+                                                                                uint16_t manufacturerCode);
+
+/** @brief Descriptor Cluster Server Message Sent
+ *
+ * Server Message Sent
+ *
+ * @param type               The type of message sent
+ * @param indexOrDestination The destination or address to which the message was sent
+ * @param apsFrame           The APS frame for the message
+ * @param msgLen             The length of the message
+ * @param message            The message that was sent
+ * @param status             The status of the sent message
+ */
+void emberAfDescriptorClusterServerMessageSentCallback(EmberOutgoingMessageType type, uint64_t indexOrDestination,
+                                                       EmberApsFrame * apsFrame, uint16_t msgLen, uint8_t * message,
+                                                       EmberStatus status);
+
+/** @brief Descriptor Cluster Server Pre Attribute Changed
+ *
+ * server Pre Attribute Changed
+ *
+ * @param endpoint      Endpoint that is being initialized
+ * @param attributeId   Attribute to be changed
+ * @param attributeType Attribute type
+ * @param size          Attribute size
+ * @param value         Attribute value
+ */
+EmberAfStatus emberAfDescriptorClusterServerPreAttributeChangedCallback(chip::EndpointId endpoint, chip::AttributeId attributeId,
+                                                                        EmberAfAttributeType attributeType, uint8_t size,
+                                                                        uint8_t * value);
+
+/** @brief Descriptor Cluster Server Tick
+ *
+ * server Tick
+ *
+ * @param endpoint  Endpoint that is being served
+ */
+void emberAfDescriptorClusterServerTickCallback(chip::EndpointId endpoint);
+
+//
 // Door Lock Cluster server
 //
 
@@ -491,6 +707,148 @@ EmberAfStatus emberAfDoorLockClusterServerPreAttributeChangedCallback(chip::Endp
  * @param endpoint  Endpoint that is being served
  */
 void emberAfDoorLockClusterServerTickCallback(chip::EndpointId endpoint);
+
+//
+// General Commissioning Cluster server
+//
+
+/** @brief General Commissioning Cluster Server Init
+ *
+ * Server Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfGeneralCommissioningClusterServerInitCallback(chip::EndpointId endpoint);
+
+/** @brief General Commissioning Cluster Server Attribute Changed
+ *
+ * Server Attribute Changed
+ *
+ * @param endpoint    Endpoint that is being initialized
+ * @param attributeId Attribute that changed
+ */
+void emberAfGeneralCommissioningClusterServerAttributeChangedCallback(chip::EndpointId endpoint, chip::AttributeId attributeId);
+
+/** @brief General Commissioning Cluster Server Manufacturer Specific Attribute Changed
+ *
+ * Server Manufacturer Specific Attribute Changed
+ *
+ * @param endpoint          Endpoint that is being initialized
+ * @param attributeId       Attribute that changed
+ * @param manufacturerCode  Manufacturer Code of the attribute that changed
+ */
+void emberAfGeneralCommissioningClusterServerManufacturerSpecificAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                                          chip::AttributeId attributeId,
+                                                                                          uint16_t manufacturerCode);
+
+/** @brief General Commissioning Cluster Server Message Sent
+ *
+ * Server Message Sent
+ *
+ * @param type               The type of message sent
+ * @param indexOrDestination The destination or address to which the message was sent
+ * @param apsFrame           The APS frame for the message
+ * @param msgLen             The length of the message
+ * @param message            The message that was sent
+ * @param status             The status of the sent message
+ */
+void emberAfGeneralCommissioningClusterServerMessageSentCallback(EmberOutgoingMessageType type, uint64_t indexOrDestination,
+                                                                 EmberApsFrame * apsFrame, uint16_t msgLen, uint8_t * message,
+                                                                 EmberStatus status);
+
+/** @brief General Commissioning Cluster Server Pre Attribute Changed
+ *
+ * server Pre Attribute Changed
+ *
+ * @param endpoint      Endpoint that is being initialized
+ * @param attributeId   Attribute to be changed
+ * @param attributeType Attribute type
+ * @param size          Attribute size
+ * @param value         Attribute value
+ */
+EmberAfStatus emberAfGeneralCommissioningClusterServerPreAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                                  chip::AttributeId attributeId,
+                                                                                  EmberAfAttributeType attributeType, uint8_t size,
+                                                                                  uint8_t * value);
+
+/** @brief General Commissioning Cluster Server Tick
+ *
+ * server Tick
+ *
+ * @param endpoint  Endpoint that is being served
+ */
+void emberAfGeneralCommissioningClusterServerTickCallback(chip::EndpointId endpoint);
+
+//
+// Group Key Management Cluster server
+//
+
+/** @brief Group Key Management Cluster Server Init
+ *
+ * Server Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfGroupKeyManagementClusterServerInitCallback(chip::EndpointId endpoint);
+
+/** @brief Group Key Management Cluster Server Attribute Changed
+ *
+ * Server Attribute Changed
+ *
+ * @param endpoint    Endpoint that is being initialized
+ * @param attributeId Attribute that changed
+ */
+void emberAfGroupKeyManagementClusterServerAttributeChangedCallback(chip::EndpointId endpoint, chip::AttributeId attributeId);
+
+/** @brief Group Key Management Cluster Server Manufacturer Specific Attribute Changed
+ *
+ * Server Manufacturer Specific Attribute Changed
+ *
+ * @param endpoint          Endpoint that is being initialized
+ * @param attributeId       Attribute that changed
+ * @param manufacturerCode  Manufacturer Code of the attribute that changed
+ */
+void emberAfGroupKeyManagementClusterServerManufacturerSpecificAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                                        chip::AttributeId attributeId,
+                                                                                        uint16_t manufacturerCode);
+
+/** @brief Group Key Management Cluster Server Message Sent
+ *
+ * Server Message Sent
+ *
+ * @param type               The type of message sent
+ * @param indexOrDestination The destination or address to which the message was sent
+ * @param apsFrame           The APS frame for the message
+ * @param msgLen             The length of the message
+ * @param message            The message that was sent
+ * @param status             The status of the sent message
+ */
+void emberAfGroupKeyManagementClusterServerMessageSentCallback(EmberOutgoingMessageType type, uint64_t indexOrDestination,
+                                                               EmberApsFrame * apsFrame, uint16_t msgLen, uint8_t * message,
+                                                               EmberStatus status);
+
+/** @brief Group Key Management Cluster Server Pre Attribute Changed
+ *
+ * server Pre Attribute Changed
+ *
+ * @param endpoint      Endpoint that is being initialized
+ * @param attributeId   Attribute to be changed
+ * @param attributeType Attribute type
+ * @param size          Attribute size
+ * @param value         Attribute value
+ */
+EmberAfStatus emberAfGroupKeyManagementClusterServerPreAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                                chip::AttributeId attributeId,
+                                                                                EmberAfAttributeType attributeType, uint8_t size,
+                                                                                uint8_t * value);
+
+/** @brief Group Key Management Cluster Server Tick
+ *
+ * server Tick
+ *
+ * @param endpoint  Endpoint that is being served
+ */
+void emberAfGroupKeyManagementClusterServerTickCallback(chip::EndpointId endpoint);
 
 //
 // Groups Cluster server
@@ -773,27 +1131,27 @@ EmberAfStatus emberAfLevelControlClusterServerPreAttributeChangedCallback(chip::
 void emberAfLevelControlClusterServerTickCallback(chip::EndpointId endpoint);
 
 //
-// Media Playback Cluster server
+// Low Power Cluster server
 //
 
-/** @brief Media Playback Cluster Server Init
+/** @brief Low Power Cluster Server Init
  *
  * Server Init
  *
  * @param endpoint    Endpoint that is being initialized
  */
-void emberAfMediaPlaybackClusterServerInitCallback(chip::EndpointId endpoint);
+void emberAfLowPowerClusterServerInitCallback(chip::EndpointId endpoint);
 
-/** @brief Media Playback Cluster Server Attribute Changed
+/** @brief Low Power Cluster Server Attribute Changed
  *
  * Server Attribute Changed
  *
  * @param endpoint    Endpoint that is being initialized
  * @param attributeId Attribute that changed
  */
-void emberAfMediaPlaybackClusterServerAttributeChangedCallback(chip::EndpointId endpoint, chip::AttributeId attributeId);
+void emberAfLowPowerClusterServerAttributeChangedCallback(chip::EndpointId endpoint, chip::AttributeId attributeId);
 
-/** @brief Media Playback Cluster Server Manufacturer Specific Attribute Changed
+/** @brief Low Power Cluster Server Manufacturer Specific Attribute Changed
  *
  * Server Manufacturer Specific Attribute Changed
  *
@@ -801,11 +1159,11 @@ void emberAfMediaPlaybackClusterServerAttributeChangedCallback(chip::EndpointId 
  * @param attributeId       Attribute that changed
  * @param manufacturerCode  Manufacturer Code of the attribute that changed
  */
-void emberAfMediaPlaybackClusterServerManufacturerSpecificAttributeChangedCallback(chip::EndpointId endpoint,
-                                                                                   chip::AttributeId attributeId,
-                                                                                   uint16_t manufacturerCode);
+void emberAfLowPowerClusterServerManufacturerSpecificAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                              chip::AttributeId attributeId,
+                                                                              uint16_t manufacturerCode);
 
-/** @brief Media Playback Cluster Server Message Sent
+/** @brief Low Power Cluster Server Message Sent
  *
  * Server Message Sent
  *
@@ -816,11 +1174,11 @@ void emberAfMediaPlaybackClusterServerManufacturerSpecificAttributeChangedCallba
  * @param message            The message that was sent
  * @param status             The status of the sent message
  */
-void emberAfMediaPlaybackClusterServerMessageSentCallback(EmberOutgoingMessageType type, uint64_t indexOrDestination,
-                                                          EmberApsFrame * apsFrame, uint16_t msgLen, uint8_t * message,
-                                                          EmberStatus status);
+void emberAfLowPowerClusterServerMessageSentCallback(EmberOutgoingMessageType type, uint64_t indexOrDestination,
+                                                     EmberApsFrame * apsFrame, uint16_t msgLen, uint8_t * message,
+                                                     EmberStatus status);
 
-/** @brief Media Playback Cluster Server Pre Attribute Changed
+/** @brief Low Power Cluster Server Pre Attribute Changed
  *
  * server Pre Attribute Changed
  *
@@ -830,17 +1188,230 @@ void emberAfMediaPlaybackClusterServerMessageSentCallback(EmberOutgoingMessageTy
  * @param size          Attribute size
  * @param value         Attribute value
  */
-EmberAfStatus emberAfMediaPlaybackClusterServerPreAttributeChangedCallback(chip::EndpointId endpoint, chip::AttributeId attributeId,
-                                                                           EmberAfAttributeType attributeType, uint8_t size,
-                                                                           uint8_t * value);
+EmberAfStatus emberAfLowPowerClusterServerPreAttributeChangedCallback(chip::EndpointId endpoint, chip::AttributeId attributeId,
+                                                                      EmberAfAttributeType attributeType, uint8_t size,
+                                                                      uint8_t * value);
 
-/** @brief Media Playback Cluster Server Tick
+/** @brief Low Power Cluster Server Tick
  *
  * server Tick
  *
  * @param endpoint  Endpoint that is being served
  */
-void emberAfMediaPlaybackClusterServerTickCallback(chip::EndpointId endpoint);
+void emberAfLowPowerClusterServerTickCallback(chip::EndpointId endpoint);
+
+//
+// Network Commissioning Cluster server
+//
+
+/** @brief Network Commissioning Cluster Server Init
+ *
+ * Server Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfNetworkCommissioningClusterServerInitCallback(chip::EndpointId endpoint);
+
+/** @brief Network Commissioning Cluster Server Attribute Changed
+ *
+ * Server Attribute Changed
+ *
+ * @param endpoint    Endpoint that is being initialized
+ * @param attributeId Attribute that changed
+ */
+void emberAfNetworkCommissioningClusterServerAttributeChangedCallback(chip::EndpointId endpoint, chip::AttributeId attributeId);
+
+/** @brief Network Commissioning Cluster Server Manufacturer Specific Attribute Changed
+ *
+ * Server Manufacturer Specific Attribute Changed
+ *
+ * @param endpoint          Endpoint that is being initialized
+ * @param attributeId       Attribute that changed
+ * @param manufacturerCode  Manufacturer Code of the attribute that changed
+ */
+void emberAfNetworkCommissioningClusterServerManufacturerSpecificAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                                          chip::AttributeId attributeId,
+                                                                                          uint16_t manufacturerCode);
+
+/** @brief Network Commissioning Cluster Server Message Sent
+ *
+ * Server Message Sent
+ *
+ * @param type               The type of message sent
+ * @param indexOrDestination The destination or address to which the message was sent
+ * @param apsFrame           The APS frame for the message
+ * @param msgLen             The length of the message
+ * @param message            The message that was sent
+ * @param status             The status of the sent message
+ */
+void emberAfNetworkCommissioningClusterServerMessageSentCallback(EmberOutgoingMessageType type, uint64_t indexOrDestination,
+                                                                 EmberApsFrame * apsFrame, uint16_t msgLen, uint8_t * message,
+                                                                 EmberStatus status);
+
+/** @brief Network Commissioning Cluster Server Pre Attribute Changed
+ *
+ * server Pre Attribute Changed
+ *
+ * @param endpoint      Endpoint that is being initialized
+ * @param attributeId   Attribute to be changed
+ * @param attributeType Attribute type
+ * @param size          Attribute size
+ * @param value         Attribute value
+ */
+EmberAfStatus emberAfNetworkCommissioningClusterServerPreAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                                  chip::AttributeId attributeId,
+                                                                                  EmberAfAttributeType attributeType, uint8_t size,
+                                                                                  uint8_t * value);
+
+/** @brief Network Commissioning Cluster Server Tick
+ *
+ * server Tick
+ *
+ * @param endpoint  Endpoint that is being served
+ */
+void emberAfNetworkCommissioningClusterServerTickCallback(chip::EndpointId endpoint);
+
+//
+// OTA Software Update Client Cluster server
+//
+
+/** @brief OTA Software Update Client Cluster Server Init
+ *
+ * Server Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfOtaSoftwareUpdateClientClusterServerInitCallback(chip::EndpointId endpoint);
+
+/** @brief OTA Software Update Client Cluster Server Attribute Changed
+ *
+ * Server Attribute Changed
+ *
+ * @param endpoint    Endpoint that is being initialized
+ * @param attributeId Attribute that changed
+ */
+void emberAfOtaSoftwareUpdateClientClusterServerAttributeChangedCallback(chip::EndpointId endpoint, chip::AttributeId attributeId);
+
+/** @brief OTA Software Update Client Cluster Server Manufacturer Specific Attribute Changed
+ *
+ * Server Manufacturer Specific Attribute Changed
+ *
+ * @param endpoint          Endpoint that is being initialized
+ * @param attributeId       Attribute that changed
+ * @param manufacturerCode  Manufacturer Code of the attribute that changed
+ */
+void emberAfOtaSoftwareUpdateClientClusterServerManufacturerSpecificAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                                             chip::AttributeId attributeId,
+                                                                                             uint16_t manufacturerCode);
+
+/** @brief OTA Software Update Client Cluster Server Message Sent
+ *
+ * Server Message Sent
+ *
+ * @param type               The type of message sent
+ * @param indexOrDestination The destination or address to which the message was sent
+ * @param apsFrame           The APS frame for the message
+ * @param msgLen             The length of the message
+ * @param message            The message that was sent
+ * @param status             The status of the sent message
+ */
+void emberAfOtaSoftwareUpdateClientClusterServerMessageSentCallback(EmberOutgoingMessageType type, uint64_t indexOrDestination,
+                                                                    EmberApsFrame * apsFrame, uint16_t msgLen, uint8_t * message,
+                                                                    EmberStatus status);
+
+/** @brief OTA Software Update Client Cluster Server Pre Attribute Changed
+ *
+ * server Pre Attribute Changed
+ *
+ * @param endpoint      Endpoint that is being initialized
+ * @param attributeId   Attribute to be changed
+ * @param attributeType Attribute type
+ * @param size          Attribute size
+ * @param value         Attribute value
+ */
+EmberAfStatus emberAfOtaSoftwareUpdateClientClusterServerPreAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                                     chip::AttributeId attributeId,
+                                                                                     EmberAfAttributeType attributeType,
+                                                                                     uint8_t size, uint8_t * value);
+
+/** @brief OTA Software Update Client Cluster Server Tick
+ *
+ * server Tick
+ *
+ * @param endpoint  Endpoint that is being served
+ */
+void emberAfOtaSoftwareUpdateClientClusterServerTickCallback(chip::EndpointId endpoint);
+
+//
+// OTA Software Update Server Cluster server
+//
+
+/** @brief OTA Software Update Server Cluster Server Init
+ *
+ * Server Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfOtaSoftwareUpdateServerClusterServerInitCallback(chip::EndpointId endpoint);
+
+/** @brief OTA Software Update Server Cluster Server Attribute Changed
+ *
+ * Server Attribute Changed
+ *
+ * @param endpoint    Endpoint that is being initialized
+ * @param attributeId Attribute that changed
+ */
+void emberAfOtaSoftwareUpdateServerClusterServerAttributeChangedCallback(chip::EndpointId endpoint, chip::AttributeId attributeId);
+
+/** @brief OTA Software Update Server Cluster Server Manufacturer Specific Attribute Changed
+ *
+ * Server Manufacturer Specific Attribute Changed
+ *
+ * @param endpoint          Endpoint that is being initialized
+ * @param attributeId       Attribute that changed
+ * @param manufacturerCode  Manufacturer Code of the attribute that changed
+ */
+void emberAfOtaSoftwareUpdateServerClusterServerManufacturerSpecificAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                                             chip::AttributeId attributeId,
+                                                                                             uint16_t manufacturerCode);
+
+/** @brief OTA Software Update Server Cluster Server Message Sent
+ *
+ * Server Message Sent
+ *
+ * @param type               The type of message sent
+ * @param indexOrDestination The destination or address to which the message was sent
+ * @param apsFrame           The APS frame for the message
+ * @param msgLen             The length of the message
+ * @param message            The message that was sent
+ * @param status             The status of the sent message
+ */
+void emberAfOtaSoftwareUpdateServerClusterServerMessageSentCallback(EmberOutgoingMessageType type, uint64_t indexOrDestination,
+                                                                    EmberApsFrame * apsFrame, uint16_t msgLen, uint8_t * message,
+                                                                    EmberStatus status);
+
+/** @brief OTA Software Update Server Cluster Server Pre Attribute Changed
+ *
+ * server Pre Attribute Changed
+ *
+ * @param endpoint      Endpoint that is being initialized
+ * @param attributeId   Attribute to be changed
+ * @param attributeType Attribute type
+ * @param size          Attribute size
+ * @param value         Attribute value
+ */
+EmberAfStatus emberAfOtaSoftwareUpdateServerClusterServerPreAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                                     chip::AttributeId attributeId,
+                                                                                     EmberAfAttributeType attributeType,
+                                                                                     uint8_t size, uint8_t * value);
+
+/** @brief OTA Software Update Server Cluster Server Tick
+ *
+ * server Tick
+ *
+ * @param endpoint  Endpoint that is being served
+ */
+void emberAfOtaSoftwareUpdateServerClusterServerTickCallback(chip::EndpointId endpoint);
 
 //
 // On/off Cluster server
@@ -909,6 +1480,77 @@ EmberAfStatus emberAfOnOffClusterServerPreAttributeChangedCallback(chip::Endpoin
  * @param endpoint  Endpoint that is being served
  */
 void emberAfOnOffClusterServerTickCallback(chip::EndpointId endpoint);
+
+//
+// Operational Credentials Cluster server
+//
+
+/** @brief Operational Credentials Cluster Server Init
+ *
+ * Server Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfOperationalCredentialsClusterServerInitCallback(chip::EndpointId endpoint);
+
+/** @brief Operational Credentials Cluster Server Attribute Changed
+ *
+ * Server Attribute Changed
+ *
+ * @param endpoint    Endpoint that is being initialized
+ * @param attributeId Attribute that changed
+ */
+void emberAfOperationalCredentialsClusterServerAttributeChangedCallback(chip::EndpointId endpoint, chip::AttributeId attributeId);
+
+/** @brief Operational Credentials Cluster Server Manufacturer Specific Attribute Changed
+ *
+ * Server Manufacturer Specific Attribute Changed
+ *
+ * @param endpoint          Endpoint that is being initialized
+ * @param attributeId       Attribute that changed
+ * @param manufacturerCode  Manufacturer Code of the attribute that changed
+ */
+void emberAfOperationalCredentialsClusterServerManufacturerSpecificAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                                            chip::AttributeId attributeId,
+                                                                                            uint16_t manufacturerCode);
+
+/** @brief Operational Credentials Cluster Server Message Sent
+ *
+ * Server Message Sent
+ *
+ * @param type               The type of message sent
+ * @param indexOrDestination The destination or address to which the message was sent
+ * @param apsFrame           The APS frame for the message
+ * @param msgLen             The length of the message
+ * @param message            The message that was sent
+ * @param status             The status of the sent message
+ */
+void emberAfOperationalCredentialsClusterServerMessageSentCallback(EmberOutgoingMessageType type, uint64_t indexOrDestination,
+                                                                   EmberApsFrame * apsFrame, uint16_t msgLen, uint8_t * message,
+                                                                   EmberStatus status);
+
+/** @brief Operational Credentials Cluster Server Pre Attribute Changed
+ *
+ * server Pre Attribute Changed
+ *
+ * @param endpoint      Endpoint that is being initialized
+ * @param attributeId   Attribute to be changed
+ * @param attributeType Attribute type
+ * @param size          Attribute size
+ * @param value         Attribute value
+ */
+EmberAfStatus emberAfOperationalCredentialsClusterServerPreAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                                    chip::AttributeId attributeId,
+                                                                                    EmberAfAttributeType attributeType,
+                                                                                    uint8_t size, uint8_t * value);
+
+/** @brief Operational Credentials Cluster Server Tick
+ *
+ * server Tick
+ *
+ * @param endpoint  Endpoint that is being served
+ */
+void emberAfOperationalCredentialsClusterServerTickCallback(chip::EndpointId endpoint);
 
 //
 // Scenes Cluster server
@@ -1051,6 +1693,76 @@ EmberAfStatus emberAfTemperatureMeasurementClusterServerPreAttributeChangedCallb
  */
 void emberAfTemperatureMeasurementClusterServerTickCallback(chip::EndpointId endpoint);
 
+//
+// Thermostat Cluster server
+//
+
+/** @brief Thermostat Cluster Server Init
+ *
+ * Server Init
+ *
+ * @param endpoint    Endpoint that is being initialized
+ */
+void emberAfThermostatClusterServerInitCallback(chip::EndpointId endpoint);
+
+/** @brief Thermostat Cluster Server Attribute Changed
+ *
+ * Server Attribute Changed
+ *
+ * @param endpoint    Endpoint that is being initialized
+ * @param attributeId Attribute that changed
+ */
+void emberAfThermostatClusterServerAttributeChangedCallback(chip::EndpointId endpoint, chip::AttributeId attributeId);
+
+/** @brief Thermostat Cluster Server Manufacturer Specific Attribute Changed
+ *
+ * Server Manufacturer Specific Attribute Changed
+ *
+ * @param endpoint          Endpoint that is being initialized
+ * @param attributeId       Attribute that changed
+ * @param manufacturerCode  Manufacturer Code of the attribute that changed
+ */
+void emberAfThermostatClusterServerManufacturerSpecificAttributeChangedCallback(chip::EndpointId endpoint,
+                                                                                chip::AttributeId attributeId,
+                                                                                uint16_t manufacturerCode);
+
+/** @brief Thermostat Cluster Server Message Sent
+ *
+ * Server Message Sent
+ *
+ * @param type               The type of message sent
+ * @param indexOrDestination The destination or address to which the message was sent
+ * @param apsFrame           The APS frame for the message
+ * @param msgLen             The length of the message
+ * @param message            The message that was sent
+ * @param status             The status of the sent message
+ */
+void emberAfThermostatClusterServerMessageSentCallback(EmberOutgoingMessageType type, uint64_t indexOrDestination,
+                                                       EmberApsFrame * apsFrame, uint16_t msgLen, uint8_t * message,
+                                                       EmberStatus status);
+
+/** @brief Thermostat Cluster Server Pre Attribute Changed
+ *
+ * server Pre Attribute Changed
+ *
+ * @param endpoint      Endpoint that is being initialized
+ * @param attributeId   Attribute to be changed
+ * @param attributeType Attribute type
+ * @param size          Attribute size
+ * @param value         Attribute value
+ */
+EmberAfStatus emberAfThermostatClusterServerPreAttributeChangedCallback(chip::EndpointId endpoint, chip::AttributeId attributeId,
+                                                                        EmberAfAttributeType attributeType, uint8_t size,
+                                                                        uint8_t * value);
+
+/** @brief Thermostat Cluster Server Tick
+ *
+ * server Tick
+ *
+ * @param endpoint  Endpoint that is being served
+ */
+void emberAfThermostatClusterServerTickCallback(chip::EndpointId endpoint);
+
 // Cluster Commands Callback
 
 /**
@@ -1058,25 +1770,19 @@ void emberAfTemperatureMeasurementClusterServerTickCallback(chip::EndpointId end
  * @param percentOpen
  */
 
-bool emberAfBarrierControlClusterBarrierControlGoToPercentCallback(uint8_t percentOpen);
+bool emberAfBarrierControlClusterBarrierControlGoToPercentCallback(chip::app::Command * commandObj, uint8_t percentOpen);
 
 /**
  * @brief Barrier Control Cluster BarrierControlStop Command callback
  */
 
-bool emberAfBarrierControlClusterBarrierControlStopCallback();
+bool emberAfBarrierControlClusterBarrierControlStopCallback(chip::app::Command * commandObj);
 
 /**
  * @brief Basic Cluster MfgSpecificPing Command callback
  */
 
-bool emberAfBasicClusterMfgSpecificPingCallback();
-
-/**
- * @brief Basic Cluster ResetToFactoryDefaults Command callback
- */
-
-bool emberAfBasicClusterResetToFactoryDefaultsCallback();
+bool emberAfBasicClusterMfgSpecificPingCallback(chip::app::Command * commandObj);
 
 /**
  * @brief Binding Cluster Bind Command callback
@@ -1086,8 +1792,8 @@ bool emberAfBasicClusterResetToFactoryDefaultsCallback();
  * @param clusterId
  */
 
-bool emberAfBindingClusterBindCallback(chip::NodeId nodeId, chip::GroupId groupId, chip::EndpointId endpointId,
-                                       chip::ClusterId clusterId);
+bool emberAfBindingClusterBindCallback(chip::app::Command * commandObj, chip::NodeId nodeId, chip::GroupId groupId,
+                                       chip::EndpointId endpointId, chip::ClusterId clusterId);
 
 /**
  * @brief Binding Cluster Unbind Command callback
@@ -1097,8 +1803,8 @@ bool emberAfBindingClusterBindCallback(chip::NodeId nodeId, chip::GroupId groupI
  * @param clusterId
  */
 
-bool emberAfBindingClusterUnbindCallback(chip::NodeId nodeId, chip::GroupId groupId, chip::EndpointId endpointId,
-                                         chip::ClusterId clusterId);
+bool emberAfBindingClusterUnbindCallback(chip::app::Command * commandObj, chip::NodeId nodeId, chip::GroupId groupId,
+                                         chip::EndpointId endpointId, chip::ClusterId clusterId);
 
 /**
  * @brief Color Control Cluster MoveColor Command callback
@@ -1108,7 +1814,8 @@ bool emberAfBindingClusterUnbindCallback(chip::NodeId nodeId, chip::GroupId grou
  * @param optionsOverride
  */
 
-bool emberAfColorControlClusterMoveColorCallback(int16_t rateX, int16_t rateY, uint8_t optionsMask, uint8_t optionsOverride);
+bool emberAfColorControlClusterMoveColorCallback(chip::app::Command * commandObj, int16_t rateX, int16_t rateY, uint8_t optionsMask,
+                                                 uint8_t optionsOverride);
 
 /**
  * @brief Color Control Cluster MoveColorTemperature Command callback
@@ -1120,9 +1827,9 @@ bool emberAfColorControlClusterMoveColorCallback(int16_t rateX, int16_t rateY, u
  * @param optionsOverride
  */
 
-bool emberAfColorControlClusterMoveColorTemperatureCallback(uint8_t moveMode, uint16_t rate, uint16_t colorTemperatureMinimum,
-                                                            uint16_t colorTemperatureMaximum, uint8_t optionsMask,
-                                                            uint8_t optionsOverride);
+bool emberAfColorControlClusterMoveColorTemperatureCallback(chip::app::Command * commandObj, uint8_t moveMode, uint16_t rate,
+                                                            uint16_t colorTemperatureMinimum, uint16_t colorTemperatureMaximum,
+                                                            uint8_t optionsMask, uint8_t optionsOverride);
 
 /**
  * @brief Color Control Cluster MoveHue Command callback
@@ -1132,7 +1839,8 @@ bool emberAfColorControlClusterMoveColorTemperatureCallback(uint8_t moveMode, ui
  * @param optionsOverride
  */
 
-bool emberAfColorControlClusterMoveHueCallback(uint8_t moveMode, uint8_t rate, uint8_t optionsMask, uint8_t optionsOverride);
+bool emberAfColorControlClusterMoveHueCallback(chip::app::Command * commandObj, uint8_t moveMode, uint8_t rate, uint8_t optionsMask,
+                                               uint8_t optionsOverride);
 
 /**
  * @brief Color Control Cluster MoveSaturation Command callback
@@ -1142,7 +1850,8 @@ bool emberAfColorControlClusterMoveHueCallback(uint8_t moveMode, uint8_t rate, u
  * @param optionsOverride
  */
 
-bool emberAfColorControlClusterMoveSaturationCallback(uint8_t moveMode, uint8_t rate, uint8_t optionsMask, uint8_t optionsOverride);
+bool emberAfColorControlClusterMoveSaturationCallback(chip::app::Command * commandObj, uint8_t moveMode, uint8_t rate,
+                                                      uint8_t optionsMask, uint8_t optionsOverride);
 
 /**
  * @brief Color Control Cluster MoveToColor Command callback
@@ -1153,8 +1862,8 @@ bool emberAfColorControlClusterMoveSaturationCallback(uint8_t moveMode, uint8_t 
  * @param optionsOverride
  */
 
-bool emberAfColorControlClusterMoveToColorCallback(uint16_t colorX, uint16_t colorY, uint16_t transitionTime, uint8_t optionsMask,
-                                                   uint8_t optionsOverride);
+bool emberAfColorControlClusterMoveToColorCallback(chip::app::Command * commandObj, uint16_t colorX, uint16_t colorY,
+                                                   uint16_t transitionTime, uint8_t optionsMask, uint8_t optionsOverride);
 
 /**
  * @brief Color Control Cluster MoveToColorTemperature Command callback
@@ -1164,8 +1873,9 @@ bool emberAfColorControlClusterMoveToColorCallback(uint16_t colorX, uint16_t col
  * @param optionsOverride
  */
 
-bool emberAfColorControlClusterMoveToColorTemperatureCallback(uint16_t colorTemperature, uint16_t transitionTime,
-                                                              uint8_t optionsMask, uint8_t optionsOverride);
+bool emberAfColorControlClusterMoveToColorTemperatureCallback(chip::app::Command * commandObj, uint16_t colorTemperature,
+                                                              uint16_t transitionTime, uint8_t optionsMask,
+                                                              uint8_t optionsOverride);
 
 /**
  * @brief Color Control Cluster MoveToHue Command callback
@@ -1176,8 +1886,8 @@ bool emberAfColorControlClusterMoveToColorTemperatureCallback(uint16_t colorTemp
  * @param optionsOverride
  */
 
-bool emberAfColorControlClusterMoveToHueCallback(uint8_t hue, uint8_t direction, uint16_t transitionTime, uint8_t optionsMask,
-                                                 uint8_t optionsOverride);
+bool emberAfColorControlClusterMoveToHueCallback(chip::app::Command * commandObj, uint8_t hue, uint8_t direction,
+                                                 uint16_t transitionTime, uint8_t optionsMask, uint8_t optionsOverride);
 
 /**
  * @brief Color Control Cluster MoveToHueAndSaturation Command callback
@@ -1188,8 +1898,9 @@ bool emberAfColorControlClusterMoveToHueCallback(uint8_t hue, uint8_t direction,
  * @param optionsOverride
  */
 
-bool emberAfColorControlClusterMoveToHueAndSaturationCallback(uint8_t hue, uint8_t saturation, uint16_t transitionTime,
-                                                              uint8_t optionsMask, uint8_t optionsOverride);
+bool emberAfColorControlClusterMoveToHueAndSaturationCallback(chip::app::Command * commandObj, uint8_t hue, uint8_t saturation,
+                                                              uint16_t transitionTime, uint8_t optionsMask,
+                                                              uint8_t optionsOverride);
 
 /**
  * @brief Color Control Cluster MoveToSaturation Command callback
@@ -1199,8 +1910,8 @@ bool emberAfColorControlClusterMoveToHueAndSaturationCallback(uint8_t hue, uint8
  * @param optionsOverride
  */
 
-bool emberAfColorControlClusterMoveToSaturationCallback(uint8_t saturation, uint16_t transitionTime, uint8_t optionsMask,
-                                                        uint8_t optionsOverride);
+bool emberAfColorControlClusterMoveToSaturationCallback(chip::app::Command * commandObj, uint8_t saturation,
+                                                        uint16_t transitionTime, uint8_t optionsMask, uint8_t optionsOverride);
 
 /**
  * @brief Color Control Cluster StepColor Command callback
@@ -1211,8 +1922,8 @@ bool emberAfColorControlClusterMoveToSaturationCallback(uint8_t saturation, uint
  * @param optionsOverride
  */
 
-bool emberAfColorControlClusterStepColorCallback(int16_t stepX, int16_t stepY, uint16_t transitionTime, uint8_t optionsMask,
-                                                 uint8_t optionsOverride);
+bool emberAfColorControlClusterStepColorCallback(chip::app::Command * commandObj, int16_t stepX, int16_t stepY,
+                                                 uint16_t transitionTime, uint8_t optionsMask, uint8_t optionsOverride);
 
 /**
  * @brief Color Control Cluster StepColorTemperature Command callback
@@ -1225,9 +1936,10 @@ bool emberAfColorControlClusterStepColorCallback(int16_t stepX, int16_t stepY, u
  * @param optionsOverride
  */
 
-bool emberAfColorControlClusterStepColorTemperatureCallback(uint8_t stepMode, uint16_t stepSize, uint16_t transitionTime,
-                                                            uint16_t colorTemperatureMinimum, uint16_t colorTemperatureMaximum,
-                                                            uint8_t optionsMask, uint8_t optionsOverride);
+bool emberAfColorControlClusterStepColorTemperatureCallback(chip::app::Command * commandObj, uint8_t stepMode, uint16_t stepSize,
+                                                            uint16_t transitionTime, uint16_t colorTemperatureMinimum,
+                                                            uint16_t colorTemperatureMaximum, uint8_t optionsMask,
+                                                            uint8_t optionsOverride);
 
 /**
  * @brief Color Control Cluster StepHue Command callback
@@ -1238,8 +1950,8 @@ bool emberAfColorControlClusterStepColorTemperatureCallback(uint8_t stepMode, ui
  * @param optionsOverride
  */
 
-bool emberAfColorControlClusterStepHueCallback(uint8_t stepMode, uint8_t stepSize, uint8_t transitionTime, uint8_t optionsMask,
-                                               uint8_t optionsOverride);
+bool emberAfColorControlClusterStepHueCallback(chip::app::Command * commandObj, uint8_t stepMode, uint8_t stepSize,
+                                               uint8_t transitionTime, uint8_t optionsMask, uint8_t optionsOverride);
 
 /**
  * @brief Color Control Cluster StepSaturation Command callback
@@ -1250,8 +1962,8 @@ bool emberAfColorControlClusterStepHueCallback(uint8_t stepMode, uint8_t stepSiz
  * @param optionsOverride
  */
 
-bool emberAfColorControlClusterStepSaturationCallback(uint8_t stepMode, uint8_t stepSize, uint8_t transitionTime,
-                                                      uint8_t optionsMask, uint8_t optionsOverride);
+bool emberAfColorControlClusterStepSaturationCallback(chip::app::Command * commandObj, uint8_t stepMode, uint8_t stepSize,
+                                                      uint8_t transitionTime, uint8_t optionsMask, uint8_t optionsOverride);
 
 /**
  * @brief Color Control Cluster StopMoveStep Command callback
@@ -1259,40 +1971,40 @@ bool emberAfColorControlClusterStepSaturationCallback(uint8_t stepMode, uint8_t 
  * @param optionsOverride
  */
 
-bool emberAfColorControlClusterStopMoveStepCallback(uint8_t optionsMask, uint8_t optionsOverride);
+bool emberAfColorControlClusterStopMoveStepCallback(chip::app::Command * commandObj, uint8_t optionsMask, uint8_t optionsOverride);
 
 /**
  * @brief Door Lock Cluster ClearAllPins Command callback
  */
 
-bool emberAfDoorLockClusterClearAllPinsCallback();
+bool emberAfDoorLockClusterClearAllPinsCallback(chip::app::Command * commandObj);
 
 /**
  * @brief Door Lock Cluster ClearAllRfids Command callback
  */
 
-bool emberAfDoorLockClusterClearAllRfidsCallback();
+bool emberAfDoorLockClusterClearAllRfidsCallback(chip::app::Command * commandObj);
 
 /**
  * @brief Door Lock Cluster ClearHolidaySchedule Command callback
  * @param scheduleId
  */
 
-bool emberAfDoorLockClusterClearHolidayScheduleCallback(uint8_t scheduleId);
+bool emberAfDoorLockClusterClearHolidayScheduleCallback(chip::app::Command * commandObj, uint8_t scheduleId);
 
 /**
  * @brief Door Lock Cluster ClearPin Command callback
  * @param userId
  */
 
-bool emberAfDoorLockClusterClearPinCallback(uint16_t userId);
+bool emberAfDoorLockClusterClearPinCallback(chip::app::Command * commandObj, uint16_t userId);
 
 /**
  * @brief Door Lock Cluster ClearRfid Command callback
  * @param userId
  */
 
-bool emberAfDoorLockClusterClearRfidCallback(uint16_t userId);
+bool emberAfDoorLockClusterClearRfidCallback(chip::app::Command * commandObj, uint16_t userId);
 
 /**
  * @brief Door Lock Cluster ClearWeekdaySchedule Command callback
@@ -1300,7 +2012,7 @@ bool emberAfDoorLockClusterClearRfidCallback(uint16_t userId);
  * @param userId
  */
 
-bool emberAfDoorLockClusterClearWeekdayScheduleCallback(uint8_t scheduleId, uint16_t userId);
+bool emberAfDoorLockClusterClearWeekdayScheduleCallback(chip::app::Command * commandObj, uint8_t scheduleId, uint16_t userId);
 
 /**
  * @brief Door Lock Cluster ClearYeardaySchedule Command callback
@@ -1308,42 +2020,42 @@ bool emberAfDoorLockClusterClearWeekdayScheduleCallback(uint8_t scheduleId, uint
  * @param userId
  */
 
-bool emberAfDoorLockClusterClearYeardayScheduleCallback(uint8_t scheduleId, uint16_t userId);
+bool emberAfDoorLockClusterClearYeardayScheduleCallback(chip::app::Command * commandObj, uint8_t scheduleId, uint16_t userId);
 
 /**
  * @brief Door Lock Cluster GetHolidaySchedule Command callback
  * @param scheduleId
  */
 
-bool emberAfDoorLockClusterGetHolidayScheduleCallback(uint8_t scheduleId);
+bool emberAfDoorLockClusterGetHolidayScheduleCallback(chip::app::Command * commandObj, uint8_t scheduleId);
 
 /**
  * @brief Door Lock Cluster GetLogRecord Command callback
  * @param logIndex
  */
 
-bool emberAfDoorLockClusterGetLogRecordCallback(uint16_t logIndex);
+bool emberAfDoorLockClusterGetLogRecordCallback(chip::app::Command * commandObj, uint16_t logIndex);
 
 /**
  * @brief Door Lock Cluster GetPin Command callback
  * @param userId
  */
 
-bool emberAfDoorLockClusterGetPinCallback(uint16_t userId);
+bool emberAfDoorLockClusterGetPinCallback(chip::app::Command * commandObj, uint16_t userId);
 
 /**
  * @brief Door Lock Cluster GetRfid Command callback
  * @param userId
  */
 
-bool emberAfDoorLockClusterGetRfidCallback(uint16_t userId);
+bool emberAfDoorLockClusterGetRfidCallback(chip::app::Command * commandObj, uint16_t userId);
 
 /**
  * @brief Door Lock Cluster GetUserType Command callback
  * @param userId
  */
 
-bool emberAfDoorLockClusterGetUserTypeCallback(uint16_t userId);
+bool emberAfDoorLockClusterGetUserTypeCallback(chip::app::Command * commandObj, uint16_t userId);
 
 /**
  * @brief Door Lock Cluster GetWeekdaySchedule Command callback
@@ -1351,7 +2063,7 @@ bool emberAfDoorLockClusterGetUserTypeCallback(uint16_t userId);
  * @param userId
  */
 
-bool emberAfDoorLockClusterGetWeekdayScheduleCallback(uint8_t scheduleId, uint16_t userId);
+bool emberAfDoorLockClusterGetWeekdayScheduleCallback(chip::app::Command * commandObj, uint8_t scheduleId, uint16_t userId);
 
 /**
  * @brief Door Lock Cluster GetYeardaySchedule Command callback
@@ -1359,14 +2071,14 @@ bool emberAfDoorLockClusterGetWeekdayScheduleCallback(uint8_t scheduleId, uint16
  * @param userId
  */
 
-bool emberAfDoorLockClusterGetYeardayScheduleCallback(uint8_t scheduleId, uint16_t userId);
+bool emberAfDoorLockClusterGetYeardayScheduleCallback(chip::app::Command * commandObj, uint8_t scheduleId, uint16_t userId);
 
 /**
  * @brief Door Lock Cluster LockDoor Command callback
  * @param pin
  */
 
-bool emberAfDoorLockClusterLockDoorCallback(uint8_t * PIN);
+bool emberAfDoorLockClusterLockDoorCallback(chip::app::Command * commandObj, uint8_t * PIN);
 
 /**
  * @brief Door Lock Cluster SetHolidaySchedule Command callback
@@ -1376,8 +2088,8 @@ bool emberAfDoorLockClusterLockDoorCallback(uint8_t * PIN);
  * @param operatingModeDuringHoliday
  */
 
-bool emberAfDoorLockClusterSetHolidayScheduleCallback(uint8_t scheduleId, uint32_t localStartTime, uint32_t localEndTime,
-                                                      uint8_t operatingModeDuringHoliday);
+bool emberAfDoorLockClusterSetHolidayScheduleCallback(chip::app::Command * commandObj, uint8_t scheduleId, uint32_t localStartTime,
+                                                      uint32_t localEndTime, uint8_t operatingModeDuringHoliday);
 
 /**
  * @brief Door Lock Cluster SetPin Command callback
@@ -1387,7 +2099,8 @@ bool emberAfDoorLockClusterSetHolidayScheduleCallback(uint8_t scheduleId, uint32
  * @param pin
  */
 
-bool emberAfDoorLockClusterSetPinCallback(uint16_t userId, uint8_t userStatus, uint8_t userType, uint8_t * pin);
+bool emberAfDoorLockClusterSetPinCallback(chip::app::Command * commandObj, uint16_t userId, uint8_t userStatus, uint8_t userType,
+                                          uint8_t * pin);
 
 /**
  * @brief Door Lock Cluster SetRfid Command callback
@@ -1397,7 +2110,8 @@ bool emberAfDoorLockClusterSetPinCallback(uint16_t userId, uint8_t userStatus, u
  * @param id
  */
 
-bool emberAfDoorLockClusterSetRfidCallback(uint16_t userId, uint8_t userStatus, uint8_t userType, uint8_t * id);
+bool emberAfDoorLockClusterSetRfidCallback(chip::app::Command * commandObj, uint16_t userId, uint8_t userStatus, uint8_t userType,
+                                           uint8_t * id);
 
 /**
  * @brief Door Lock Cluster SetUserType Command callback
@@ -1405,7 +2119,7 @@ bool emberAfDoorLockClusterSetRfidCallback(uint16_t userId, uint8_t userStatus, 
  * @param userType
  */
 
-bool emberAfDoorLockClusterSetUserTypeCallback(uint16_t userId, uint8_t userType);
+bool emberAfDoorLockClusterSetUserTypeCallback(chip::app::Command * commandObj, uint16_t userId, uint8_t userType);
 
 /**
  * @brief Door Lock Cluster SetWeekdaySchedule Command callback
@@ -1418,8 +2132,9 @@ bool emberAfDoorLockClusterSetUserTypeCallback(uint16_t userId, uint8_t userType
  * @param endMinute
  */
 
-bool emberAfDoorLockClusterSetWeekdayScheduleCallback(uint8_t scheduleId, uint16_t userId, uint8_t daysMask, uint8_t startHour,
-                                                      uint8_t startMinute, uint8_t endHour, uint8_t endMinute);
+bool emberAfDoorLockClusterSetWeekdayScheduleCallback(chip::app::Command * commandObj, uint8_t scheduleId, uint16_t userId,
+                                                      uint8_t daysMask, uint8_t startHour, uint8_t startMinute, uint8_t endHour,
+                                                      uint8_t endMinute);
 
 /**
  * @brief Door Lock Cluster SetYeardaySchedule Command callback
@@ -1429,15 +2144,15 @@ bool emberAfDoorLockClusterSetWeekdayScheduleCallback(uint8_t scheduleId, uint16
  * @param localEndTime
  */
 
-bool emberAfDoorLockClusterSetYeardayScheduleCallback(uint8_t scheduleId, uint16_t userId, uint32_t localStartTime,
-                                                      uint32_t localEndTime);
+bool emberAfDoorLockClusterSetYeardayScheduleCallback(chip::app::Command * commandObj, uint8_t scheduleId, uint16_t userId,
+                                                      uint32_t localStartTime, uint32_t localEndTime);
 
 /**
  * @brief Door Lock Cluster UnlockDoor Command callback
  * @param pin
  */
 
-bool emberAfDoorLockClusterUnlockDoorCallback(uint8_t * PIN);
+bool emberAfDoorLockClusterUnlockDoorCallback(chip::app::Command * commandObj, uint8_t * PIN);
 
 /**
  * @brief Door Lock Cluster UnlockWithTimeout Command callback
@@ -1445,7 +2160,34 @@ bool emberAfDoorLockClusterUnlockDoorCallback(uint8_t * PIN);
  * @param pin
  */
 
-bool emberAfDoorLockClusterUnlockWithTimeoutCallback(uint16_t timeoutInSeconds, uint8_t * pin);
+bool emberAfDoorLockClusterUnlockWithTimeoutCallback(chip::app::Command * commandObj, uint16_t timeoutInSeconds, uint8_t * pin);
+
+/**
+ * @brief General Commissioning Cluster ArmFailSafe Command callback
+ * @param expiryLengthSeconds
+ * @param breadcrumb
+ * @param timeoutMs
+ */
+
+bool emberAfGeneralCommissioningClusterArmFailSafeCallback(chip::app::Command * commandObj, uint16_t expiryLengthSeconds,
+                                                           uint64_t breadcrumb, uint32_t timeoutMs);
+
+/**
+ * @brief General Commissioning Cluster CommissioningComplete Command callback
+ */
+
+bool emberAfGeneralCommissioningClusterCommissioningCompleteCallback(chip::app::Command * commandObj);
+
+/**
+ * @brief General Commissioning Cluster SetRegulatoryConfig Command callback
+ * @param location
+ * @param countryCode
+ * @param breadcrumb
+ * @param timeoutMs
+ */
+
+bool emberAfGeneralCommissioningClusterSetRegulatoryConfigCallback(chip::app::Command * commandObj, uint8_t location,
+                                                                   uint8_t * countryCode, uint64_t breadcrumb, uint32_t timeoutMs);
 
 /**
  * @brief Groups Cluster AddGroup Command callback
@@ -1453,7 +2195,7 @@ bool emberAfDoorLockClusterUnlockWithTimeoutCallback(uint16_t timeoutInSeconds, 
  * @param groupName
  */
 
-bool emberAfGroupsClusterAddGroupCallback(uint16_t groupId, uint8_t * groupName);
+bool emberAfGroupsClusterAddGroupCallback(chip::app::Command * commandObj, uint16_t groupId, uint8_t * groupName);
 
 /**
  * @brief Groups Cluster AddGroupIfIdentifying Command callback
@@ -1461,7 +2203,7 @@ bool emberAfGroupsClusterAddGroupCallback(uint16_t groupId, uint8_t * groupName)
  * @param groupName
  */
 
-bool emberAfGroupsClusterAddGroupIfIdentifyingCallback(uint16_t groupId, uint8_t * groupName);
+bool emberAfGroupsClusterAddGroupIfIdentifyingCallback(chip::app::Command * commandObj, uint16_t groupId, uint8_t * groupName);
 
 /**
  * @brief Groups Cluster GetGroupMembership Command callback
@@ -1469,28 +2211,28 @@ bool emberAfGroupsClusterAddGroupIfIdentifyingCallback(uint16_t groupId, uint8_t
  * @param groupList
  */
 
-bool emberAfGroupsClusterGetGroupMembershipCallback(uint8_t groupCount,
+bool emberAfGroupsClusterGetGroupMembershipCallback(chip::app::Command * commandObj, uint8_t groupCount,
                                                     /* TYPE WARNING: array array defaults to */ uint8_t * groupList);
 
 /**
  * @brief Groups Cluster RemoveAllGroups Command callback
  */
 
-bool emberAfGroupsClusterRemoveAllGroupsCallback();
+bool emberAfGroupsClusterRemoveAllGroupsCallback(chip::app::Command * commandObj);
 
 /**
  * @brief Groups Cluster RemoveGroup Command callback
  * @param groupId
  */
 
-bool emberAfGroupsClusterRemoveGroupCallback(uint16_t groupId);
+bool emberAfGroupsClusterRemoveGroupCallback(chip::app::Command * commandObj, uint16_t groupId);
 
 /**
  * @brief Groups Cluster ViewGroup Command callback
  * @param groupId
  */
 
-bool emberAfGroupsClusterViewGroupCallback(uint16_t groupId);
+bool emberAfGroupsClusterViewGroupCallback(chip::app::Command * commandObj, uint16_t groupId);
 
 /**
  * @brief IAS Zone Cluster ZoneEnrollResponse Command callback
@@ -1498,20 +2240,20 @@ bool emberAfGroupsClusterViewGroupCallback(uint16_t groupId);
  * @param zoneId
  */
 
-bool emberAfIasZoneClusterZoneEnrollResponseCallback(uint8_t enrollResponseCode, uint8_t zoneId);
+bool emberAfIasZoneClusterZoneEnrollResponseCallback(chip::app::Command * commandObj, uint8_t enrollResponseCode, uint8_t zoneId);
 
 /**
  * @brief Identify Cluster Identify Command callback
  * @param identifyTime
  */
 
-bool emberAfIdentifyClusterIdentifyCallback(uint16_t identifyTime);
+bool emberAfIdentifyClusterIdentifyCallback(chip::app::Command * commandObj, uint16_t identifyTime);
 
 /**
  * @brief Identify Cluster IdentifyQuery Command callback
  */
 
-bool emberAfIdentifyClusterIdentifyQueryCallback();
+bool emberAfIdentifyClusterIdentifyQueryCallback(chip::app::Command * commandObj);
 
 /**
  * @brief Level Control Cluster Move Command callback
@@ -1521,7 +2263,8 @@ bool emberAfIdentifyClusterIdentifyQueryCallback();
  * @param optionOverride
  */
 
-bool emberAfLevelControlClusterMoveCallback(uint8_t moveMode, uint8_t rate, uint8_t optionMask, uint8_t optionOverride);
+bool emberAfLevelControlClusterMoveCallback(chip::app::Command * commandObj, uint8_t moveMode, uint8_t rate, uint8_t optionMask,
+                                            uint8_t optionOverride);
 
 /**
  * @brief Level Control Cluster MoveToLevel Command callback
@@ -1531,8 +2274,8 @@ bool emberAfLevelControlClusterMoveCallback(uint8_t moveMode, uint8_t rate, uint
  * @param optionOverride
  */
 
-bool emberAfLevelControlClusterMoveToLevelCallback(uint8_t level, uint16_t transitionTime, uint8_t optionMask,
-                                                   uint8_t optionOverride);
+bool emberAfLevelControlClusterMoveToLevelCallback(chip::app::Command * commandObj, uint8_t level, uint16_t transitionTime,
+                                                   uint8_t optionMask, uint8_t optionOverride);
 
 /**
  * @brief Level Control Cluster MoveToLevelWithOnOff Command callback
@@ -1540,7 +2283,8 @@ bool emberAfLevelControlClusterMoveToLevelCallback(uint8_t level, uint16_t trans
  * @param transitionTime
  */
 
-bool emberAfLevelControlClusterMoveToLevelWithOnOffCallback(uint8_t level, uint16_t transitionTime);
+bool emberAfLevelControlClusterMoveToLevelWithOnOffCallback(chip::app::Command * commandObj, uint8_t level,
+                                                            uint16_t transitionTime);
 
 /**
  * @brief Level Control Cluster MoveWithOnOff Command callback
@@ -1548,7 +2292,7 @@ bool emberAfLevelControlClusterMoveToLevelWithOnOffCallback(uint8_t level, uint1
  * @param rate
  */
 
-bool emberAfLevelControlClusterMoveWithOnOffCallback(uint8_t moveMode, uint8_t rate);
+bool emberAfLevelControlClusterMoveWithOnOffCallback(chip::app::Command * commandObj, uint8_t moveMode, uint8_t rate);
 
 /**
  * @brief Level Control Cluster Step Command callback
@@ -1559,8 +2303,8 @@ bool emberAfLevelControlClusterMoveWithOnOffCallback(uint8_t moveMode, uint8_t r
  * @param optionOverride
  */
 
-bool emberAfLevelControlClusterStepCallback(uint8_t stepMode, uint8_t stepSize, uint16_t transitionTime, uint8_t optionMask,
-                                            uint8_t optionOverride);
+bool emberAfLevelControlClusterStepCallback(chip::app::Command * commandObj, uint8_t stepMode, uint8_t stepSize,
+                                            uint16_t transitionTime, uint8_t optionMask, uint8_t optionOverride);
 
 /**
  * @brief Level Control Cluster StepWithOnOff Command callback
@@ -1569,7 +2313,8 @@ bool emberAfLevelControlClusterStepCallback(uint8_t stepMode, uint8_t stepSize, 
  * @param transitionTime
  */
 
-bool emberAfLevelControlClusterStepWithOnOffCallback(uint8_t stepMode, uint8_t stepSize, uint16_t transitionTime);
+bool emberAfLevelControlClusterStepWithOnOffCallback(chip::app::Command * commandObj, uint8_t stepMode, uint8_t stepSize,
+                                                     uint16_t transitionTime);
 
 /**
  * @brief Level Control Cluster Stop Command callback
@@ -1577,91 +2322,188 @@ bool emberAfLevelControlClusterStepWithOnOffCallback(uint8_t stepMode, uint8_t s
  * @param optionOverride
  */
 
-bool emberAfLevelControlClusterStopCallback(uint8_t optionMask, uint8_t optionOverride);
+bool emberAfLevelControlClusterStopCallback(chip::app::Command * commandObj, uint8_t optionMask, uint8_t optionOverride);
 
 /**
  * @brief Level Control Cluster StopWithOnOff Command callback
  */
 
-bool emberAfLevelControlClusterStopWithOnOffCallback();
+bool emberAfLevelControlClusterStopWithOnOffCallback(chip::app::Command * commandObj);
 
 /**
- * @brief Media Playback Cluster FastForwardRequest Command callback
+ * @brief Low Power Cluster Sleep Command callback
  */
 
-bool emberAfMediaPlaybackClusterFastForwardRequestCallback();
+bool emberAfLowPowerClusterSleepCallback(chip::app::Command * commandObj);
 
 /**
- * @brief Media Playback Cluster NextRequest Command callback
+ * @brief Network Commissioning Cluster AddThreadNetwork Command callback
+ * @param operationalDataset
+ * @param breadcrumb
+ * @param timeoutMs
  */
 
-bool emberAfMediaPlaybackClusterNextRequestCallback();
+bool emberAfNetworkCommissioningClusterAddThreadNetworkCallback(chip::app::Command * commandObj, chip::ByteSpan operationalDataset,
+                                                                uint64_t breadcrumb, uint32_t timeoutMs);
 
 /**
- * @brief Media Playback Cluster PauseRequest Command callback
+ * @brief Network Commissioning Cluster AddWiFiNetwork Command callback
+ * @param ssid
+ * @param credentials
+ * @param breadcrumb
+ * @param timeoutMs
  */
 
-bool emberAfMediaPlaybackClusterPauseRequestCallback();
+bool emberAfNetworkCommissioningClusterAddWiFiNetworkCallback(chip::app::Command * commandObj, chip::ByteSpan ssid,
+                                                              chip::ByteSpan credentials, uint64_t breadcrumb, uint32_t timeoutMs);
 
 /**
- * @brief Media Playback Cluster PlayRequest Command callback
+ * @brief Network Commissioning Cluster DisableNetwork Command callback
+ * @param networkID
+ * @param breadcrumb
+ * @param timeoutMs
  */
 
-bool emberAfMediaPlaybackClusterPlayRequestCallback();
+bool emberAfNetworkCommissioningClusterDisableNetworkCallback(chip::app::Command * commandObj, chip::ByteSpan networkID,
+                                                              uint64_t breadcrumb, uint32_t timeoutMs);
 
 /**
- * @brief Media Playback Cluster PreviousRequest Command callback
+ * @brief Network Commissioning Cluster EnableNetwork Command callback
+ * @param networkID
+ * @param breadcrumb
+ * @param timeoutMs
  */
 
-bool emberAfMediaPlaybackClusterPreviousRequestCallback();
+bool emberAfNetworkCommissioningClusterEnableNetworkCallback(chip::app::Command * commandObj, chip::ByteSpan networkID,
+                                                             uint64_t breadcrumb, uint32_t timeoutMs);
 
 /**
- * @brief Media Playback Cluster RewindRequest Command callback
+ * @brief Network Commissioning Cluster GetLastNetworkCommissioningResult Command callback
+ * @param timeoutMs
  */
 
-bool emberAfMediaPlaybackClusterRewindRequestCallback();
+bool emberAfNetworkCommissioningClusterGetLastNetworkCommissioningResultCallback(chip::app::Command * commandObj,
+                                                                                 uint32_t timeoutMs);
 
 /**
- * @brief Media Playback Cluster SkipBackwardRequest Command callback
+ * @brief Network Commissioning Cluster RemoveNetwork Command callback
+ * @param networkID
+ * @param breadcrumb
+ * @param timeoutMs
  */
 
-bool emberAfMediaPlaybackClusterSkipBackwardRequestCallback();
+bool emberAfNetworkCommissioningClusterRemoveNetworkCallback(chip::app::Command * commandObj, chip::ByteSpan NetworkID,
+                                                             uint64_t Breadcrumb, uint32_t TimeoutMs);
 
 /**
- * @brief Media Playback Cluster SkipForwardRequest Command callback
+ * @brief Network Commissioning Cluster ScanNetworks Command callback
+ * @param ssid
+ * @param breadcrumb
+ * @param timeoutMs
  */
 
-bool emberAfMediaPlaybackClusterSkipForwardRequestCallback();
+bool emberAfNetworkCommissioningClusterScanNetworksCallback(chip::app::Command * commandObj, chip::ByteSpan ssid,
+                                                            uint64_t breadcrumb, uint32_t timeoutMs);
 
 /**
- * @brief Media Playback Cluster StartOverRequest Command callback
+ * @brief Network Commissioning Cluster UpdateThreadNetwork Command callback
+ * @param operationalDataset
+ * @param breadcrumb
+ * @param timeoutMs
  */
 
-bool emberAfMediaPlaybackClusterStartOverRequestCallback();
+bool emberAfNetworkCommissioningClusterUpdateThreadNetworkCallback(chip::app::Command * commandObj,
+                                                                   chip::ByteSpan operationalDataset, uint64_t breadcrumb,
+                                                                   uint32_t timeoutMs);
 
 /**
- * @brief Media Playback Cluster StopRequest Command callback
+ * @brief Network Commissioning Cluster UpdateWiFiNetwork Command callback
+ * @param ssid
+ * @param credentials
+ * @param breadcrumb
+ * @param timeoutMs
  */
 
-bool emberAfMediaPlaybackClusterStopRequestCallback();
+bool emberAfNetworkCommissioningClusterUpdateWiFiNetworkCallback(chip::app::Command * commandObj, chip::ByteSpan ssid,
+                                                                 chip::ByteSpan credentials, uint64_t breadcrumb,
+                                                                 uint32_t timeoutMs);
+
+/**
+ * @brief OTA Software Update Server Cluster ApplyUpdateRequest Command callback
+ * @param updateToken
+ * @param newVersion
+ */
+
+bool emberAfOtaSoftwareUpdateServerClusterApplyUpdateRequestCallback(chip::app::Command * commandObj, chip::ByteSpan updateToken,
+                                                                     uint32_t newVersion);
+
+/**
+ * @brief OTA Software Update Server Cluster NotifyUpdateApplied Command callback
+ * @param updateToken
+ * @param currentVersion
+ */
+
+bool emberAfOtaSoftwareUpdateServerClusterNotifyUpdateAppliedCallback(chip::app::Command * commandObj, chip::ByteSpan updateToken,
+                                                                      uint32_t currentVersion);
+
+/**
+ * @brief OTA Software Update Server Cluster QueryImage Command callback
+ * @param vendorId
+ * @param productId
+ * @param imageType
+ * @param hardwareVersion
+ * @param currentVersion
+ * @param protocolsSupported
+ * @param location
+ * @param clientCanConsent
+ * @param metadataForServer
+ */
+
+bool emberAfOtaSoftwareUpdateServerClusterQueryImageCallback(
+    chip::app::Command * commandObj, uint16_t vendorId, uint16_t productId, uint16_t imageType, uint16_t hardwareVersion,
+    uint32_t currentVersion, /* TYPE WARNING: array array defaults to */ uint8_t * protocolsSupported, uint8_t * location,
+    uint8_t clientCanConsent, chip::ByteSpan metadataForServer);
 
 /**
  * @brief On/off Cluster Off Command callback
  */
 
-bool emberAfOnOffClusterOffCallback();
+bool emberAfOnOffClusterOffCallback(chip::app::Command * commandObj);
 
 /**
  * @brief On/off Cluster On Command callback
  */
 
-bool emberAfOnOffClusterOnCallback();
+bool emberAfOnOffClusterOnCallback(chip::app::Command * commandObj);
 
 /**
  * @brief On/off Cluster Toggle Command callback
  */
 
-bool emberAfOnOffClusterToggleCallback();
+bool emberAfOnOffClusterToggleCallback(chip::app::Command * commandObj);
+
+/**
+ * @brief Operational Credentials Cluster GetFabricId Command callback
+ */
+
+bool emberAfOperationalCredentialsClusterGetFabricIdCallback(chip::app::Command * commandObj);
+
+/**
+ * @brief Operational Credentials Cluster RemoveFabric Command callback
+ * @param fabricId
+ * @param nodeId
+ * @param vendorId
+ */
+
+bool emberAfOperationalCredentialsClusterRemoveFabricCallback(chip::app::Command * commandObj, chip::FabricId FabricId,
+                                                              chip::NodeId NodeId, uint16_t VendorId);
+
+/**
+ * @brief Operational Credentials Cluster UpdateFabricLabel Command callback
+ * @param label
+ */
+
+bool emberAfOperationalCredentialsClusterUpdateFabricLabelCallback(chip::app::Command * commandObj, uint8_t * Label);
 
 /**
  * @brief Scenes Cluster AddScene Command callback
@@ -1672,7 +2514,8 @@ bool emberAfOnOffClusterToggleCallback();
  * @param extensionFieldSets
  */
 
-bool emberAfScenesClusterAddSceneCallback(uint16_t groupId, uint8_t sceneId, uint16_t transitionTime, uint8_t * sceneName,
+bool emberAfScenesClusterAddSceneCallback(chip::app::Command * commandObj, uint16_t groupId, uint8_t sceneId,
+                                          uint16_t transitionTime, uint8_t * sceneName,
                                           /* TYPE WARNING: array array defaults to */ uint8_t * extensionFieldSets);
 
 /**
@@ -1680,7 +2523,7 @@ bool emberAfScenesClusterAddSceneCallback(uint16_t groupId, uint8_t sceneId, uin
  * @param groupId
  */
 
-bool emberAfScenesClusterGetSceneMembershipCallback(uint16_t groupId);
+bool emberAfScenesClusterGetSceneMembershipCallback(chip::app::Command * commandObj, uint16_t groupId);
 
 /**
  * @brief Scenes Cluster RecallScene Command callback
@@ -1689,14 +2532,15 @@ bool emberAfScenesClusterGetSceneMembershipCallback(uint16_t groupId);
  * @param transitionTime
  */
 
-bool emberAfScenesClusterRecallSceneCallback(uint16_t groupId, uint8_t sceneId, uint16_t transitionTime);
+bool emberAfScenesClusterRecallSceneCallback(chip::app::Command * commandObj, uint16_t groupId, uint8_t sceneId,
+                                             uint16_t transitionTime);
 
 /**
  * @brief Scenes Cluster RemoveAllScenes Command callback
  * @param groupId
  */
 
-bool emberAfScenesClusterRemoveAllScenesCallback(uint16_t groupId);
+bool emberAfScenesClusterRemoveAllScenesCallback(chip::app::Command * commandObj, uint16_t groupId);
 
 /**
  * @brief Scenes Cluster RemoveScene Command callback
@@ -1704,7 +2548,7 @@ bool emberAfScenesClusterRemoveAllScenesCallback(uint16_t groupId);
  * @param sceneId
  */
 
-bool emberAfScenesClusterRemoveSceneCallback(uint16_t groupId, uint8_t sceneId);
+bool emberAfScenesClusterRemoveSceneCallback(chip::app::Command * commandObj, uint16_t groupId, uint8_t sceneId);
 
 /**
  * @brief Scenes Cluster StoreScene Command callback
@@ -1712,7 +2556,7 @@ bool emberAfScenesClusterRemoveSceneCallback(uint16_t groupId, uint8_t sceneId);
  * @param sceneId
  */
 
-bool emberAfScenesClusterStoreSceneCallback(uint16_t groupId, uint8_t sceneId);
+bool emberAfScenesClusterStoreSceneCallback(chip::app::Command * commandObj, uint16_t groupId, uint8_t sceneId);
 
 /**
  * @brief Scenes Cluster ViewScene Command callback
@@ -1720,7 +2564,7 @@ bool emberAfScenesClusterStoreSceneCallback(uint16_t groupId, uint8_t sceneId);
  * @param sceneId
  */
 
-bool emberAfScenesClusterViewSceneCallback(uint16_t groupId, uint8_t sceneId);
+bool emberAfScenesClusterViewSceneCallback(chip::app::Command * commandObj, uint16_t groupId, uint8_t sceneId);
 
 //
 // Non-Cluster Related Callbacks

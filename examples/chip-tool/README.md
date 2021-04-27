@@ -51,7 +51,7 @@ remote device.
 The command below uses the default values hard-coded into the debug versions of
 the ESP32 all-clusters-app:
 
-    $ chip-tool pairing ble 12345678 3840
+    $ chip-tool pairing ble 20202021 3840
 
 ### Unpair a device
 
@@ -136,7 +136,7 @@ and the `parse-setup-payload` command
 
 #### QR Code with optional Vendor Info
 
-    $ chip-tool chip-tool payload parse-setup-payload "CH:#####"
+    $ chip-tool payload parse-setup-payload "CH:#####"
 
 #### Manual Setup Code
 

@@ -28,6 +28,21 @@ class Listen : public ReportingCommand
 public:
     Listen() : ReportingCommand("listen") {}
 
+    ~Listen()
+    {
+        delete onReportColorControlCurrentHueCallback;
+        delete onReportColorControlCurrentSaturationCallback;
+        delete onReportColorControlCurrentXCallback;
+        delete onReportColorControlCurrentYCallback;
+        delete onReportColorControlColorTemperatureCallback;
+        delete onReportDoorLockLockStateCallback;
+        delete onReportLevelControlCurrentLevelCallback;
+        delete onReportOnOffOnOffCallback;
+        delete onReportPumpConfigurationAndControlCapacityCallback;
+        delete onReportTemperatureMeasurementMeasuredValueCallback;
+        delete onReportThermostatLocalTemperatureCallback;
+    }
+
     void AddReportCallbacks(uint8_t endpointId) override
     {
         chip::app::CHIPDeviceCallbacksMgr & callbacksMgr = chip::app::CHIPDeviceCallbacksMgr::GetInstance();
@@ -46,8 +61,12 @@ public:
         callbacksMgr.AddReportCallback(chip::kTestDeviceNodeId, endpointId, 0x0008, 0x0000,
                                        onReportLevelControlCurrentLevelCallback->Cancel());
         callbacksMgr.AddReportCallback(chip::kTestDeviceNodeId, endpointId, 0x0006, 0x0000, onReportOnOffOnOffCallback->Cancel());
+        callbacksMgr.AddReportCallback(chip::kTestDeviceNodeId, endpointId, 0x0200, 0x0013,
+                                       onReportPumpConfigurationAndControlCapacityCallback->Cancel());
         callbacksMgr.AddReportCallback(chip::kTestDeviceNodeId, endpointId, 0x0402, 0x0000,
                                        onReportTemperatureMeasurementMeasuredValueCallback->Cancel());
+        callbacksMgr.AddReportCallback(chip::kTestDeviceNodeId, endpointId, 0x0201, 0x0000,
+                                       onReportThermostatLocalTemperatureCallback->Cancel());
     }
 
     static void OnDefaultSuccessResponse(void * context) { ChipLogProgress(chipTool, "Default Success Response"); }
@@ -99,7 +118,11 @@ private:
         new chip::Callback::Callback<Int8uAttributeCallback>(OnInt8uAttributeResponse, this);
     chip::Callback::Callback<BooleanAttributeCallback> * onReportOnOffOnOffCallback =
         new chip::Callback::Callback<BooleanAttributeCallback>(OnBooleanAttributeResponse, this);
+    chip::Callback::Callback<Int16sAttributeCallback> * onReportPumpConfigurationAndControlCapacityCallback =
+        new chip::Callback::Callback<Int16sAttributeCallback>(OnInt16sAttributeResponse, this);
     chip::Callback::Callback<Int16sAttributeCallback> * onReportTemperatureMeasurementMeasuredValueCallback =
+        new chip::Callback::Callback<Int16sAttributeCallback>(OnInt16sAttributeResponse, this);
+    chip::Callback::Callback<Int16sAttributeCallback> * onReportThermostatLocalTemperatureCallback =
         new chip::Callback::Callback<Int16sAttributeCallback>(OnInt16sAttributeResponse, this);
 };
 

@@ -24,7 +24,6 @@
 #include <transport/raw/UDP.h>
 
 #include <support/CodeUtils.h>
-#include <support/ReturnMacros.h>
 #include <support/logging/CHIPLogging.h>
 #include <transport/raw/MessageHeader.h>
 
@@ -53,12 +52,10 @@ CHIP_ERROR UDP::Init(UdpListenParameters & params)
     err = mUDPEndPoint->Bind(params.GetAddressType(), Inet::IPAddress::Any, params.GetListenPort(), params.GetInterfaceId());
     SuccessOrExit(err);
 
-    err = mUDPEndPoint->Listen();
+    err = mUDPEndPoint->Listen(OnUdpReceive, nullptr /*onReceiveError*/, this);
     SuccessOrExit(err);
 
-    mUDPEndPoint->AppState          = reinterpret_cast<void *>(this);
-    mUDPEndPoint->OnMessageReceived = OnUdpReceive;
-    mUDPEndpointType                = params.GetAddressType();
+    mUDPEndpointType = params.GetAddressType();
 
     mState = State::kInitialized;
 

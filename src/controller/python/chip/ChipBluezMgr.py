@@ -66,10 +66,10 @@ from .ChipBleUtility import (
 
 from .ChipBleBase import ChipBleBase
 
-chip_service = uuid.UUID("0000FEAF-0000-1000-8000-00805F9B34FB")
+chip_service = uuid.UUID("0000FFF6-0000-1000-8000-00805F9B34FB")
 chip_tx = uuid.UUID("18EE2EF5-263D-4559-959F-4F9C429F9D11")
 chip_rx = uuid.UUID("18EE2EF5-263D-4559-959F-4F9C429F9D12")
-chip_service_short = uuid.UUID("0000FEAF-0000-0000-0000-000000000000")
+chip_service_short = uuid.UUID("0000FFF6-0000-0000-0000-000000000000")
 chromecast_setup_service = uuid.UUID("0000FEA0-0000-1000-8000-00805F9B34FB")
 chromecast_setup_service_short = uuid.UUID("0000FEA0-0000-0000-0000-000000000000")
 
@@ -848,7 +848,7 @@ class BluezManager(ChipBleBase):
                 )
             ]
             for i in range(len(adapters)):
-                self.logger.info("adapter %s = %s" % (i, adapters[i].Address))
+                self.logger.info("AdapterName: %s   AdapterAddress: %s" % (adapters[i].path.replace("/org/bluez/", ""), adapters[i].Address))
         except dbus.exceptions.DBusException as ex:
             self.logger.debug(str(ex))
 
@@ -864,7 +864,7 @@ class BluezManager(ChipBleBase):
                 return adapters[0]
             if len(adapters) > 0:
                 for adapter in adapters:
-                    if str(adapter.Address).upper() == str(identifier).upper():
+                    if str(adapter.Address).upper() == str(identifier).upper() or "/org/bluez/{}".format(identifier) == str(adapter.path):
                         return adapter
             self.logger.info(
                 "adapter %s cannot be found, expect the ble mac address" % (identifier)

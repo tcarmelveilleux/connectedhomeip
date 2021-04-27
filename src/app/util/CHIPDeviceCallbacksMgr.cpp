@@ -28,7 +28,6 @@
 
 #include <core/CHIPCore.h>
 #include <inttypes.h>
-#include <support/ReturnMacros.h>
 
 namespace {
 struct ResponseCallbackInfo
@@ -75,6 +74,14 @@ CHIP_ERROR CHIPDeviceCallbacksMgr::AddResponseCallback(NodeId nodeId, uint8_t se
 
     mResponsesSuccess.Enqueue(onSuccessCallback);
     mResponsesFailure.Enqueue(onFailureCallback);
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR CHIPDeviceCallbacksMgr::CancelResponseCallback(NodeId nodeId, uint8_t sequenceNumber)
+{
+    ResponseCallbackInfo info = { nodeId, sequenceNumber };
+    CancelCallback(info, mResponsesSuccess);
+    CancelCallback(info, mResponsesFailure);
     return CHIP_NO_ERROR;
 }
 
