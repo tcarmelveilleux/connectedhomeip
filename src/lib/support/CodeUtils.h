@@ -179,6 +179,14 @@ constexpr inline const _T & max(const _T & a, const _T & b)
         CHIP_ERROR __err = (expr);                                                                                                 \
         if (__err != CHIP_NO_ERROR)                                                                                                \
         {                                                                                                                          \
+                             NL_ASSERT_LOG ( \
+                                           NL_ASSERT_PREFIX_STRING,                       \
+                                           NL_ASSERT_COMPONENT_STRING,                    \
+                                           #expr,                                    \
+                                           "",                                        \
+                                           NL_ASSERT_FILE,                                \
+                                           __LINE__,                                      \
+                                           0);                                            \
             return __err;                                                                                                          \
         }                                                                                                                          \
     } while (false)
@@ -225,7 +233,15 @@ constexpr inline const _T & max(const _T & a, const _T & b)
     do                                                                                                                             \
     {                                                                                                                              \
         if (!(expr))                                                                                                               \
-        {                                                                                                                          \
+        {                    \
+                                         NL_ASSERT_LOG ( \
+                                           NL_ASSERT_PREFIX_STRING,                       \
+                                           NL_ASSERT_COMPONENT_STRING,                    \
+                                           #expr,                                    \
+                                           "",                                        \
+                                           NL_ASSERT_FILE,                                \
+                                           __LINE__,                                      \
+                                           0);                                            \
             __VA_ARGS__;                                                                                                           \
             return;                                                                                                                \
         }                                                                                                                          \
@@ -251,6 +267,14 @@ constexpr inline const _T & max(const _T & a, const _T & b)
     {                                                                                                                              \
         if (!(expr))                                                                                                               \
         {                                                                                                                          \
+                                     NL_ASSERT_LOG ( \
+                                           NL_ASSERT_PREFIX_STRING,                       \
+                                           NL_ASSERT_COMPONENT_STRING,                    \
+                                           #expr,                                    \
+                                           "",                                        \
+                                           NL_ASSERT_FILE,                                \
+                                           __LINE__,                                      \
+                                           0);                                            \
             return code;                                                                                                           \
         }                                                                                                                          \
     } while (false)
