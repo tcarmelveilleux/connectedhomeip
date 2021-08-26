@@ -1,0 +1,49 @@
+@startuml
+
+title Group Key Management example
+participant "Admin Node" as ADMIN order 10
+participant "ClusterServer" as CS order 10
+participant "GroupKeyMgmtProvider" as P order 20
+participant "Matter Stack" as MS order 30
+participant "Other Node" as NODE order 40
+
+ADMIN --> CS: INVOKE\nEP1/GKMC/KeySetWrite(group_key_idx=5)
+CS -> P: AddKeySet(...)
+P -> CS: CHIP_NO_ERROR
+CS --> ADMIN: Status(SUCCESS)
+
+ADMIN --> CS: WRITE\nEP1/GKMC/Groups/[3] = {group_key_idx=5,...}
+CS -> P: AddGroupState(3, ...)
+P -> CS: CHIP_NO_ERROR
+CS --> ADMIN: Status(SUCCESS)
+
+...
+
+ADMIN -> CS: READ\nEP1/GKMC/Groups/*
+CS -> P: IterateGroupStateMappings()
+P -> CS: iterator
+activate CS
+  loop until iterator->HasNext() == false
+    CS -> CS: entry = iterator->Next()
+    CS -> CS: AddEntryToTLV(entry)
+  end
+deactivate CS
+CS -> ADMIN: ReportData(...)
+
+...
+
+NODE --> MS: Msg(group_session_id=0xF3A9,...)
+Note left of MS: Stack needs to find\npossible group keys
+activate MS
+MS -> P: IterateGroupKeyCandidates\n(group_session_id=0xF3A())
+P -> MS: iterator
+
+  loop until iterator->HasNext() == false
+    MS -> P: iterator->Next()
+    P -> MS: GroupKeyCandidate c
+    MS -> MS: success = msg.decrypt(c.key)
+  end
+  MS -> MS: process_msg(msg, c.fabric_idx, c.group_id)
+deactivate MS
+
+@enduml
