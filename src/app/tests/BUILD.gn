@@ -28,6 +28,7 @@ chip_test_suite("tests") {
     "TestCommandPathParams.cpp",
     "TestEventLogging.cpp",
     "TestEventPathParams.cpp",
+    "TestGroupDataProvider.cpp",
     "TestInteractionModelEngine.cpp",
     "TestMessageDef.cpp",
     "TestReadInteraction.cpp",
