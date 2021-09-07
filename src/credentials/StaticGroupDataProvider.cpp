@@ -15,7 +15,7 @@
  *    limitations under the License.
  */
 #include "GroupDataProvider.h"
-#include <CHIPProjectConfig.h>
+#include <lib/core/CHIPConfig.h>
 #include <string.h>
 
 using namespace chip::DeviceLayer;

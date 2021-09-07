@@ -19,6 +19,7 @@
 #include <app/util/basic-types.h>
 #include <lib/core/CHIPError.h>
 #include <stdint.h>
+#include <sys/types.h>
 
 namespace chip {
 namespace Credentials {
@@ -31,9 +32,9 @@ public:
 
     struct EpochKey
     {
-        static constexpr size_t LengthBytes = 16;
+        static constexpr size_t kLengthBytes = 16;
         uint64_t start_time;
-        uint8_t key[LengthBytes];
+        uint8_t key[kLengthBytes];
     };
 
     struct GroupMapping
