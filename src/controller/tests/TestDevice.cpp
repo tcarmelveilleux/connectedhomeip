@@ -15,7 +15,9 @@
  *    limitations under the License.
  */
 
+#if CONFIG_NETWORK_LAYER_BLE
 #include <ble/BleLayer.h>
+#endif // CONFIG_NETWORK_LAYER_BLE
 #include <controller/CHIPDevice.h>
 #include <inet/IPAddress.h>
 #include <inet/InetLayer.h>
@@ -25,7 +27,7 @@
 #include <protocols/secure_channel/MessageCounterManager.h>
 #include <protocols/secure_channel/SessionIDAllocator.h>
 #include <system/SystemLayerImpl.h>
-#include <transport/SecureSessionMgr.h>
+#include <transport/SessionManager.h>
 #include <transport/TransportMgr.h>
 #include <transport/raw/PeerAddress.h>
 #include <transport/raw/UDP.h>
@@ -43,19 +45,23 @@ void TestDevice_EstablishSessionDirectly(nlTestSuite * inSuite, void * inContext
 {
     Platform::MemoryInit();
     DeviceTransportMgr transportMgr;
-    SecureSessionMgr sessionMgr;
+    SessionManager sessionManager;
     ExchangeManager exchangeMgr;
     Inet::InetLayer inetLayer;
     System::LayerImpl systemLayer;
+#if CONFIG_NETWORK_LAYER_BLE
     Ble::BleLayer blelayer;
-    FabricTable fabrics;
+#endif // CONFIG_NETWORK_LAYER_BLE
+    // Heap-allocate the fairly large FabricTable so we don't end up with a huge
+    // stack.
+    FabricTable * fabrics = Platform::New<FabricTable>();
     secure_channel::MessageCounterManager messageCounterManager;
     SessionIDAllocator idAllocator;
 
     systemLayer.Init();
     inetLayer.Init(systemLayer, nullptr);
     transportMgr.Init(
-        UdpListenParameters(&inetLayer).SetAddressType(Inet::IPAddressType::kIPAddressType_IPv4).SetListenPort(CHIP_PORT)
+        UdpListenParameters(&inetLayer).SetAddressType(Inet::IPAddressType::kIPAddressType_IPv6).SetListenPort(CHIP_PORT)
 #if INET_CONFIG_ENABLE_IPV4
             ,
         UdpListenParameters(&inetLayer).SetAddressType(Inet::kIPAddressType_IPv4).SetListenPort(CHIP_PORT)
@@ -65,26 +71,26 @@ void TestDevice_EstablishSessionDirectly(nlTestSuite * inSuite, void * inContext
         BleListenParameters(&blelayer)
 #endif
     );
-    sessionMgr.Init(&systemLayer, &transportMgr, &fabrics, &messageCounterManager);
-    exchangeMgr.Init(&sessionMgr);
+    sessionManager.Init(&systemLayer, &transportMgr, &messageCounterManager);
+    exchangeMgr.Init(&sessionManager);
     messageCounterManager.Init(&exchangeMgr);
 
     ControllerDeviceInitParams params = {
         .transportMgr    = &transportMgr,
-        .sessionMgr      = &sessionMgr,
+        .sessionManager  = &sessionManager,
         .exchangeMgr     = &exchangeMgr,
         .inetLayer       = &inetLayer,
         .storageDelegate = nullptr,
         .idAllocator     = &idAllocator,
-        .fabricsTable    = &fabrics,
+        .fabricsTable    = fabrics,
     };
     Device device;
     NodeId mockNodeId           = 1;
     FabricIndex mockFabricIndex = 1;
     Inet::IPAddress mockAddr;
-    Inet::IPAddress::FromString("127.0.0.1", mockAddr);
+    Inet::IPAddress::FromString("::1", mockAddr);
     PeerAddress addr = PeerAddress::UDP(mockAddr, CHIP_PORT);
-    device.Init(params, CHIP_PORT, mockNodeId, addr, mockFabricIndex);
+    device.Init(params, mockNodeId, addr, mockFabricIndex);
 
     device.OperationalCertProvisioned();
     NL_TEST_ASSERT(inSuite, device.EstablishConnectivity(nullptr, nullptr) == CHIP_NO_ERROR);
@@ -92,7 +98,8 @@ void TestDevice_EstablishSessionDirectly(nlTestSuite * inSuite, void * inContext
     device.Reset();
     messageCounterManager.Shutdown();
     exchangeMgr.Shutdown();
-    sessionMgr.Shutdown();
+    sessionManager.Shutdown();
+    Platform::Delete(fabrics);
     transportMgr.Close();
     inetLayer.Shutdown();
     systemLayer.Shutdown();

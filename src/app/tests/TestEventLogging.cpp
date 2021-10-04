@@ -42,7 +42,7 @@
 #include <system/SystemLayerImpl.h>
 #include <system/SystemPacketBuffer.h>
 #include <system/TLVPacketBufferBackingStore.h>
-#include <transport/SecureSessionMgr.h>
+#include <transport/SessionManager.h>
 #include <transport/raw/UDP.h>
 
 #include <nlunit-test.h>
@@ -63,7 +63,7 @@ static uint8_t gInfoEventBuffer[128];
 static uint8_t gCritEventBuffer[128];
 static chip::app::CircularEventBuffer gCircularEventBuffer[3];
 
-chip::SecureSessionMgr gSessionManager;
+chip::SessionManager gSessionManager;
 chip::Messaging::ExchangeManager gExchangeManager;
 chip::secure_channel::MessageCounterManager gMessageCounterManager;
 
@@ -71,14 +71,13 @@ void InitializeChip(nlTestSuite * apSuite)
 {
     CHIP_ERROR err = CHIP_NO_ERROR;
     chip::Optional<chip::Transport::PeerAddress> peer(chip::Transport::Type::kUndefined);
-    chip::Transport::FabricTable fabrics;
 
     err = chip::Platform::MemoryInit();
     NL_TEST_ASSERT(apSuite, err == CHIP_NO_ERROR);
 
     gSystemLayer.Init();
 
-    err = gSessionManager.Init(&gSystemLayer, &gTransportManager, &fabrics, &gMessageCounterManager);
+    err = gSessionManager.Init(&gSystemLayer, &gTransportManager, &gMessageCounterManager);
     NL_TEST_ASSERT(apSuite, err == CHIP_NO_ERROR);
 
     err = gExchangeManager.Init(&gSessionManager);

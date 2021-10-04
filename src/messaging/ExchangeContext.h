@@ -33,7 +33,7 @@
 #include <messaging/Flags.h>
 #include <messaging/ReliableMessageContext.h>
 #include <protocols/Protocols.h>
-#include <transport/SecureSessionMgr.h>
+#include <transport/SessionManager.h>
 
 namespace chip {
 
@@ -150,11 +150,11 @@ public:
 
     ExchangeMessageDispatch * GetMessageDispatch() { return mDispatch; }
 
-    ExchangeACL * GetExchangeACL(Transport::FabricTable & table)
+    ExchangeACL * GetExchangeACL(FabricTable & table)
     {
         if (mExchangeACL == nullptr)
         {
-            Transport::FabricInfo * fabric = table.FindFabricWithIndex(mSecureSession.Value().GetFabricIndex());
+            FabricInfo * fabric = table.FindFabricWithIndex(mSecureSession.Value().GetFabricIndex());
             if (fabric != nullptr)
             {
                 mExchangeACL = chip::Platform::New<CASEExchangeACL>(fabric);
@@ -165,6 +165,7 @@ public:
     }
 
     SessionHandle GetSecureSession() { return mSecureSession.Value(); }
+    bool HasSecureSession() const { return mSecureSession.HasValue(); }
 
     uint16_t GetExchangeId() const { return mExchangeId; }
 

@@ -101,9 +101,11 @@ CHIP_ERROR DNSResolver::Resolve(const char * hostName, uint16_t hostNameLen, uin
     uint8_t optionFlags      = (options & kDNSOption_Flags_Mask);
 
     // Check that the supplied options are valid.
-    if ((addrFamilyOption != kDNSOption_AddrFamily_Any && addrFamilyOption != kDNSOption_AddrFamily_IPv4Only &&
-         addrFamilyOption != kDNSOption_AddrFamily_IPv4Preferred && addrFamilyOption != kDNSOption_AddrFamily_IPv6Only &&
-         addrFamilyOption != kDNSOption_AddrFamily_IPv6Preferred) ||
+    if ((addrFamilyOption != kDNSOption_AddrFamily_Any
+#if INET_CONFIG_ENABLE_IPV4
+         && addrFamilyOption != kDNSOption_AddrFamily_IPv4Only && addrFamilyOption != kDNSOption_AddrFamily_IPv4Preferred
+#endif
+         && addrFamilyOption != kDNSOption_AddrFamily_IPv6Only && addrFamilyOption != kDNSOption_AddrFamily_IPv6Preferred) ||
         (optionFlags & ~kDNSOption_ValidFlags) != 0)
     {
         Release();
@@ -347,10 +349,11 @@ void DNSResolver::LwIPHandleResolveComplete(const char * name, ip_addr_t * ipadd
 
 void DNSResolver::InitAddrInfoHints(struct addrinfo & hints)
 {
+    memset(&hints, 0, sizeof(hints));
+
+#if INET_CONFIG_ENABLE_IPV4
     uint8_t addrFamilyOption = (DNSOptions & kDNSOption_AddrFamily_Mask);
 
-    memset(&hints, 0, sizeof(hints));
-#if INET_CONFIG_ENABLE_IPV4
     if (addrFamilyOption == kDNSOption_AddrFamily_IPv4Only)
     {
         hints.ai_family = AF_INET;
@@ -477,7 +480,7 @@ CHIP_ERROR DNSResolver::ProcessGetAddrInfoResult(int returnCode, struct addrinfo
             err = INET_ERROR_DNS_TRY_AGAIN;
             break;
         case EAI_SYSTEM:
-            err = chip::System::MapErrorPOSIX(errno);
+            err = CHIP_ERROR_POSIX(errno);
             break;
         default:
             err = INET_ERROR_DNS_NO_RECOVERY;

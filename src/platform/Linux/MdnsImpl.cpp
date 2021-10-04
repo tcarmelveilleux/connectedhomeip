@@ -29,6 +29,7 @@
 #include <lib/support/CHIPMemString.h>
 #include <lib/support/CodeUtils.h>
 #include <platform/internal/CHIPDeviceLayerInternal.h>
+#include <system/SystemLayer.h>
 
 using chip::Mdns::kMdnsTypeMaxSize;
 using chip::Mdns::MdnsServiceProtocol;
@@ -47,9 +48,11 @@ AvahiProtocol ToAvahiProtocol(chip::Inet::IPAddressType addressType)
 
     switch (addressType)
     {
+#if INET_CONFIG_ENABLE_IPV4
     case chip::Inet::IPAddressType::kIPAddressType_IPv4:
         protocol = AVAHI_PROTO_INET;
         break;
+#endif
     case chip::Inet::IPAddressType::kIPAddressType_IPv6:
         protocol = AVAHI_PROTO_INET6;
         break;
@@ -67,9 +70,11 @@ chip::Inet::IPAddressType ToAddressType(AvahiProtocol protocol)
 
     switch (protocol)
     {
+#if INET_CONFIG_ENABLE_IPV4
     case AVAHI_PROTO_INET:
         type = chip::Inet::IPAddressType::kIPAddressType_IPv4;
         break;
+#endif
     case AVAHI_PROTO_INET6:
         type = chip::Inet::IPAddressType::kIPAddressType_IPv6;
         break;
@@ -136,8 +141,6 @@ namespace Mdns {
 
 MdnsAvahi MdnsAvahi::sInstance;
 
-constexpr uint64_t kUsPerSec = 1000 * 1000;
-
 Poller::Poller()
 {
     mAvahiPoller.userdata         = this;
@@ -149,6 +152,8 @@ Poller::Poller()
     mAvahiPoller.timeout_new    = TimeoutNew;
     mAvahiPoller.timeout_update = TimeoutUpdate;
     mAvahiPoller.timeout_free   = TimeoutFree;
+
+    mEarliestTimeout = std::chrono::steady_clock::time_point();
 }
 
 AvahiWatch * Poller::WatchNew(const struct AvahiPoll * poller, int fd, AvahiWatchEvent event, AvahiWatchCallback callback,
@@ -237,9 +242,10 @@ steady_clock::time_point GetAbsTimeout(const struct timeval * timeout)
 
 AvahiTimeout * Poller::TimeoutNew(const struct timeval * timeout, AvahiTimeoutCallback callback, void * context)
 {
-
     mTimers.emplace_back(new AvahiTimeout{ GetAbsTimeout(timeout), callback, timeout != nullptr, context, this });
-    return mTimers.back().get();
+    AvahiTimeout * timer = mTimers.back().get();
+    SystemTimerUpdate(timer);
+    return timer;
 }
 
 void Poller::TimeoutUpdate(AvahiTimeout * timer, const struct timeval * timeout)
@@ -248,6 +254,7 @@ void Poller::TimeoutUpdate(AvahiTimeout * timer, const struct timeval * timeout)
     {
         timer->mAbsTimeout = GetAbsTimeout(timeout);
         timer->mEnabled    = true;
+        static_cast<Poller *>(timer->mPoller)->SystemTimerUpdate(timer);
     }
     else
     {
@@ -267,38 +274,17 @@ void Poller::TimeoutFree(AvahiTimeout & timer)
                   mTimers.end());
 }
 
-void Poller::GetTimeout(timeval & timeout)
+void Poller::SystemTimerCallback(System::Layer * layer, void * data)
 {
-    microseconds timeoutVal = seconds(timeout.tv_sec) + microseconds(timeout.tv_usec);
-
-    for (auto && timer : mTimers)
-    {
-        steady_clock::time_point absTimeout = timer->mAbsTimeout;
-        steady_clock::time_point now        = steady_clock::now();
-
-        if (!timer->mEnabled)
-        {
-            continue;
-        }
-        if (absTimeout < now)
-        {
-            timeoutVal = microseconds(0);
-            break;
-        }
-        else
-        {
-            timeoutVal = std::min(timeoutVal, duration_cast<microseconds>(absTimeout - now));
-        }
-    }
-
-    timeout.tv_sec  = static_cast<uint64_t>(timeoutVal.count()) / kUsPerSec;
-    timeout.tv_usec = static_cast<uint64_t>(timeoutVal.count()) % kUsPerSec;
+    static_cast<Poller *>(data)->HandleTimeout();
 }
 
 void Poller::HandleTimeout()
 {
+    mEarliestTimeout             = std::chrono::steady_clock::time_point();
     steady_clock::time_point now = steady_clock::now();
 
+    AvahiTimeout * earliest = nullptr;
     for (auto && timer : mTimers)
     {
         if (!timer->mEnabled)
@@ -309,6 +295,27 @@ void Poller::HandleTimeout()
         {
             timer->mCallback(timer.get(), timer->mContext);
         }
+        else
+        {
+            if ((earliest == nullptr) || (timer->mAbsTimeout < earliest->mAbsTimeout))
+            {
+                earliest = timer.get();
+            }
+        }
+    }
+    if (earliest)
+    {
+        SystemTimerUpdate(earliest);
+    }
+}
+
+void Poller::SystemTimerUpdate(AvahiTimeout * timer)
+{
+    if ((mEarliestTimeout == std::chrono::steady_clock::time_point()) || (timer->mAbsTimeout < mEarliestTimeout))
+    {
+        mEarliestTimeout = timer->mAbsTimeout;
+        auto msDelay     = std::chrono::duration_cast<std::chrono::milliseconds>(steady_clock::now() - mEarliestTimeout).count();
+        DeviceLayer::SystemLayer().StartTimer(msDelay, SystemTimerCallback, this);
     }
 }
 
@@ -509,8 +516,11 @@ exit:
 CHIP_ERROR MdnsAvahi::StopPublish()
 {
     CHIP_ERROR error = CHIP_NO_ERROR;
-
-    VerifyOrExit(avahi_entry_group_reset(mGroup) == 0, error = CHIP_ERROR_INTERNAL);
+    mPublishedServices.clear();
+    if (mGroup)
+    {
+        VerifyOrExit(avahi_entry_group_reset(mGroup) == 0, error = CHIP_ERROR_INTERNAL);
+    }
 exit:
     return error;
 }
@@ -679,7 +689,8 @@ void MdnsAvahi::HandleResolve(AvahiServiceResolver * resolver, AvahiIfIndex inte
         context->mCallback(context->mContext, nullptr, CHIP_ERROR_INTERNAL);
         break;
     case AVAHI_RESOLVER_FOUND:
-        MdnsService result = {};
+        MdnsService result    = {};
+        CHIP_ERROR result_err = CHIP_NO_ERROR;
 
         result.mAddress.SetValue(chip::Inet::IPAddress());
         ChipLogError(DeviceLayer, "Avahi resolve found");
@@ -707,10 +718,15 @@ void MdnsAvahi::HandleResolve(AvahiServiceResolver * resolver, AvahiIfIndex inte
             switch (address->proto)
             {
             case AVAHI_PROTO_INET:
+#if INET_CONFIG_ENABLE_IPV4
                 struct in_addr addr4;
 
                 memcpy(&addr4, &(address->data.ipv4), sizeof(addr4));
                 result.mAddress.SetValue(chip::Inet::IPAddress::FromIPv4(addr4));
+#else
+                result_err = CHIP_ERROR_INVALID_ADDRESS;
+                ChipLogError(Discovery, "Ignoring IPv4 mDNS address.");
+#endif
                 break;
             case AVAHI_PROTO_INET6:
                 struct in6_addr addr6;
@@ -743,22 +759,19 @@ void MdnsAvahi::HandleResolve(AvahiServiceResolver * resolver, AvahiIfIndex inte
         }
         result.mTextEntrySize = textEntries.size();
 
-        context->mCallback(context->mContext, &result, CHIP_NO_ERROR);
+        if (result_err == CHIP_NO_ERROR)
+        {
+            context->mCallback(context->mContext, &result, CHIP_NO_ERROR);
+        }
+        else
+        {
+            context->mCallback(context->mContext, nullptr, result_err);
+        }
         break;
     }
 
     avahi_service_resolver_free(resolver);
     chip::Platform::Delete(context);
-}
-
-void GetMdnsTimeout(timeval & timeout)
-{
-    MdnsAvahi::GetInstance().GetPoller().GetTimeout(timeout);
-}
-
-void HandleMdnsTimeout()
-{
-    MdnsAvahi::GetInstance().GetPoller().HandleTimeout();
 }
 
 CHIP_ERROR ChipMdnsInit(MdnsAsyncReturnCallback initCallback, MdnsAsyncReturnCallback errorCallback, void * context)

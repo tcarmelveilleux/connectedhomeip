@@ -37,17 +37,6 @@
 #define PTHREAD_NULL 0
 #endif // CHIP_SYSTEM_CONFIG_POSIX_LOCKING && !defined(PTHREAD_NULL)
 
-#if CHIP_DEVICE_CONFIG_ENABLE_MDNS && !__ZEPHYR__
-
-namespace chip {
-namespace Mdns {
-void GetMdnsTimeout(timeval & timeout);
-void HandleMdnsTimeout();
-} // namespace Mdns
-} // namespace chip
-
-#endif // CHIP_DEVICE_CONFIG_ENABLE_MDNS && !__ZEPHYR__
-
 namespace chip {
 namespace System {
 
@@ -339,7 +328,7 @@ void LayerImplSelect::PrepareEvents()
 
     constexpr Clock::MonotonicMilliseconds kMaxTimeout =
         static_cast<Clock::MonotonicMilliseconds>(DEFAULT_MIN_SLEEP_PERIOD) * kMillisecondsPerSecond;
-    const Clock::MonotonicMilliseconds currentTime = Clock::GetMonotonicMilliseconds();
+    const Clock::MonotonicMilliseconds currentTime = SystemClock().GetMonotonicMilliseconds();
     Clock::MonotonicMilliseconds awakenTime        = currentTime + kMaxTimeout;
 
     Timer * timer = mTimerList.Earliest();
@@ -350,10 +339,6 @@ void LayerImplSelect::PrepareEvents()
 
     const Clock::MonotonicMilliseconds sleepTime = (awakenTime > currentTime) ? (awakenTime - currentTime) : 0;
     Clock::MillisecondsToTimeval(sleepTime, mNextTimeout);
-
-#if CHIP_DEVICE_CONFIG_ENABLE_MDNS && !__ZEPHYR__ && !__MBED__
-    chip::Mdns::GetMdnsTimeout(mNextTimeout);
-#endif // CHIP_DEVICE_CONFIG_ENABLE_MDNS && !__ZEPHYR__
 
     mMaxFd = -1;
     FD_ZERO(&mSelected.mReadSet);
@@ -390,7 +375,7 @@ void LayerImplSelect::HandleEvents()
 
     if (mSelectResult < 0)
     {
-        ChipLogError(DeviceLayer, "select failed: %s\n", ErrorStr(System::MapErrorPOSIX(errno)));
+        ChipLogError(DeviceLayer, "select failed: %s\n", ErrorStr(CHIP_ERROR_POSIX(errno)));
         return;
     }
 
@@ -400,7 +385,7 @@ void LayerImplSelect::HandleEvents()
 
     // Obtain the list of currently expired timers. Any new timers added by timer callback are NOT handled on this pass,
     // since that could result in infinite handling of new timers blocking any other progress.
-    Timer::List expiredTimers(mTimerList.ExtractEarlier(1 + Clock::GetMonotonicMilliseconds()));
+    Timer::List expiredTimers(mTimerList.ExtractEarlier(1 + SystemClock().GetMonotonicMilliseconds()));
     Timer * timer = nullptr;
     while ((timer = expiredTimers.PopEarliest()) != nullptr)
     {
@@ -418,10 +403,6 @@ void LayerImplSelect::HandleEvents()
             }
         }
     }
-
-#if CHIP_DEVICE_CONFIG_ENABLE_MDNS && !__ZEPHYR__ && !__MBED__
-    chip::Mdns::HandleMdnsTimeout();
-#endif // CHIP_DEVICE_CONFIG_ENABLE_MDNS && !__ZEPHYR__
 
 #if CHIP_SYSTEM_CONFIG_POSIX_LOCKING
     mHandleSelectThread = PTHREAD_NULL;

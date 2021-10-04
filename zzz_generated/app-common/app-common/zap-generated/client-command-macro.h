@@ -285,37 +285,16 @@
                                                                                                                                    \
                               ZCL_IDENTIFY_QUERY_COMMAND_ID, "", );
 
-/** @brief Command description for EZModeInvoke
- *
- * Command: EZModeInvoke
- * @param action BITMAP8
- */
-#define emberAfFillCommandIdentifyClusterEZModeInvoke(action)                                                                      \
-    emberAfFillExternalBuffer(mask,                                                                                                \
-                                                                                                                                   \
-                              ZCL_EZ_MODE_INVOKE_COMMAND_ID, "u", action);
-
-/** @brief Command description for UpdateCommissionState
- *
- * Command: UpdateCommissionState
- * @param action ENUM8
- * @param commissionStateMask BITMAP8
- */
-#define emberAfFillCommandIdentifyClusterUpdateCommissionState(action, commissionStateMask)                                        \
-    emberAfFillExternalBuffer(mask,                                                                                                \
-                                                                                                                                   \
-                              ZCL_UPDATE_COMMISSION_STATE_COMMAND_ID, "uu", action, commissionStateMask);
-
 /** @brief Command description for TriggerEffect
  *
  * Command: TriggerEffect
- * @param effectId IdentifyEffectIdentifier
+ * @param effectIdentifier IdentifyEffectIdentifier
  * @param effectVariant IdentifyEffectVariant
  */
-#define emberAfFillCommandIdentifyClusterTriggerEffect(effectId, effectVariant)                                                    \
+#define emberAfFillCommandIdentifyClusterTriggerEffect(effectIdentifier, effectVariant)                                            \
     emberAfFillExternalBuffer(mask,                                                                                                \
                                                                                                                                    \
-                              ZCL_TRIGGER_EFFECT_COMMAND_ID, "uu", effectId, effectVariant);
+                              ZCL_TRIGGER_EFFECT_COMMAND_ID, "uu", effectIdentifier, effectVariant);
 
 /** @brief Command description for AddGroup
  *
@@ -1733,21 +1712,20 @@
  * Command: QueryImage
  * @param vendorId INT16U
  * @param productId INT16U
- * @param imageType INT16U
  * @param hardwareVersion INT16U
- * @param currentVersion INT32U
+ * @param softwareVersion INT32U
  * @param protocolsSupported OTADownloadProtocol
  * @param location CHAR_STRING
  * @param requestorCanConsent BOOLEAN
  * @param metadataForProvider OCTET_STRING
  */
 #define emberAfFillCommandOTA                                                                                                      \
-    Software Update ProviderClusterQueryImage(vendorId, productId, imageType, hardwareVersion, currentVersion, protocolsSupported, \
-                                              location, requestorCanConsent, metadataForProvider)                                  \
+    Software Update ProviderClusterQueryImage(vendorId, productId, hardwareVersion, softwareVersion, protocolsSupported, location, \
+                                              requestorCanConsent, metadataForProvider)                                            \
         emberAfFillExternalBuffer(mask,                                                                                            \
                                                                                                                                    \
-                                  ZCL_QUERY_IMAGE_COMMAND_ID, "uuuuuuuuu", vendorId, productId, imageType, hardwareVersion,        \
-                                  currentVersion, protocolsSupported, location, requestorCanConsent, metadataForProvider);
+                                  ZCL_QUERY_IMAGE_COMMAND_ID, "uuuuuuuu", vendorId, productId, hardwareVersion, softwareVersion,   \
+                                  protocolsSupported, location, requestorCanConsent, metadataForProvider);
 
 /** @brief Command description for ApplyUpdateRequest
  *
@@ -1765,13 +1743,13 @@
  *
  * Command: NotifyUpdateApplied
  * @param updateToken OCTET_STRING
- * @param currentVersion INT32U
+ * @param softwareVersion INT32U
  */
 #define emberAfFillCommandOTA                                                                                                      \
-    Software Update ProviderClusterNotifyUpdateApplied(updateToken, currentVersion)                                                \
+    Software Update ProviderClusterNotifyUpdateApplied(updateToken, softwareVersion)                                               \
         emberAfFillExternalBuffer(mask,                                                                                            \
                                                                                                                                    \
-                                  ZCL_NOTIFY_UPDATE_APPLIED_COMMAND_ID, "uu", updateToken, currentVersion);
+                                  ZCL_NOTIFY_UPDATE_APPLIED_COMMAND_ID, "uu", updateToken, softwareVersion);
 
 /** @brief Command description for QueryImageResponse
  *
@@ -1780,17 +1758,18 @@
  * @param delayedActionTime INT32U
  * @param imageURI CHAR_STRING
  * @param softwareVersion INT32U
+ * @param softwareVersionString CHAR_STRING
  * @param updateToken OCTET_STRING
  * @param userConsentNeeded BOOLEAN
  * @param metadataForRequestor OCTET_STRING
  */
 #define emberAfFillCommandOTA                                                                                                      \
-    Software Update ProviderClusterQueryImageResponse(status, delayedActionTime, imageURI, softwareVersion, updateToken,           \
-                                                      userConsentNeeded, metadataForRequestor)                                     \
+    Software Update ProviderClusterQueryImageResponse(status, delayedActionTime, imageURI, softwareVersion, softwareVersionString, \
+                                                      updateToken, userConsentNeeded, metadataForRequestor)                        \
         emberAfFillExternalBuffer(mask,                                                                                            \
                                                                                                                                    \
-                                  ZCL_QUERY_IMAGE_RESPONSE_COMMAND_ID, "uuuuuuu", status, delayedActionTime, imageURI,             \
-                                  softwareVersion, updateToken, userConsentNeeded, metadataForRequestor);
+                                  ZCL_QUERY_IMAGE_RESPONSE_COMMAND_ID, "uuuuuuuu", status, delayedActionTime, imageURI,            \
+                                  softwareVersion, softwareVersionString, updateToken, userConsentNeeded, metadataForRequestor);
 
 /** @brief Command description for ApplyUpdateRequestResponse
  *
@@ -1807,16 +1786,16 @@
 /** @brief Command description for AnnounceOtaProvider
  *
  * Command: AnnounceOtaProvider
- * @param serverLocation OCTET_STRING
+ * @param providerLocation OCTET_STRING
  * @param vendorId INT16U
  * @param announcementReason OTAAnnouncementReason
  * @param metadataForNode OCTET_STRING
  */
 #define emberAfFillCommandOTA                                                                                                      \
-    Software Update RequestorClusterAnnounceOtaProvider(serverLocation, vendorId, announcementReason, metadataForNode)             \
+    Software Update RequestorClusterAnnounceOtaProvider(providerLocation, vendorId, announcementReason, metadataForNode)           \
         emberAfFillExternalBuffer(mask,                                                                                            \
                                                                                                                                    \
-                                  ZCL_ANNOUNCE_OTA_PROVIDER_COMMAND_ID, "uuuu", serverLocation, vendorId, announcementReason,      \
+                                  ZCL_ANNOUNCE_OTA_PROVIDER_COMMAND_ID, "uuuu", providerLocation, vendorId, announcementReason,    \
                                   metadataForNode);
 
 /** @brief Command description for ArmFailSafe
@@ -2245,6 +2224,51 @@
                                                                                                                                    \
                               ZCL_REVOKE_COMMISSIONING_COMMAND_ID, "", );
 
+/** @brief Command description for AttestationRequest
+ *
+ * Command: AttestationRequest
+ * @param AttestationNonce OCTET_STRING
+ */
+#define emberAfFillCommandOperational                                                                                              \
+    CredentialsClusterAttestationRequest(AttestationNonce)                                                                         \
+        emberAfFillExternalBuffer(mask,                                                                                            \
+                                                                                                                                   \
+                                  ZCL_ATTESTATION_REQUEST_COMMAND_ID, "u", AttestationNonce);
+
+/** @brief Command description for AttestationResponse
+ *
+ * Command: AttestationResponse
+ * @param AttestationElements OCTET_STRING
+ * @param Signature OCTET_STRING
+ */
+#define emberAfFillCommandOperational                                                                                              \
+    CredentialsClusterAttestationResponse(AttestationElements, Signature)                                                          \
+        emberAfFillExternalBuffer(mask,                                                                                            \
+                                                                                                                                   \
+                                  ZCL_ATTESTATION_RESPONSE_COMMAND_ID, "uu", AttestationElements, Signature);
+
+/** @brief Command description for CertificateChainRequest
+ *
+ * Command: CertificateChainRequest
+ * @param CertificateType INT8U
+ */
+#define emberAfFillCommandOperational                                                                                              \
+    CredentialsClusterCertificateChainRequest(CertificateType)                                                                     \
+        emberAfFillExternalBuffer(mask,                                                                                            \
+                                                                                                                                   \
+                                  ZCL_CERTIFICATE_CHAIN_REQUEST_COMMAND_ID, "u", CertificateType);
+
+/** @brief Command description for CertificateChainResponse
+ *
+ * Command: CertificateChainResponse
+ * @param Certificate OCTET_STRING
+ */
+#define emberAfFillCommandOperational                                                                                              \
+    CredentialsClusterCertificateChainResponse(Certificate)                                                                        \
+        emberAfFillExternalBuffer(mask,                                                                                            \
+                                                                                                                                   \
+                                  ZCL_CERTIFICATE_CHAIN_RESPONSE_COMMAND_ID, "u", Certificate);
+
 /** @brief Command description for OpCSRRequest
  *
  * Command: OpCSRRequest
@@ -2270,26 +2294,29 @@
 /** @brief Command description for AddNOC
  *
  * Command: AddNOC
- * @param NOCArray OCTET_STRING
+ * @param NOCValue OCTET_STRING
+ * @param ICACValue OCTET_STRING
  * @param IPKValue OCTET_STRING
  * @param CaseAdminNode NODE_ID
  * @param AdminVendorId INT16U
  */
 #define emberAfFillCommandOperational                                                                                              \
-    CredentialsClusterAddNOC(NOCArray, IPKValue, CaseAdminNode, AdminVendorId)                                                     \
+    CredentialsClusterAddNOC(NOCValue, ICACValue, IPKValue, CaseAdminNode, AdminVendorId)                                          \
         emberAfFillExternalBuffer(mask,                                                                                            \
                                                                                                                                    \
-                                  ZCL_ADD_NOC_COMMAND_ID, "uuuu", NOCArray, IPKValue, CaseAdminNode, AdminVendorId);
+                                  ZCL_ADD_NOC_COMMAND_ID, "uuuuu", NOCValue, ICACValue, IPKValue, CaseAdminNode, AdminVendorId);
 
 /** @brief Command description for UpdateNOC
  *
  * Command: UpdateNOC
- * @param NOCArray OCTET_STRING
+ * @param NOCValue OCTET_STRING
+ * @param ICACValue OCTET_STRING
  */
 #define emberAfFillCommandOperational                                                                                              \
-    CredentialsClusterUpdateNOC(NOCArray) emberAfFillExternalBuffer(mask,                                                          \
+    CredentialsClusterUpdateNOC(NOCValue, ICACValue)                                                                               \
+        emberAfFillExternalBuffer(mask,                                                                                            \
                                                                                                                                    \
-                                                                    ZCL_UPDATE_NOC_COMMAND_ID, "u", NOCArray);
+                                  ZCL_UPDATE_NOC_COMMAND_ID, "uu", NOCValue, ICACValue);
 
 /** @brief Command description for NOCResponse
  *

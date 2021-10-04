@@ -103,7 +103,7 @@ CHIP_ERROR PythonInteractionModelDelegate::WriteResponseStatus(const app::WriteC
 }
 
 void PythonInteractionModelDelegate::OnReportData(const app::ReadClient * apReadClient, const app::ClusterInfo & aPath,
-                                                  TLV::TLVReader * apData, Protocols::InteractionModel::ProtocolCode status)
+                                                  TLV::TLVReader * apData, Protocols::InteractionModel::Status status)
 {
     if (onReportDataFunct != nullptr)
     {
@@ -125,9 +125,9 @@ void PythonInteractionModelDelegate::OnReportData(const app::ReadClient * apRead
         if (CHIP_NO_ERROR == err)
         {
             AttributePath path{ .endpointId = aPath.mEndpointId, .clusterId = aPath.mClusterId, .fieldId = aPath.mFieldId };
-            onReportDataFunct(apReadClient->GetExchangeContext()->GetSecureSession().GetPeerNodeId(),
-                              apReadClient->GetAppIdentifier(), &path, sizeof(path), writerBuffer, writer.GetLengthWritten(),
-                              to_underlying(status));
+            onReportDataFunct(apReadClient->GetPeerNodeId(), apReadClient->GetAppIdentifier(),
+                              /* TODO: Use real SubscriptionId */ apReadClient->IsSubscriptionType() ? 1 : 0, &path, sizeof(path),
+                              writerBuffer, writer.GetLengthWritten(), to_underlying(status));
         }
         else
         {

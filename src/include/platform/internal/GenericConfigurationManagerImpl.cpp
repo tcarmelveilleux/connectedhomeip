@@ -56,9 +56,7 @@ CHIP_ERROR GenericConfigurationManagerImpl<ImplClass>::_Init()
     mFlags.ClearAll()
         .Set(Flags::kIsServiceProvisioned, Impl()->ConfigValueExists(ImplClass::kConfigKey_ServiceConfig))
         .Set(Flags::kIsMemberOfFabric, Impl()->ConfigValueExists(ImplClass::kConfigKey_FabricId))
-        .Set(Flags::kIsPairedToAccount, Impl()->ConfigValueExists(ImplClass::kConfigKey_PairedAccountId))
-        .Set(Flags::kOperationalDeviceCredentialsProvisioned,
-             Impl()->ConfigValueExists(ImplClass::kConfigKey_OperationalDeviceCert));
+        .Set(Flags::kIsPairedToAccount, Impl()->ConfigValueExists(ImplClass::kConfigKey_PairedAccountId));
 
 #if CHIP_ENABLE_ROTATING_DEVICE_ID
     mLifetimePersistedCounter.Init(CHIP_CONFIG_LIFETIIME_PERSISTED_COUNTER_KEY);
@@ -431,138 +429,27 @@ CHIP_ERROR GenericConfigurationManagerImpl<ImplClass>::_StoreManufacturerDeviceP
 template <class ImplClass>
 CHIP_ERROR GenericConfigurationManagerImpl<ImplClass>::_GetDeviceId(uint64_t & deviceId)
 {
-    CHIP_ERROR err;
-
-#if CHIP_DEVICE_CONFIG_ENABLE_JUST_IN_TIME_PROVISIONING
-    if (!UseManufacturerCredentialsAsOperational())
-    {
-        err = Impl()->ReadConfigValue(ImplClass::kConfigKey_OperationalDeviceId, deviceId);
-    }
-    else
-#endif
-    {
-        err = Impl()->_GetManufacturerDeviceId(deviceId);
-    }
-
-    return err;
+    return Impl()->_GetManufacturerDeviceId(deviceId);
 }
 
 template <class ImplClass>
 CHIP_ERROR GenericConfigurationManagerImpl<ImplClass>::_GetDeviceCertificate(uint8_t * buf, size_t bufSize, size_t & certLen)
 {
-    CHIP_ERROR err;
-
-#if CHIP_DEVICE_CONFIG_ENABLE_JUST_IN_TIME_PROVISIONING
-    if (!UseManufacturerCredentialsAsOperational())
-    {
-        err = Impl()->ReadConfigValueBin(ImplClass::kConfigKey_OperationalDeviceCert, buf, bufSize, certLen);
-    }
-    else
-#endif
-    {
-        err = Impl()->_GetManufacturerDeviceCertificate(buf, bufSize, certLen);
-    }
-
-    return err;
+    return Impl()->_GetManufacturerDeviceCertificate(buf, bufSize, certLen);
 }
 
 template <class ImplClass>
 CHIP_ERROR GenericConfigurationManagerImpl<ImplClass>::_GetDeviceIntermediateCACerts(uint8_t * buf, size_t bufSize,
                                                                                      size_t & certsLen)
 {
-    CHIP_ERROR err;
-
-#if CHIP_DEVICE_CONFIG_ENABLE_JUST_IN_TIME_PROVISIONING
-    if (!UseManufacturerCredentialsAsOperational())
-    {
-        err = Impl()->ReadConfigValueBin(ImplClass::kConfigKey_OperationalDeviceICACerts, buf, bufSize, certsLen);
-    }
-    else
-#endif
-    {
-        err = Impl()->_GetManufacturerDeviceIntermediateCACerts(buf, bufSize, certsLen);
-    }
-
-    return err;
+    return Impl()->_GetManufacturerDeviceIntermediateCACerts(buf, bufSize, certsLen);
 }
 
 template <class ImplClass>
 CHIP_ERROR GenericConfigurationManagerImpl<ImplClass>::_GetDevicePrivateKey(uint8_t * buf, size_t bufSize, size_t & keyLen)
 {
-    CHIP_ERROR err;
-
-#if CHIP_DEVICE_CONFIG_ENABLE_JUST_IN_TIME_PROVISIONING
-    if (!UseManufacturerCredentialsAsOperational())
-    {
-        err = Impl()->ReadConfigValueBin(ImplClass::kConfigKey_OperationalDevicePrivateKey, buf, bufSize, keyLen);
-    }
-    else
-#endif
-    {
-        err = Impl()->_GetManufacturerDevicePrivateKey(buf, bufSize, keyLen);
-    }
-
-    return err;
+    return Impl()->_GetManufacturerDevicePrivateKey(buf, bufSize, keyLen);
 }
-
-#if CHIP_DEVICE_CONFIG_ENABLE_JUST_IN_TIME_PROVISIONING
-
-template <class ImplClass>
-CHIP_ERROR GenericConfigurationManagerImpl<ImplClass>::_StoreDeviceId(uint64_t deviceId)
-{
-    return Impl()->WriteConfigValue(ImplClass::kConfigKey_OperationalDeviceId, deviceId);
-}
-
-template <class ImplClass>
-CHIP_ERROR GenericConfigurationManagerImpl<ImplClass>::_StoreDeviceCertificate(const uint8_t * cert, size_t certLen)
-{
-    return Impl()->WriteConfigValueBin(ImplClass::kConfigKey_OperationalDeviceCert, cert, certLen);
-}
-
-template <class ImplClass>
-CHIP_ERROR GenericConfigurationManagerImpl<ImplClass>::_StoreDeviceIntermediateCACerts(const uint8_t * certs, size_t certsLen)
-{
-    return Impl()->WriteConfigValueBin(ImplClass::kConfigKey_OperationalDeviceICACerts, certs, certsLen);
-}
-
-template <class ImplClass>
-CHIP_ERROR GenericConfigurationManagerImpl<ImplClass>::_StoreDevicePrivateKey(const uint8_t * key, size_t keyLen)
-{
-    return Impl()->WriteConfigValueBin(ImplClass::kConfigKey_OperationalDevicePrivateKey, key, keyLen);
-}
-
-template <class ImplClass>
-CHIP_ERROR GenericConfigurationManagerImpl<ImplClass>::_ClearOperationalDeviceCredentials(void)
-{
-    Impl()->ClearConfigValue(ImplClass::kConfigKey_OperationalDeviceId);
-    Impl()->ClearConfigValue(ImplClass::kConfigKey_OperationalDeviceCert);
-    Impl()->ClearConfigValue(ImplClass::kConfigKey_OperationalDeviceICACerts);
-    Impl()->ClearConfigValue(ImplClass::kConfigKey_OperationalDevicePrivateKey);
-
-    mFlags.Clear(Flags::kOperationalDeviceCredentialsProvisioned);
-
-    return CHIP_NO_ERROR;
-}
-
-template <class ImplClass>
-bool GenericConfigurationManagerImpl<ImplClass>::_OperationalDeviceCredentialsProvisioned()
-{
-    return mFlags.Has(Flags::kOperationalDeviceCredentialsProvisioned);
-}
-
-template <class ImplClass>
-bool GenericConfigurationManagerImpl<ImplClass>::UseManufacturerCredentialsAsOperational()
-{
-    return mFlags.Has(Flags::kUseManufacturerCredentialsAsOperational);
-}
-
-template <class ImplClass>
-void GenericConfigurationManagerImpl<ImplClass>::_UseManufacturerCredentialsAsOperational(bool val)
-{
-    mFlags.Set(Flags::kUseManufacturerCredentialsAsOperational, val);
-}
-
-#endif // CHIP_DEVICE_CONFIG_ENABLE_JUST_IN_TIME_PROVISIONING
 
 template <class ImplClass>
 CHIP_ERROR GenericConfigurationManagerImpl<ImplClass>::_GetSetupPinCode(uint32_t & setupPinCode)
@@ -781,11 +668,14 @@ exit:
 template <class ImplClass>
 CHIP_ERROR GenericConfigurationManagerImpl<ImplClass>::_ClearServiceProvisioningData()
 {
+    CHIP_ERROR err = CHIP_NO_ERROR;
+
     Impl()->ClearConfigValue(ImplClass::kConfigKey_ServiceId);
     Impl()->ClearConfigValue(ImplClass::kConfigKey_ServiceConfig);
     Impl()->ClearConfigValue(ImplClass::kConfigKey_PairedAccountId);
 
     // TODO: Move these behaviors out of configuration manager.
+    // Also, should the flags be cleared even if the corresponding notification fails to post?
 
     // If necessary, post an event alerting other subsystems to the change in
     // the account pairing state.
@@ -794,7 +684,7 @@ CHIP_ERROR GenericConfigurationManagerImpl<ImplClass>::_ClearServiceProvisioning
         ChipDeviceEvent event;
         event.Type                                   = DeviceEventType::kAccountPairingChange;
         event.AccountPairingChange.IsPairedToAccount = false;
-        PlatformMgr().PostEvent(&event);
+        err                                          = PlatformMgr().PostEvent(&event);
     }
 
     // If necessary, post an event alerting other subsystems to the change in
@@ -805,13 +695,17 @@ CHIP_ERROR GenericConfigurationManagerImpl<ImplClass>::_ClearServiceProvisioning
         event.Type                                           = DeviceEventType::kServiceProvisioningChange;
         event.ServiceProvisioningChange.IsServiceProvisioned = false;
         event.ServiceProvisioningChange.ServiceConfigUpdated = false;
-        PlatformMgr().PostEvent(&event);
+        CHIP_ERROR postError                                 = PlatformMgr().PostEvent(&event);
+        if (err == CHIP_NO_ERROR)
+        {
+            err = postError;
+        }
     }
 
     mFlags.Clear(Flags::kIsServiceProvisioned);
     mFlags.Clear(Flags::kIsPairedToAccount);
 
-    return CHIP_NO_ERROR;
+    return err;
 }
 
 template <class ImplClass>
@@ -916,9 +810,6 @@ bool GenericConfigurationManagerImpl<ImplClass>::_IsFullyProvisioned()
 #endif
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
         ConnectivityMgr().IsThreadProvisioned() &&
-#endif
-#if CHIP_DEVICE_CONFIG_ENABLE_JUST_IN_TIME_PROVISIONING
-        (!UseManufacturerCredentialsAsOperational() && _OperationalDeviceCredentialsProvisioned()) &&
 #endif
         // TODO: Add checks regarding fabric membership (IsMemberOfFabric()) and account pairing (IsPairedToAccount()),
         // when functionalities will be implemented.

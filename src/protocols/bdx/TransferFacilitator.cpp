@@ -37,9 +37,10 @@ CHIP_ERROR TransferFacilitator::OnMessageReceived(chip::Messaging::ExchangeConte
         mExchangeCtx = ec;
     }
 
-    ChipLogDetail(BDX, "%s: message 0x%x protocol %u", __FUNCTION__, static_cast<uint8_t>(payloadHeader.GetMessageType()),
-                  payloadHeader.GetProtocolID().GetProtocolId());
-    CHIP_ERROR err = mTransfer.HandleMessageReceived(payloadHeader, std::move(payload), System::Clock::GetMonotonicMilliseconds());
+    ChipLogDetail(BDX, "%s: message " ChipLogFormatMessageType " protocol " ChipLogFormatProtocolId, __FUNCTION__,
+                  payloadHeader.GetMessageType(), ChipLogValueProtocolId(payloadHeader.GetProtocolID()));
+    CHIP_ERROR err =
+        mTransfer.HandleMessageReceived(payloadHeader, std::move(payload), System::SystemClock().GetMonotonicMilliseconds());
     if (err != CHIP_NO_ERROR)
     {
         ChipLogError(BDX, "failed to handle message: %s", ErrorStr(err));
@@ -56,7 +57,7 @@ CHIP_ERROR TransferFacilitator::OnMessageReceived(chip::Messaging::ExchangeConte
 
 void TransferFacilitator::OnResponseTimeout(Messaging::ExchangeContext * ec)
 {
-    ChipLogError(BDX, "%s, ec: %d", __FUNCTION__, ec->GetExchangeId());
+    ChipLogError(BDX, "%s, ec: " ChipLogFormatExchange, __FUNCTION__, ChipLogValueExchange(ec));
     mExchangeCtx = nullptr;
     mTransfer.Reset();
 }
@@ -70,7 +71,7 @@ void TransferFacilitator::PollTimerHandler(chip::System::Layer * systemLayer, vo
 void TransferFacilitator::PollForOutput()
 {
     TransferSession::OutputEvent outEvent;
-    mTransfer.PollOutput(outEvent, System::Clock::GetMonotonicMilliseconds());
+    mTransfer.PollOutput(outEvent, System::SystemClock().GetMonotonicMilliseconds());
     HandleTransferSessionOutput(outEvent);
 
     VerifyOrReturn(mSystemLayer != nullptr, ChipLogError(BDX, "%s mSystemLayer is null", __FUNCTION__));

@@ -32,7 +32,7 @@
 #include <protocols/secure_channel/PASESession.h>
 #include <system/SystemPacketBuffer.h>
 #include <system/TLVPacketBufferBackingStore.h>
-#include <transport/SecureSessionMgr.h>
+#include <transport/SessionManager.h>
 #include <transport/raw/UDP.h>
 #include <transport/raw/tests/NetworkTestHelpers.h>
 
@@ -109,7 +109,7 @@ void TestWriteInteraction::AddAttributeStatus(nlTestSuite * apSuite, void * apCo
     attributePathParams.mFlags.Set(AttributePathParams::Flags::kFieldIdValid);
 
     err = aWriteHandler.AddAttributeStatusCode(attributePathParams, Protocols::SecureChannel::GeneralStatusCode::kSuccess,
-                                               Protocols::SecureChannel::Id, Protocols::InteractionModel::ProtocolCode::Success);
+                                               Protocols::SecureChannel::Id, Protocols::InteractionModel::Status::Success);
     NL_TEST_ASSERT(apSuite, err == CHIP_NO_ERROR);
 }
 
@@ -216,9 +216,8 @@ void TestWriteInteraction::TestWriteClient(nlTestSuite * apSuite, void * apConte
     NL_TEST_ASSERT(apSuite, err == CHIP_NO_ERROR);
     AddAttributeDataElement(apSuite, apContext, writeClientHandle);
 
-    SessionHandle session = ctx.GetSessionLocalToPeer();
-    err                   = writeClientHandle.SendWriteRequest(ctx.GetDestinationNodeId(), ctx.GetFabricIndex(),
-                                             Optional<SessionHandle>::Value(session));
+    SessionHandle session = ctx.GetSessionBobToAlice();
+    err = writeClientHandle.SendWriteRequest(ctx.GetAliceNodeId(), ctx.GetFabricIndex(), Optional<SessionHandle>::Value(session));
     NL_TEST_ASSERT(apSuite, err == CHIP_NO_ERROR);
     // The internal WriteClient should be nullptr once we SendWriteRequest.
     NL_TEST_ASSERT(apSuite, nullptr == writeClientHandle.mpWriteClient);
@@ -249,7 +248,7 @@ void TestWriteInteraction::TestWriteHandler(nlTestSuite * apSuite, void * apCont
     GenerateWriteRequest(apSuite, apContext, buf);
 
     TestExchangeDelegate delegate;
-    Messaging::ExchangeContext * exchange = ctx.NewExchangeToLocal(&delegate);
+    Messaging::ExchangeContext * exchange = ctx.NewExchangeToBob(&delegate);
     err                                   = writeHandler.OnWriteRequest(exchange, std::move(buf));
     NL_TEST_ASSERT(apSuite, err == CHIP_NO_ERROR);
 
@@ -263,7 +262,7 @@ CHIP_ERROR WriteSingleClusterData(ClusterInfo & aClusterInfo, TLV::TLVReader & a
         AttributePathParams(aClusterInfo.mNodeId, aClusterInfo.mEndpointId, aClusterInfo.mClusterId, aClusterInfo.mFieldId,
                             aClusterInfo.mListIndex, AttributePathParams::Flags::kFieldIdValid),
         Protocols::SecureChannel::GeneralStatusCode::kSuccess, Protocols::SecureChannel::Id,
-        Protocols::InteractionModel::ProtocolCode::Success);
+        Protocols::InteractionModel::Status::Success);
 }
 
 class RoundtripDelegate : public chip::app::InteractionModelDelegate
@@ -305,9 +304,9 @@ void TestWriteInteraction::TestWriteRoundtrip(nlTestSuite * apSuite, void * apCo
 
     NL_TEST_ASSERT(apSuite, !delegate.mGotResponse);
 
-    SessionHandle session = ctx.GetSessionLocalToPeer();
+    SessionHandle session = ctx.GetSessionBobToAlice();
 
-    err = writeClient.SendWriteRequest(ctx.GetDestinationNodeId(), ctx.GetFabricIndex(), Optional<SessionHandle>::Value(session));
+    err = writeClient.SendWriteRequest(ctx.GetAliceNodeId(), ctx.GetFabricIndex(), Optional<SessionHandle>::Value(session));
     NL_TEST_ASSERT(apSuite, err == CHIP_NO_ERROR);
 
     NL_TEST_ASSERT(apSuite, delegate.mGotResponse);
@@ -361,7 +360,7 @@ int Initialize(void * aContext)
     auto * ctx = static_cast<TestContext *>(aContext);
     VerifyOrReturnError(ctx->Init(&sSuite, &gTransportManager, &gIOContext) == CHIP_NO_ERROR, FAILURE);
 
-    gTransportManager.SetSecureSessionMgr(&ctx->GetSecureSessionManager());
+    gTransportManager.SetSessionManager(&ctx->GetSecureSessionManager());
     return SUCCESS;
 }
 

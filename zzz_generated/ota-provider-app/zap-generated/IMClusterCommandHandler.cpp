@@ -41,7 +41,7 @@ void ReportCommandUnsupported(Command * aCommandObj, EndpointId aEndpointId, Clu
                                             0, // GroupId
                                             aClusterId, aCommandId, (CommandPathFlags::kEndpointIdValid) };
     aCommandObj->AddStatusCode(returnStatusParam, Protocols::SecureChannel::GeneralStatusCode::kNotFound,
-                               Protocols::SecureChannel::Id, Protocols::InteractionModel::ProtocolCode::UnsupportedCommand);
+                               Protocols::SecureChannel::Id, Protocols::InteractionModel::Status::UnsupportedCommand);
     ChipLogError(Zcl, "Unknown command " ChipLogFormatMEI " for cluster " ChipLogFormatMEI, ChipLogValueMEI(aCommandId),
                  ChipLogValueMEI(aClusterId));
 }
@@ -49,7 +49,7 @@ void ReportCommandUnsupported(Command * aCommandObj, EndpointId aEndpointId, Clu
 
 // Cluster specific command parsing
 
-namespace clusters {
+namespace Clusters {
 
 namespace OtaSoftwareUpdateProvider {
 
@@ -68,7 +68,7 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
     {
         switch (aCommandId)
         {
-        case Clusters::OtaSoftwareUpdateProvider::Commands::Ids::ApplyUpdateRequest: {
+        case Commands::ApplyUpdateRequest::Id: {
             expectArgumentCount = 2;
             chip::ByteSpan updateToken;
             uint32_t newVersion;
@@ -131,10 +131,10 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
             }
             break;
         }
-        case Clusters::OtaSoftwareUpdateProvider::Commands::Ids::NotifyUpdateApplied: {
+        case Commands::NotifyUpdateApplied::Id: {
             expectArgumentCount = 2;
             chip::ByteSpan updateToken;
-            uint32_t currentVersion;
+            uint32_t softwareVersion;
             bool argExists[2];
 
             memset(argExists, 0, sizeof argExists);
@@ -168,7 +168,7 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
                     TLVUnpackError = aDataTlv.Get(updateToken);
                     break;
                 case 1:
-                    TLVUnpackError = aDataTlv.Get(currentVersion);
+                    TLVUnpackError = aDataTlv.Get(softwareVersion);
                     break;
                 default:
                     // Unsupported tag, ignore it.
@@ -190,22 +190,21 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
             if (CHIP_NO_ERROR == TLVError && CHIP_NO_ERROR == TLVUnpackError && 2 == validArgumentCount)
             {
                 wasHandled = emberAfOtaSoftwareUpdateProviderClusterNotifyUpdateAppliedCallback(aEndpointId, apCommandObj,
-                                                                                                updateToken, currentVersion);
+                                                                                                updateToken, softwareVersion);
             }
             break;
         }
-        case Clusters::OtaSoftwareUpdateProvider::Commands::Ids::QueryImage: {
-            expectArgumentCount = 9;
+        case Commands::QueryImage::Id: {
+            expectArgumentCount = 8;
             uint16_t vendorId;
             uint16_t productId;
-            uint16_t imageType;
             uint16_t hardwareVersion;
-            uint32_t currentVersion;
+            uint32_t softwareVersion;
             uint8_t protocolsSupported;
             const uint8_t * location;
             bool requestorCanConsent;
             chip::ByteSpan metadataForProvider;
-            bool argExists[9];
+            bool argExists[8];
 
             memset(argExists, 0, sizeof argExists);
 
@@ -218,7 +217,7 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
                     continue;
                 }
                 currentDecodeTagId = TLV::TagNumFromTag(aDataTlv.GetTag());
-                if (currentDecodeTagId < 9)
+                if (currentDecodeTagId < 8)
                 {
                     if (argExists[currentDecodeTagId])
                     {
@@ -241,25 +240,22 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
                     TLVUnpackError = aDataTlv.Get(productId);
                     break;
                 case 2:
-                    TLVUnpackError = aDataTlv.Get(imageType);
-                    break;
-                case 3:
                     TLVUnpackError = aDataTlv.Get(hardwareVersion);
                     break;
-                case 4:
-                    TLVUnpackError = aDataTlv.Get(currentVersion);
+                case 3:
+                    TLVUnpackError = aDataTlv.Get(softwareVersion);
                     break;
-                case 5:
+                case 4:
                     TLVUnpackError = aDataTlv.Get(protocolsSupported);
                     break;
-                case 6:
+                case 5:
                     // TODO(#5542): The cluster handlers should accept a ByteSpan for all string types.
                     TLVUnpackError = aDataTlv.GetDataPtr(location);
                     break;
-                case 7:
+                case 6:
                     TLVUnpackError = aDataTlv.Get(requestorCanConsent);
                     break;
-                case 8:
+                case 7:
                     TLVUnpackError = aDataTlv.Get(metadataForProvider);
                     break;
                 default:
@@ -279,17 +275,17 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
                 TLVError = CHIP_NO_ERROR;
             }
 
-            if (CHIP_NO_ERROR == TLVError && CHIP_NO_ERROR == TLVUnpackError && 9 == validArgumentCount)
+            if (CHIP_NO_ERROR == TLVError && CHIP_NO_ERROR == TLVUnpackError && 8 == validArgumentCount)
             {
                 wasHandled = emberAfOtaSoftwareUpdateProviderClusterQueryImageCallback(
-                    aEndpointId, apCommandObj, vendorId, productId, imageType, hardwareVersion, currentVersion, protocolsSupported,
+                    aEndpointId, apCommandObj, vendorId, productId, hardwareVersion, softwareVersion, protocolsSupported,
                     const_cast<uint8_t *>(location), requestorCanConsent, metadataForProvider);
             }
             break;
         }
         default: {
             // Unrecognized command ID, error status will apply.
-            ReportCommandUnsupported(apCommandObj, aEndpointId, Clusters::OtaSoftwareUpdateProvider::Id, aCommandId);
+            ReportCommandUnsupported(apCommandObj, aEndpointId, OtaSoftwareUpdateProvider::Id, aCommandId);
             return;
         }
         }
@@ -299,10 +295,9 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
     {
         CommandPathParams returnStatusParam = { aEndpointId,
                                                 0, // GroupId
-                                                Clusters::OtaSoftwareUpdateProvider::Id, aCommandId,
-                                                (CommandPathFlags::kEndpointIdValid) };
+                                                OtaSoftwareUpdateProvider::Id, aCommandId, (CommandPathFlags::kEndpointIdValid) };
         apCommandObj->AddStatusCode(returnStatusParam, Protocols::SecureChannel::GeneralStatusCode::kBadRequest,
-                                    Protocols::SecureChannel::Id, Protocols::InteractionModel::ProtocolCode::InvalidCommand);
+                                    Protocols::SecureChannel::Id, Protocols::InteractionModel::Status::InvalidCommand);
         ChipLogProgress(Zcl,
                         "Failed to dispatch command, %" PRIu32 "/%" PRIu32 " arguments parsed, TLVError=%" CHIP_ERROR_FORMAT
                         ", UnpackError=%" CHIP_ERROR_FORMAT " (last decoded tag = %" PRIu32,
@@ -333,13 +328,14 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
     {
         switch (aCommandId)
         {
-        case Clusters::OperationalCredentials::Commands::Ids::AddNOC: {
-            expectArgumentCount = 4;
-            chip::ByteSpan NOCArray;
+        case Commands::AddNOC::Id: {
+            expectArgumentCount = 5;
+            chip::ByteSpan NOCValue;
+            chip::ByteSpan ICACValue;
             chip::ByteSpan IPKValue;
             chip::NodeId CaseAdminNode;
             uint16_t AdminVendorId;
-            bool argExists[4];
+            bool argExists[5];
 
             memset(argExists, 0, sizeof argExists);
 
@@ -352,7 +348,7 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
                     continue;
                 }
                 currentDecodeTagId = TLV::TagNumFromTag(aDataTlv.GetTag());
-                if (currentDecodeTagId < 4)
+                if (currentDecodeTagId < 5)
                 {
                     if (argExists[currentDecodeTagId])
                     {
@@ -369,15 +365,18 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
                 switch (currentDecodeTagId)
                 {
                 case 0:
-                    TLVUnpackError = aDataTlv.Get(NOCArray);
+                    TLVUnpackError = aDataTlv.Get(NOCValue);
                     break;
                 case 1:
-                    TLVUnpackError = aDataTlv.Get(IPKValue);
+                    TLVUnpackError = aDataTlv.Get(ICACValue);
                     break;
                 case 2:
-                    TLVUnpackError = aDataTlv.Get(CaseAdminNode);
+                    TLVUnpackError = aDataTlv.Get(IPKValue);
                     break;
                 case 3:
+                    TLVUnpackError = aDataTlv.Get(CaseAdminNode);
+                    break;
+                case 4:
                     TLVUnpackError = aDataTlv.Get(AdminVendorId);
                     break;
                 default:
@@ -397,14 +396,14 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
                 TLVError = CHIP_NO_ERROR;
             }
 
-            if (CHIP_NO_ERROR == TLVError && CHIP_NO_ERROR == TLVUnpackError && 4 == validArgumentCount)
+            if (CHIP_NO_ERROR == TLVError && CHIP_NO_ERROR == TLVUnpackError && 5 == validArgumentCount)
             {
-                wasHandled = emberAfOperationalCredentialsClusterAddNOCCallback(aEndpointId, apCommandObj, NOCArray, IPKValue,
-                                                                                CaseAdminNode, AdminVendorId);
+                wasHandled = emberAfOperationalCredentialsClusterAddNOCCallback(aEndpointId, apCommandObj, NOCValue, ICACValue,
+                                                                                IPKValue, CaseAdminNode, AdminVendorId);
             }
             break;
         }
-        case Clusters::OperationalCredentials::Commands::Ids::AddTrustedRootCertificate: {
+        case Commands::AddTrustedRootCertificate::Id: {
             expectArgumentCount = 1;
             chip::ByteSpan RootCertificate;
             bool argExists[1];
@@ -463,7 +462,125 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
             }
             break;
         }
-        case Clusters::OperationalCredentials::Commands::Ids::OpCSRRequest: {
+        case Commands::AttestationRequest::Id: {
+            expectArgumentCount = 1;
+            chip::ByteSpan AttestationNonce;
+            bool argExists[1];
+
+            memset(argExists, 0, sizeof argExists);
+
+            while ((TLVError = aDataTlv.Next()) == CHIP_NO_ERROR)
+            {
+                // Since call to aDataTlv.Next() is CHIP_NO_ERROR, the read head always points to an element.
+                // Skip this element if it is not a ContextTag, not consider it as an error if other values are valid.
+                if (!TLV::IsContextTag(aDataTlv.GetTag()))
+                {
+                    continue;
+                }
+                currentDecodeTagId = TLV::TagNumFromTag(aDataTlv.GetTag());
+                if (currentDecodeTagId < 1)
+                {
+                    if (argExists[currentDecodeTagId])
+                    {
+                        ChipLogProgress(Zcl, "Duplicate TLV tag %" PRIx32, TLV::TagNumFromTag(aDataTlv.GetTag()));
+                        TLVUnpackError = CHIP_ERROR_IM_MALFORMED_COMMAND_DATA_ELEMENT;
+                        break;
+                    }
+                    else
+                    {
+                        argExists[currentDecodeTagId] = true;
+                        validArgumentCount++;
+                    }
+                }
+                switch (currentDecodeTagId)
+                {
+                case 0:
+                    TLVUnpackError = aDataTlv.Get(AttestationNonce);
+                    break;
+                default:
+                    // Unsupported tag, ignore it.
+                    ChipLogProgress(Zcl, "Unknown TLV tag during processing.");
+                    break;
+                }
+                if (CHIP_NO_ERROR != TLVUnpackError)
+                {
+                    break;
+                }
+            }
+
+            if (CHIP_END_OF_TLV == TLVError)
+            {
+                // CHIP_END_OF_TLV means we have iterated all items in the structure, which is not a real error.
+                TLVError = CHIP_NO_ERROR;
+            }
+
+            if (CHIP_NO_ERROR == TLVError && CHIP_NO_ERROR == TLVUnpackError && 1 == validArgumentCount)
+            {
+                wasHandled =
+                    emberAfOperationalCredentialsClusterAttestationRequestCallback(aEndpointId, apCommandObj, AttestationNonce);
+            }
+            break;
+        }
+        case Commands::CertificateChainRequest::Id: {
+            expectArgumentCount = 1;
+            uint8_t CertificateType;
+            bool argExists[1];
+
+            memset(argExists, 0, sizeof argExists);
+
+            while ((TLVError = aDataTlv.Next()) == CHIP_NO_ERROR)
+            {
+                // Since call to aDataTlv.Next() is CHIP_NO_ERROR, the read head always points to an element.
+                // Skip this element if it is not a ContextTag, not consider it as an error if other values are valid.
+                if (!TLV::IsContextTag(aDataTlv.GetTag()))
+                {
+                    continue;
+                }
+                currentDecodeTagId = TLV::TagNumFromTag(aDataTlv.GetTag());
+                if (currentDecodeTagId < 1)
+                {
+                    if (argExists[currentDecodeTagId])
+                    {
+                        ChipLogProgress(Zcl, "Duplicate TLV tag %" PRIx32, TLV::TagNumFromTag(aDataTlv.GetTag()));
+                        TLVUnpackError = CHIP_ERROR_IM_MALFORMED_COMMAND_DATA_ELEMENT;
+                        break;
+                    }
+                    else
+                    {
+                        argExists[currentDecodeTagId] = true;
+                        validArgumentCount++;
+                    }
+                }
+                switch (currentDecodeTagId)
+                {
+                case 0:
+                    TLVUnpackError = aDataTlv.Get(CertificateType);
+                    break;
+                default:
+                    // Unsupported tag, ignore it.
+                    ChipLogProgress(Zcl, "Unknown TLV tag during processing.");
+                    break;
+                }
+                if (CHIP_NO_ERROR != TLVUnpackError)
+                {
+                    break;
+                }
+            }
+
+            if (CHIP_END_OF_TLV == TLVError)
+            {
+                // CHIP_END_OF_TLV means we have iterated all items in the structure, which is not a real error.
+                TLVError = CHIP_NO_ERROR;
+            }
+
+            if (CHIP_NO_ERROR == TLVError && CHIP_NO_ERROR == TLVUnpackError && 1 == validArgumentCount)
+            {
+                wasHandled =
+                    emberAfOperationalCredentialsClusterCertificateChainRequestCallback(aEndpointId, apCommandObj, CertificateType);
+            }
+            break;
+        }
+        case Commands::OpCSRRequest::Id: {
             expectArgumentCount = 1;
             chip::ByteSpan CSRNonce;
             bool argExists[1];
@@ -521,7 +638,7 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
             }
             break;
         }
-        case Clusters::OperationalCredentials::Commands::Ids::RemoveFabric: {
+        case Commands::RemoveFabric::Id: {
             expectArgumentCount = 1;
             uint8_t FabricIndex;
             bool argExists[1];
@@ -579,7 +696,7 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
             }
             break;
         }
-        case Clusters::OperationalCredentials::Commands::Ids::UpdateFabricLabel: {
+        case Commands::UpdateFabricLabel::Id: {
             expectArgumentCount = 1;
             const uint8_t * Label;
             bool argExists[1];
@@ -641,7 +758,7 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
         }
         default: {
             // Unrecognized command ID, error status will apply.
-            ReportCommandUnsupported(apCommandObj, aEndpointId, Clusters::OperationalCredentials::Id, aCommandId);
+            ReportCommandUnsupported(apCommandObj, aEndpointId, OperationalCredentials::Id, aCommandId);
             return;
         }
         }
@@ -651,10 +768,9 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
     {
         CommandPathParams returnStatusParam = { aEndpointId,
                                                 0, // GroupId
-                                                Clusters::OperationalCredentials::Id, aCommandId,
-                                                (CommandPathFlags::kEndpointIdValid) };
+                                                OperationalCredentials::Id, aCommandId, (CommandPathFlags::kEndpointIdValid) };
         apCommandObj->AddStatusCode(returnStatusParam, Protocols::SecureChannel::GeneralStatusCode::kBadRequest,
-                                    Protocols::SecureChannel::Id, Protocols::InteractionModel::ProtocolCode::InvalidCommand);
+                                    Protocols::SecureChannel::Id, Protocols::InteractionModel::Status::InvalidCommand);
         ChipLogProgress(Zcl,
                         "Failed to dispatch command, %" PRIu32 "/%" PRIu32 " arguments parsed, TLVError=%" CHIP_ERROR_FORMAT
                         ", UnpackError=%" CHIP_ERROR_FORMAT " (last decoded tag = %" PRIu32,
@@ -668,7 +784,7 @@ void DispatchServerCommand(CommandHandler * apCommandObj, CommandId aCommandId, 
 
 } // namespace OperationalCredentials
 
-} // namespace clusters
+} // namespace Clusters
 
 void DispatchSingleClusterCommand(ClusterId aClusterId, CommandId aCommandId, EndpointId aEndPointId, TLV::TLVReader & aReader,
                                   CommandHandler * apCommandObj)
@@ -681,10 +797,10 @@ void DispatchSingleClusterCommand(ClusterId aClusterId, CommandId aCommandId, En
     switch (aClusterId)
     {
     case Clusters::OtaSoftwareUpdateProvider::Id:
-        clusters::OtaSoftwareUpdateProvider::DispatchServerCommand(apCommandObj, aCommandId, aEndPointId, aReader);
+        Clusters::OtaSoftwareUpdateProvider::DispatchServerCommand(apCommandObj, aCommandId, aEndPointId, aReader);
         break;
     case Clusters::OperationalCredentials::Id:
-        clusters::OperationalCredentials::DispatchServerCommand(apCommandObj, aCommandId, aEndPointId, aReader);
+        Clusters::OperationalCredentials::DispatchServerCommand(apCommandObj, aCommandId, aEndPointId, aReader);
         break;
     default:
         // Unrecognized cluster ID, error status will apply.
@@ -692,7 +808,7 @@ void DispatchSingleClusterCommand(ClusterId aClusterId, CommandId aCommandId, En
                                                 0, // GroupId
                                                 aClusterId, aCommandId, (CommandPathFlags::kEndpointIdValid) };
         apCommandObj->AddStatusCode(returnStatusParam, Protocols::SecureChannel::GeneralStatusCode::kNotFound,
-                                    Protocols::SecureChannel::Id, Protocols::InteractionModel::ProtocolCode::InvalidCommand);
+                                    Protocols::SecureChannel::Id, Protocols::InteractionModel::Status::InvalidCommand);
         ChipLogError(Zcl, "Unknown cluster %" PRIx32, aClusterId);
         break;
     }
@@ -717,7 +833,7 @@ void DispatchSingleClusterResponseCommand(ClusterId aClusterId, CommandId aComma
                                                 0, // GroupId
                                                 aClusterId, aCommandId, (CommandPathFlags::kEndpointIdValid) };
         apCommandObj->AddStatusCode(returnStatusParam, Protocols::SecureChannel::GeneralStatusCode::kNotFound,
-                                    Protocols::SecureChannel::Id, Protocols::InteractionModel::ProtocolCode::InvalidCommand);
+                                    Protocols::SecureChannel::Id, Protocols::InteractionModel::Status::InvalidCommand);
         ChipLogError(Zcl, "Unknown cluster " ChipLogFormatMEI, ChipLogValueMEI(aClusterId));
         break;
     }

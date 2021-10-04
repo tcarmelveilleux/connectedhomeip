@@ -30,13 +30,7 @@
 namespace chip {
 namespace System {
 
-LayerLwIP::EventHandlerDelegate LayerImplLwIP::sSystemEventHandlerDelegate;
-
-LayerImplLwIP::LayerImplLwIP() : mHandlingTimerComplete(false), mEventDelegateList(nullptr)
-{
-    if (!sSystemEventHandlerDelegate.IsInitialized())
-        sSystemEventHandlerDelegate.Init(HandleSystemLayerEvent);
-}
+LayerImplLwIP::LayerImplLwIP() : mHandlingTimerComplete(false), mEventDelegateList(nullptr) {}
 
 CHIP_ERROR LayerImplLwIP::Init()
 {
@@ -44,7 +38,6 @@ CHIP_ERROR LayerImplLwIP::Init()
 
     RegisterLwIPErrorFormatter();
 
-    AddEventHandlerDelegate(sSystemEventHandlerDelegate);
     ReturnErrorOnFailure(mTimerList.Init());
 
     VerifyOrReturnError(mLayerState.Init(), CHIP_ERROR_INCORRECT_STATE);
@@ -100,7 +93,7 @@ CHIP_ERROR LayerImplLwIP::ScheduleWork(TimerCompleteCallback onComplete, void * 
     Timer * timer = Timer::New(*this, 0, onComplete, appState);
     VerifyOrReturnError(timer != nullptr, CHIP_ERROR_NO_MEMORY);
 
-    return PostEvent(*timer, chip::System::kEvent_ScheduleWork, 0);
+    return ScheduleLambda([timer] { timer->HandleComplete(); });
 }
 
 bool LayerLwIP::EventHandlerDelegate::IsInitialized() const
@@ -120,37 +113,24 @@ void LayerLwIP::EventHandlerDelegate::Prepend(const LayerLwIP::EventHandlerDeleg
     aDelegateList = this;
 }
 
-/**
- * This is the dispatch handler for system layer events.
- *
- *  @param[in,out]  aTarget     A pointer to the CHIP System Layer object making the post request.
- *  @param[in]      aEventType  The type of event to post.
- *  @param[in,out]  aArgument   The argument associated with the event to post.
- */
-CHIP_ERROR LayerImplLwIP::HandleSystemLayerEvent(Object & aTarget, EventType aEventType, uintptr_t aArgument)
-{
-    // Dispatch logic specific to the event type
-    switch (aEventType)
-    {
-    case kEvent_ReleaseObj:
-        aTarget.Release();
-        return CHIP_NO_ERROR;
-
-    case kEvent_ScheduleWork:
-        static_cast<Timer &>(aTarget).HandleComplete();
-        return CHIP_NO_ERROR;
-
-    default:
-        return CHIP_ERROR_UNEXPECTED_EVENT;
-    }
-}
-
 CHIP_ERROR LayerImplLwIP::AddEventHandlerDelegate(EventHandlerDelegate & aDelegate)
 {
     LwIPEventHandlerDelegate & lDelegate = static_cast<LwIPEventHandlerDelegate &>(aDelegate);
     VerifyOrReturnError(lDelegate.GetFunction() != nullptr, CHIP_ERROR_INVALID_ARGUMENT);
     lDelegate.Prepend(mEventDelegateList);
     return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR LayerImplLwIP::ScheduleLambdaBridge(const LambdaBridge & bridge)
+{
+    VerifyOrReturnError(IsInitialized(), CHIP_ERROR_INCORRECT_STATE);
+
+    CHIP_ERROR lReturn = PlatformEventing::ScheduleLambdaBridge(*this, bridge);
+    if (lReturn != CHIP_NO_ERROR)
+    {
+        ChipLogError(chipSystemLayer, "Failed to queue CHIP System Layer lambda event: %s", ErrorStr(lReturn));
+    }
+    return lReturn;
 }
 
 CHIP_ERROR LayerImplLwIP::PostEvent(Object & aTarget, EventType aEventType, uintptr_t aArgument)
@@ -275,7 +255,7 @@ CHIP_ERROR LayerImplLwIP::HandlePlatformTimer()
     // Expire each timer in turn until an unexpired timer is reached or the timerlist is emptied.  We set the current expiration
     // time outside the loop; that way timers set after the current tick will not be executed within this expiration window
     // regardless how long the processing of the currently expired timers took
-    Clock::MonotonicMilliseconds currentTime = Clock::GetMonotonicMilliseconds();
+    Clock::MonotonicMilliseconds currentTime = SystemClock().GetMonotonicMilliseconds();
 
     // limit the number of timers handled before the control is returned to the event queue.  The bound is similar to
     // (though not exactly same) as that on the sockets-based systems.
@@ -297,7 +277,7 @@ CHIP_ERROR LayerImplLwIP::HandlePlatformTimer()
         // timers still exist so restart the platform timer.
         uint64_t delayMilliseconds = 0ULL;
 
-        currentTime = Clock::GetMonotonicMilliseconds();
+        currentTime = SystemClock().GetMonotonicMilliseconds();
 
         // the next timer expires in the future, so set the delayMilliseconds to a non-zero value
         if (currentTime < mTimerList.Earliest()->mAwakenTime)

@@ -38,11 +38,8 @@ static_library("ESP32") {
     "KeyValueStoreManagerImpl.h",
     "Logging.cpp",
     "LwIPCoreLock.cpp",
-    "MdnsImpl.cpp",
     "PlatformManagerImpl.cpp",
     "PlatformManagerImpl.h",
-    "ServiceProvisioning.cpp",
-    "ServiceProvisioning.h",
     "SoftwareUpdateManagerImpl.h",
     "SystemTimeSupport.cpp",
     "bluedroid/BLEManagerImpl.cpp",
@@ -55,4 +52,21 @@ static_library("ESP32") {
     "${chip_root}/src/crypto",
     "${chip_root}/src/platform:platform_base",
   ]
+
+  if (chip_enable_wifi) {
+    sources += [
+      "ConnectivityManagerImpl_WiFi.cpp",
+      "WiFiProvisioning.cpp",
+      "WiFiProvisioning.h",
+    ]
+  }
+
+  if (chip_enable_openthread) {
+    sources += [
+      "../OpenThread/OpenThreadUtils.cpp",
+      "ESPThreadConfig.h",
+      "ThreadStackManagerImpl.cpp",
+      "ThreadStackManagerImpl.h",
+    ]
+  }
 }

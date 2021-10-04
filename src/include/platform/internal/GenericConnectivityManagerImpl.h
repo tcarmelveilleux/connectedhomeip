@@ -47,6 +47,13 @@ public:
     uint16_t _GetUserSelectedModeTimeout();
     void _SetUserSelectedModeTimeout(uint16_t val);
 
+    CHIP_ERROR _GetEthPacketRxCount(uint64_t & packetRxCount);
+    CHIP_ERROR _GetEthPacketTxCount(uint64_t & packetTxCount);
+    CHIP_ERROR _GetEthTxErrCount(uint64_t & txErrCount);
+    CHIP_ERROR _GetEthCollisionCount(uint64_t & collisionCount);
+    CHIP_ERROR _GetEthOverrunCount(uint64_t & overrunCount);
+    CHIP_ERROR _ResetEthNetworkDiagnosticsCounts();
+
 private:
     ImplClass * Impl() { return static_cast<ImplClass *>(this); }
 };
@@ -70,6 +77,42 @@ inline uint16_t GenericConnectivityManagerImpl<ImplClass>::_GetUserSelectedModeT
 template <class ImplClass>
 inline void GenericConnectivityManagerImpl<ImplClass>::_SetUserSelectedModeTimeout(uint16_t val)
 {}
+
+template <class ImplClass>
+inline CHIP_ERROR GenericConnectivityManagerImpl<ImplClass>::_GetEthPacketRxCount(uint64_t & packetRxCount)
+{
+    return CHIP_ERROR_UNSUPPORTED_CHIP_FEATURE;
+}
+
+template <class ImplClass>
+inline CHIP_ERROR GenericConnectivityManagerImpl<ImplClass>::_GetEthPacketTxCount(uint64_t & packetTxCount)
+{
+    return CHIP_ERROR_UNSUPPORTED_CHIP_FEATURE;
+}
+
+template <class ImplClass>
+inline CHIP_ERROR GenericConnectivityManagerImpl<ImplClass>::_GetEthTxErrCount(uint64_t & txErrCount)
+{
+    return CHIP_ERROR_UNSUPPORTED_CHIP_FEATURE;
+}
+
+template <class ImplClass>
+inline CHIP_ERROR GenericConnectivityManagerImpl<ImplClass>::_GetEthCollisionCount(uint64_t & collisionCount)
+{
+    return CHIP_ERROR_UNSUPPORTED_CHIP_FEATURE;
+}
+
+template <class ImplClass>
+inline CHIP_ERROR GenericConnectivityManagerImpl<ImplClass>::_GetEthOverrunCount(uint64_t & overrunCount)
+{
+    return CHIP_ERROR_UNSUPPORTED_CHIP_FEATURE;
+}
+
+template <class ImplClass>
+inline CHIP_ERROR GenericConnectivityManagerImpl<ImplClass>::_ResetEthNetworkDiagnosticsCounts()
+{
+    return CHIP_ERROR_UNSUPPORTED_CHIP_FEATURE;
+}
 
 } // namespace Internal
 } // namespace DeviceLayer

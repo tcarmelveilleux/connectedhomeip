@@ -51,11 +51,16 @@ enum class PairingNetworkType
 
 class PairingCommand : public Command,
                        public chip::Controller::DevicePairingDelegate,
-                       public chip::Controller::DeviceAddressUpdateDelegate
+                       public chip::Controller::DeviceAddressUpdateDelegate,
+                       public chip::Controller::DeviceDiscoveryDelegate
 {
 public:
-    PairingCommand(const char * commandName, PairingMode mode, PairingNetworkType networkType) :
-        Command(commandName), mPairingMode(mode), mNetworkType(networkType), mRemoteAddr{ IPAddress::Any, INET_NULL_INTERFACEID }
+    PairingCommand(const char * commandName, PairingMode mode, PairingNetworkType networkType,
+                   chip::Mdns::DiscoveryFilterType filterType = chip::Mdns::DiscoveryFilterType::kNone) :
+        Command(commandName),
+        mPairingMode(mode), mNetworkType(networkType),
+        mFilterType(filterType), mRemoteAddr{ IPAddress::Any, INET_NULL_INTERFACEID },
+        mOnDeviceConnectedCallback(OnDeviceConnectedFn, this), mOnDeviceConnectionFailureCallback(OnDeviceConnectionFailureFn, this)
     {
         switch (networkType)
         {
@@ -81,7 +86,6 @@ public:
             break;
         case PairingMode::QRCode:
         case PairingMode::ManualCode:
-            AddArgument("fabric-id", 0, UINT64_MAX, &mFabricId);
             AddArgument("payload", &mOnboardingPayload);
             break;
         case PairingMode::Ble:
@@ -90,6 +94,8 @@ public:
             AddArgument("discriminator", 0, 4096, &mDiscriminator);
             break;
         case PairingMode::OnNetwork:
+            AddArgument("setup-pin-code", 0, 134217727, &mSetupPINCode);
+            break;
         case PairingMode::SoftAP:
             AddArgument("fabric-id", 0, UINT64_MAX, &mFabricId);
             AddArgument("setup-pin-code", 0, 134217727, &mSetupPINCode);
@@ -110,6 +116,33 @@ public:
             AddArgument("discriminator", 0, 4096, &mDiscriminator);
             break;
         }
+
+        switch (filterType)
+        {
+        case chip::Mdns::DiscoveryFilterType::kNone:
+            break;
+        case chip::Mdns::DiscoveryFilterType::kShort:
+            AddArgument("discriminator", 0, 15, &mDiscoveryFilterCode);
+            break;
+        case chip::Mdns::DiscoveryFilterType::kLong:
+            AddArgument("discriminator", 0, 4096, &mDiscoveryFilterCode);
+            break;
+        case chip::Mdns::DiscoveryFilterType::kVendor:
+            AddArgument("vendor-id", 0, UINT16_MAX, &mDiscoveryFilterCode);
+            break;
+        case chip::Mdns::DiscoveryFilterType::kCompressedFabricId:
+            AddArgument("fabric-id", 0, UINT64_MAX, &mDiscoveryFilterCode);
+            break;
+        case chip::Mdns::DiscoveryFilterType::kCommissioningMode:
+        case chip::Mdns::DiscoveryFilterType::kCommissioner:
+            break;
+        case chip::Mdns::DiscoveryFilterType::kDeviceType:
+            AddArgument("device-type", 0, UINT16_MAX, &mDiscoveryFilterCode);
+            break;
+        case chip::Mdns::DiscoveryFilterType::kInstanceName:
+            AddArgument("name", &mDiscoveryFilterInstanceName);
+            break;
+        }
     }
 
     /////////// Command Interface /////////
@@ -123,6 +156,9 @@ public:
     void OnPairingDeleted(CHIP_ERROR error) override;
     void OnCommissioningComplete(NodeId deviceId, CHIP_ERROR error) override;
 
+    /////////// DeviceDiscoveryDelegate Interface /////////
+    void OnDiscoveredDevice(const chip::Mdns::DiscoveredNodeData & nodeData) override;
+
     /////////// DeviceAddressUpdateDelegate Interface /////////
     void OnAddressUpdateComplete(NodeId nodeId, CHIP_ERROR error) override;
 
@@ -134,13 +170,13 @@ public:
 private:
     CHIP_ERROR RunInternal(NodeId remoteId);
     CHIP_ERROR Pair(NodeId remoteId, PeerAddress address);
+    CHIP_ERROR PairWithMdns(NodeId remoteId);
     CHIP_ERROR PairWithQRCode(NodeId remoteId);
     CHIP_ERROR PairWithManualCode(NodeId remoteId);
     CHIP_ERROR PairWithCode(NodeId remoteId, chip::SetupPayload payload);
     CHIP_ERROR PairWithoutSecurity(NodeId remoteId, PeerAddress address);
     CHIP_ERROR Unpair(NodeId remoteId);
-    CHIP_ERROR OpenCommissioningWindow(NodeId remoteId, uint16_t timeout, uint16_t iteration, uint16_t discriminator,
-                                       uint8_t option);
+    CHIP_ERROR OpenCommissioningWindow();
 
     void InitCallbacks();
     CHIP_ERROR SetupNetwork();
@@ -154,6 +190,7 @@ private:
 
     const PairingMode mPairingMode;
     const PairingNetworkType mNetworkType;
+    const chip::Mdns::DiscoveryFilterType mFilterType;
     Command::AddressWithInterface mRemoteAddr;
     NodeId mRemoteId;
     uint16_t mRemotePort;
@@ -168,6 +205,8 @@ private:
     chip::ByteSpan mSSID;
     chip::ByteSpan mPassword;
     char * mOnboardingPayload;
+    uint64_t mDiscoveryFilterCode;
+    char * mDiscoveryFilterInstanceName;
 
     chip::Callback::Callback<NetworkCommissioningClusterAddThreadNetworkResponseCallback> * mOnAddThreadNetworkCallback = nullptr;
     chip::Callback::Callback<NetworkCommissioningClusterAddWiFiNetworkResponseCallback> * mOnAddWiFiNetworkCallback     = nullptr;
@@ -177,4 +216,10 @@ private:
     chip::Controller::NetworkCommissioningCluster mCluster;
     chip::EndpointId mEndpointId = 0;
     chip::Controller::ExampleOperationalCredentialsIssuer mOpCredsIssuer;
+
+    static void OnDeviceConnectedFn(void * context, chip::Controller::Device * device);
+    static void OnDeviceConnectionFailureFn(void * context, NodeId deviceId, CHIP_ERROR error);
+
+    chip::Callback::Callback<chip::Controller::OnDeviceConnected> mOnDeviceConnectedCallback;
+    chip::Callback::Callback<chip::Controller::OnDeviceConnectionFailure> mOnDeviceConnectionFailureCallback;
 };

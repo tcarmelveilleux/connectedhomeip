@@ -104,9 +104,8 @@ class ConnectivityManagerImpl final : public ConnectivityManager,
     friend class ConnectivityManager;
 
 public:
-    CHIP_ERROR ProvisionWiFiNetwork(const char * ssid, const char * key);
-
 #if CHIP_DEVICE_CONFIG_ENABLE_WPA
+    CHIP_ERROR ProvisionWiFiNetwork(const char * ssid, const char * key);
     void StartWiFiManagement();
     bool IsWiFiManagementStarted();
 #endif
@@ -114,9 +113,6 @@ public:
 private:
     // ===== Members that implement the ConnectivityManager abstract interface.
 
-    bool _HaveIPv4InternetConnectivity();
-    bool _HaveIPv6InternetConnectivity();
-    bool _HaveServiceConnectivity();
     CHIP_ERROR _Init();
     void _OnPlatformEvent(const ChipDeviceEvent * event);
 
@@ -151,9 +147,32 @@ private:
 
     static BitFlags<ConnectivityFlags> mConnectivityFlag;
     static struct GDBusWpaSupplicant mWpaSupplicant;
+    static std::mutex mWpaSupplicantMutex;
+#endif
+
+    CHIP_ERROR _GetEthPacketRxCount(uint64_t & packetRxCount);
+    CHIP_ERROR _GetEthPacketTxCount(uint64_t & packetTxCount);
+    CHIP_ERROR _GetEthTxErrCount(uint64_t & txErrCount);
+    CHIP_ERROR _GetEthCollisionCount(uint64_t & collisionCount);
+    CHIP_ERROR _GetEthOverrunCount(uint64_t & overrunCount);
+    CHIP_ERROR _ResetEthNetworkDiagnosticsCounts();
+
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFI
+    CHIP_ERROR _GetWiFiChannelNumber(uint16_t & channelNumber);
+    CHIP_ERROR _GetWiFiRssi(int8_t & rssi);
+    CHIP_ERROR _GetWiFiBeaconLostCount(uint32_t & beaconLostCount);
+    CHIP_ERROR _GetWiFiPacketMulticastRxCount(uint32_t & packetMulticastRxCount);
+    CHIP_ERROR _GetWiFiPacketMulticastTxCount(uint32_t & packetMulticastTxCount);
+    CHIP_ERROR _GetWiFiPacketUnicastRxCount(uint32_t & packetUnicastRxCount);
+    CHIP_ERROR _GetWiFiPacketUnicastTxCount(uint32_t & packetUnicastTxCount);
+    CHIP_ERROR _GetWiFiCurrentMaxRate(uint64_t & currentMaxRate);
+    CHIP_ERROR _GetWiFiOverrunCount(uint64_t & overrunCount);
+    CHIP_ERROR _ResetWiFiNetworkDiagnosticsCounts();
 #endif
 
     // ==================== ConnectivityManager Private Methods ====================
+
+    CHIP_ERROR ResetEthernetStatsCount();
 
 #if CHIP_DEVICE_CONFIG_ENABLE_WPA
     void DriveAPState();
@@ -171,12 +190,24 @@ private:
 
     // ===== Private members reserved for use by this class only.
 
+    uint64_t mEthPacketRxCount  = 0;
+    uint64_t mEthPacketTxCount  = 0;
+    uint64_t mEthTxErrCount     = 0;
+    uint64_t mEthCollisionCount = 0;
+    uint64_t mEthOverrunCount   = 0;
+
+#if CHIP_DEVICE_CONFIG_ENABLE_WPA
     ConnectivityManager::WiFiStationMode mWiFiStationMode;
     ConnectivityManager::WiFiAPMode mWiFiAPMode;
     WiFiAPState mWiFiAPState;
     uint64_t mLastAPDemandTime;
     uint32_t mWiFiStationReconnectIntervalMS;
     uint32_t mWiFiAPIdleTimeoutMS;
+#endif
+
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFI
+    char mWiFiIfName[IFNAMSIZ];
+#endif
 };
 
 #if CHIP_DEVICE_CONFIG_ENABLE_WPA
@@ -200,10 +231,6 @@ inline uint32_t ConnectivityManagerImpl::_GetWiFiAPIdleTimeoutMS()
     return mWiFiAPIdleTimeoutMS;
 }
 
-inline bool ConnectivityManagerImpl::_HaveServiceConnectivity()
-{
-    return _HaveServiceConnectivityViaThread();
-}
 #endif
 
 /**

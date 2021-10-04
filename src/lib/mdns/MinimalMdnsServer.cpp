@@ -58,15 +58,13 @@ public:
     }
 
 private:
+#if INET_CONFIG_ENABLE_IPV4
     enum class State
     {
         kIpV4,
         kIpV6,
     };
-#if INET_CONFIG_ENABLE_IPV4
     State mState = State::kIpV4;
-#else
-    State mState = State::kIpV6;
 #endif
     chip::Inet::InterfaceIterator mIterator;
 
@@ -105,6 +103,11 @@ CHIP_ERROR GlobalMinimalMdnsServer::StartServer(chip::Inet::InetLayer * inetLaye
     GlobalMinimalMdnsServer::Server().Shutdown();
     AllInterfaces allInterfaces;
     return GlobalMinimalMdnsServer::Server().Listen(inetLayer, &allInterfaces, port);
+}
+
+void GlobalMinimalMdnsServer::ShutdownServer()
+{
+    GlobalMinimalMdnsServer::Server().Shutdown();
 }
 
 } // namespace Mdns

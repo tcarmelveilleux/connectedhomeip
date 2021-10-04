@@ -216,8 +216,8 @@ void emberAfPluginReportingTickEventHandler(void)
         // We will only send reports for active reported attributes and only if a
         // reportable change has occurred and the minimum interval has elapsed or
         // if the maximum interval is set and has elapsed.
-        elapsedMs =
-            elapsedTimeInt32u(emAfPluginReportVolatileData[i].lastReportTimeMs, chip::System::Clock::GetMonotonicMilliseconds());
+        elapsedMs = elapsedTimeInt32u(emAfPluginReportVolatileData[i].lastReportTimeMs,
+                                      chip::System::SystemClock().GetMonotonicMilliseconds());
         if (entry.endpoint == EMBER_AF_PLUGIN_REPORTING_UNUSED_ENDPOINT_ID ||
             entry.direction != EMBER_ZCL_REPORTING_DIRECTION_REPORTED ||
             (elapsedMs < entry.data.reported.minInterval * MILLISECOND_TICKS_PER_SECOND) ||
@@ -326,10 +326,11 @@ void emberAfPluginReportingTickEventHandler(void)
         // and changes.  We only track changes for data types that are small enough
         // for us to compare. For CHAR and OCTET strings, we substitute a 32-bit hash.
         emAfPluginReportVolatileData[i].reportableChange = false;
-        emAfPluginReportVolatileData[i].lastReportTimeMs = static_cast<uint32_t>(chip::System::Clock::GetMonotonicMilliseconds());
-        uint32_t stringHash                              = 0;
-        uint8_t * copyData                               = readData;
-        uint16_t copySize                                = dataSize;
+        emAfPluginReportVolatileData[i].lastReportTimeMs =
+            static_cast<uint32_t>(chip::System::SystemClock().GetMonotonicMilliseconds());
+        uint32_t stringHash = 0;
+        uint8_t * copyData  = readData;
+        uint16_t copySize   = dataSize;
         if (dataType == ZCL_OCTET_STRING_ATTRIBUTE_TYPE || dataType == ZCL_CHAR_STRING_ATTRIBUTE_TYPE)
         {
             // dataSize was set above to count the string's length byte, in addition to string length.
@@ -694,53 +695,6 @@ EmberStatus emAfPluginReportingRemoveEntry(uint8_t index)
     return status;
 }
 
-void emberAfReportingAttributeChangeCallback(EndpointId endpoint, ClusterId clusterId, AttributeId attributeId, uint8_t mask,
-                                             uint16_t manufacturerCode, EmberAfAttributeType type, uint8_t * data)
-{
-    uint8_t i;
-    for (i = 0; i < REPORT_TABLE_SIZE; i++)
-    {
-        EmberAfPluginReportingEntry entry;
-        emAfPluginReportingGetEntry(i, &entry);
-        if (entry.endpoint == EMBER_AF_PLUGIN_REPORTING_UNUSED_ENDPOINT_ID)
-        {
-            continue;
-        }
-        if (entry.direction == EMBER_ZCL_REPORTING_DIRECTION_REPORTED && entry.endpoint == endpoint &&
-            entry.clusterId == clusterId && entry.attributeId == attributeId && entry.mask == mask &&
-            entry.manufacturerCode == manufacturerCode)
-        {
-            // For CHAR and OCTET strings, the string value may be too long to fit into the
-            // lastReportValue field (EmberAfDifferenceType), so instead we save the string's
-            // hash, and detect changes in string value based on unequal hash.
-            uint32_t stringHash = 0;
-            uint8_t dataSize    = emberAfGetDataSize(type);
-            uint8_t * dataRef   = data;
-            if (type == ZCL_OCTET_STRING_ATTRIBUTE_TYPE || type == ZCL_CHAR_STRING_ATTRIBUTE_TYPE)
-            {
-                stringHash = computeStringHash(data + 1, emberAfStringLength(data));
-                dataRef    = (uint8_t *) &stringHash;
-                dataSize   = sizeof(stringHash);
-            }
-            // If we are reporting this particular attribute, we only care whether
-            // the new value meets the reportable change criteria.  If it does, we
-            // mark the entry as ready to report and reschedule the tick.  Whether
-            // the tick will be scheduled for immediate or delayed execution depends
-            // on the minimum reporting interval.  This is handled in the scheduler.
-            EmberAfDifferenceType difference =
-                emberAfGetDifference(dataRef, emAfPluginReportVolatileData[i].lastReportValue, dataSize);
-            uint8_t analogOrDiscrete = emberAfGetAttributeAnalogOrDiscreteType(type);
-            if ((analogOrDiscrete == EMBER_AF_DATA_TYPE_DISCRETE && difference != 0) ||
-                (analogOrDiscrete == EMBER_AF_DATA_TYPE_ANALOG && entry.data.reported.reportableChange <= difference))
-            {
-                emAfPluginReportVolatileData[i].reportableChange = true;
-                scheduleTick();
-            }
-            break;
-        }
-    }
-}
-
 bool emAfPluginReportingDoEntriesMatch(const EmberAfPluginReportingEntry * const entry1,
                                        const EmberAfPluginReportingEntry * const entry2)
 {
@@ -809,7 +763,7 @@ static void scheduleTick(void)
             uint32_t minIntervalMs = (entry.data.reported.minInterval * MILLISECOND_TICKS_PER_SECOND);
             uint32_t maxIntervalMs = (entry.data.reported.maxInterval * MILLISECOND_TICKS_PER_SECOND);
             uint32_t elapsedMs     = elapsedTimeInt32u(emAfPluginReportVolatileData[i].lastReportTimeMs,
-                                                   chip::System::Clock::GetMonotonicMilliseconds());
+                                                   chip::System::SystemClock().GetMonotonicMilliseconds());
             uint32_t remainingMs   = MAX_INT32U_VALUE;
             if (emAfPluginReportVolatileData[i].reportableChange)
             {
@@ -941,7 +895,7 @@ EmberAfStatus emberAfPluginReportingConfigureReportedAttribute(const EmberAfPlug
         if (index < REPORT_TABLE_SIZE)
         {
             emAfPluginReportVolatileData[index].lastReportTimeMs =
-                static_cast<uint32_t>(chip::System::Clock::GetMonotonicMilliseconds());
+                static_cast<uint32_t>(chip::System::SystemClock().GetMonotonicMilliseconds());
             emAfPluginReportVolatileData[index].lastReportValue = 0;
         }
     }
