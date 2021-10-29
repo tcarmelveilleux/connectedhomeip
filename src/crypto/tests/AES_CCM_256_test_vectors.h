@@ -1655,6 +1655,22 @@ static const struct ccm_test_vector chiptest_12cb0ed34854_test_vector_392 = { .k
                                                                               .tcId    = 36,
                                                                               .result  = CHIP_ERROR_INVALID_ARGUMENT };
 
+static const struct ccm_test_vector chiptest_12cb0ed34854_test_vector_393 = { .key     = chiptest_12cb0ed34854_key_29,
+                                                                              .key_len = 32,
+                                                                              .pt      = reinterpret_cast<const uint8_t *>(""),
+                                                                              .pt_len  = 0,
+                                                                              .ct      = nullptr,
+                                                                              .ct_len  = 0,
+                                                                              .iv      = chiptest_12cb0ed34854_iv_32,
+                                                                              .iv_len  = 7,
+                                                                              .aad     = chiptest_12cb0ed34854_aad_33,
+                                                                              .aad_len = 1,
+                                                                              .tag     = chiptest_12cb0ed34854_tag_34,
+                                                                              .tag_len = 12,
+                                                                              .tcId    = 37,
+                                                                              .result  = CHIP_NO_ERROR };
+
+
 static const struct ccm_test_vector * ccm_test_vectors[] = {
     &chiptest_12cb0ed34854_test_vector_7,   &chiptest_12cb0ed34854_test_vector_14,  &chiptest_12cb0ed34854_test_vector_21,
     &chiptest_12cb0ed34854_test_vector_28,  &chiptest_12cb0ed34854_test_vector_35,  &chiptest_12cb0ed34854_test_vector_42,
@@ -1678,7 +1694,7 @@ static const struct ccm_test_vector * ccm_test_vectors[] = {
     &chiptest_12cb0ed34854_test_vector_382, &chiptest_12cb0ed34854_test_vector_383, &chiptest_12cb0ed34854_test_vector_384,
     &chiptest_12cb0ed34854_test_vector_385, &chiptest_12cb0ed34854_test_vector_386, &chiptest_12cb0ed34854_test_vector_387,
     &chiptest_12cb0ed34854_test_vector_388, &chiptest_12cb0ed34854_test_vector_389, &chiptest_12cb0ed34854_test_vector_390,
-    &chiptest_12cb0ed34854_test_vector_391, &chiptest_12cb0ed34854_test_vector_392
+    &chiptest_12cb0ed34854_test_vector_391, &chiptest_12cb0ed34854_test_vector_392, &chiptest_12cb0ed34854_test_vector_393
 };
 
 // These are some invalid vectors where the ct bits have been flipped.

@@ -45,7 +45,6 @@
 #include <lib/support/SafeInt.h>
 #include <lib/support/SafePointerCast.h>
 #include <lib/support/logging/CHIPLogging.h>
-
 #include <string.h>
 
 namespace chip {
@@ -132,33 +131,42 @@ CHIP_ERROR AES_CCM_encrypt(const uint8_t * plaintext, size_t plaintext_length, c
     int result               = 1;
     const EVP_CIPHER * type  = nullptr;
 
+    if ((plaintext_length > 0) && ((plaintext == nullptr) || (ciphertext == nullptr)))
+    {
+        return CHIP_ERROR_INVALID_ARGUMENT;
+    }
+
     // Placeholder location for avoiding null params for plaintexts when
-    // size is zero.
-    uint8_t placeholder_empty_plaintext = 0;
+    // size is zero. This is to work-around OpenSSL bugs with empty
+    // plaintext buffer that are nullptr. This will more likely cause a
+    // crash if the underlying library tries to actually read/write to
+    // that pointer, compared to if we used a placeholder one-byte
+    // variable on the stack or elsewhere, where unintended writes
+    // that should not have happened (even if temporary and internal)
+    // could cause worse side-effects..
+    uint8_t * kBadPointer = reinterpret_cast<uint8_t *>(1);
 
     // Ciphertext block to hold a finalized ciphertext block if output
     // `ciphertext` buffer is nullptr or plaintext_length is zero (i.e.
-    // we are only doing auth and don't care about output).
+    // we are only doing auth and don't care about output). Again,
+    // due to OpenSSL internals in some impls.
     uint8_t placeholder_ciphertext[kAES_CCM256_Block_Length];
     bool ciphertext_was_null = (ciphertext == nullptr);
 
-    if (plaintext_length == 0)
+    if ((plaintext_length == 0) || (plaintext == nullptr))
     {
-        if (plaintext == nullptr)
-        {
-            plaintext = &placeholder_empty_plaintext;
-        }
-        // Make sure we have at least 1 full block size buffer for the
-        // extraction of final block (required by OpenSSL EVP_EncryptFinal_ex)
-        if (ciphertext_was_null)
-        {
-            ciphertext = &placeholder_ciphertext[0];
-        }
+        plaintext = kBadPointer;
+    }
+
+    // Make sure we have at least 1 full block size buffer for the
+    // extraction of final block (required by OpenSSL EVP_EncryptFinal_ex)
+    if (ciphertext_was_null)
+    {
+        ciphertext = &placeholder_ciphertext[0];
     }
 
     VerifyOrExit((key_length == kAES_CCM128_Key_Length) || (key_length == kAES_CCM256_Key_Length),
                  error = CHIP_ERROR_INVALID_ARGUMENT);
-    VerifyOrExit((plaintext_length != 0) || ciphertext_was_null, error = CHIP_ERROR_INVALID_ARGUMENT);
     VerifyOrExit(plaintext != nullptr, error = CHIP_ERROR_INVALID_ARGUMENT);
     VerifyOrExit(ciphertext != nullptr, error = CHIP_ERROR_INVALID_ARGUMENT);
     VerifyOrExit(key != nullptr, error = CHIP_ERROR_INVALID_ARGUMENT);
