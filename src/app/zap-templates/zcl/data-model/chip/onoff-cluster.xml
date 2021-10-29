@@ -17,6 +17,8 @@ limitations under the License.
 <configurator>
   <domain name="General"/>
 
+
+  <!---------  LET'S FIX THIS!  -->
   <enum name="OnOffEffectIdentifier" type="enum8">
     <cluster code="0x0006"/>
     <item name="DelayedAllOff" value="0x00"/>
@@ -48,11 +50,11 @@ limitations under the License.
     <description>Attributes and commands for switching devices between 'On' and 'Off' states.</description>
     <globalAttribute side="either" code="0xFFFD" value="4"/>
 
-    <attribute side="server" code="0x0000" define="ON_OFF"               type="boolean" default="0" reportable="true"              >OnOff</attribute>
-    <attribute side="server" code="0x4000" define="GLOBAL_SCENE_CONTROL" type="boolean" default="1"                 optional="true">GlobalSceneControl</attribute>
-    <attribute side="server" code="0x4001" define="ON_TIME"              type="int16u"  default="0" writable="true" optional="true">OnTime</attribute>
-    <attribute side="server" code="0x4002" define="OFF_WAIT_TIME"        type="int16u"  default="0" writable="true" optional="true">OffWaitTime</attribute>
-    <attribute side="server" code="0x4003" define="START_UP_ON_OFF"      type="enum8"               writable="true" optional="true">StartUpOnOff</attribute>
+    <attribute side="server" code="0x0000" define="ON_OFF" type="boolean" default="0" reportable="true">OnOff</attribute>
+    <attribute side="server" code="0x4000" define="GLOBAL_SCENE_CONTROL" type="boolean" default="1" optional="true">GlobalSceneControl</attribute>
+    <attribute side="server" code="0x4001" define="ON_TIME" type="int16u" default="0" writable="true" optional="true">OnTime</attribute>
+    <attribute side="server" code="0x4002" define="OFF_WAIT_TIME" type="int16u" default="0" writable="true" optional="true">OffWaitTime</attribute>
+    <attribute side="server" code="0x4003" define="START_UP_ON_OFF" type="enum8" writable="true" optional="true">StartUpOnOff</attribute>
 
     <command source="client" code="0x00" name="Off" optional="false">
       <description>On receipt of this command, a device SHALL enter its ‘Off’ state. This state is device dependent, but it is recommended that it is used for power off or similar functions. On receipt of the Off command, the OnTime attribute SHALL be set to 0.</description>
@@ -79,8 +81,10 @@ limitations under the License.
     <command source="client" code="0x42" name="OnWithTimedOff" optional="true">
       <description>The OnWithTimedOff command allows devices to be turned on for a specific duration with a guarded off duration so that SHOULD the device be subsequently switched off, further OnWithTimedOff commands, received during this time, are prevented from turning the devices back on.</description>
       <arg name="OnOffControl" type="OnOffControl"/>
-      <arg name="OnTime" type="int16u"/><!-- min:0 max:0xfe -->
-      <arg name="OffWaitTime" type="int16u"/><!-- min:0 max:0xfe -->
+      <arg name="OnTime" type="int16u"/>
+      <!-- min:0 max:0xfe -->
+      <arg name="OffWaitTime" type="int16u"/>
+      <!-- min:0 max:0xfe -->
     </command>
 
   </cluster>
