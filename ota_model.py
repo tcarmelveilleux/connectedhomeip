@@ -28,10 +28,6 @@ class RunWorkEvent(Event):
     self.callback = callback
     self.context = context
 
-class BlockReceivedEvent(Event):
-  def __init__(self, block_data: bytes):
-    pass
-
 class RequestorWorkItem:
   TRIGGER_IMMEDIATE = 0
   CANCEL_OTA = 1
@@ -61,6 +57,7 @@ class Platform:
   def run_event_loop(self, event_handler: callable):
     self._last_time_ms = int(time.time() * 1000.0)
 
+    print("Event loop running")
     while self._running:
       try:
         event = self._queue.get(block=True, timeout=0.1)
@@ -112,7 +109,7 @@ class Platform:
     now_ms = int(now * 1000.0)
     self._elapsed_ms += (now_ms - self._last_time_ms)
     self._last_time_ms = now_ms
-    print("%.3f: Elapsed_ms=%d" % (now, self._elapsed_ms))
+    #print("%.3f: Elapsed_ms=%d" % (now, self._elapsed_ms))
 
   def fast_forward_clock_for_testing(self, num_ms: int):
     self.process_timers()
@@ -145,6 +142,12 @@ class Platform:
     self.post_event(None)
 
 
+class SessionProxy:
+  def __init__(self):
+    pass
+
+  def InvokeQueryImage(self, payload: dict, on_success: callable, on_failure, callable):
+    pass
 class SessionEstablisher:
   """Fake session establishment logic"""
   def __init__(self, platform: Platform):
@@ -172,20 +175,20 @@ class SessionEstablisher:
     context = {
       "on_success": on_success,
       "fabric_index": fabric_index,
-      "node_id": node_id
+      "node_id": node_id,
+      "session_proxy": self
     }
 
     kDelayForSimulationMs = 1000
     self._platform.start_timer(expiry_ms=kDelayForSimulationMs, callback=self._handle_success, context=context)
 
-def app_event_handler(event: Event):
-  if isinstance(event, RunWorkEvent):
-    event.callback(event.context)
-  elif isinstance(event, TimerDoneEvent):
-    event.callback(event.context)
-  elif isinstance(event, StartTimerEvent):
-    # TODO: Handle starting a timer
-    pass
+  def
+
+class CommandClient:
+  """Fake session establishment logic"""
+  def __init__(self, platform: Platform):
+    self._platform = platform
+    self._should_fail = False
 
 class OtaContext:
   # Ongoing OTA context
@@ -245,14 +248,86 @@ class OtaImageProcessor:
   def handle_block(block: bytes):
     raise NotImplementedError
 
+class OtaRequestorCallbacks:
+    # Call-ins to be done by platform/application
+  def on_trigger_immediate_query(self):
+    pass
+
+  def on_cancel_ongoing_ota(self):
+    pass
+
+  def on_query_timer_hit(self):
+    pass
+
+  def on_delayed_action_timer_hit(self):
+    pass
+
+  def on_provider_session_established(self, context:any):
+    pass
+
+  def on_provider_session_error(self, context:any):
+    pass
+
+  def on_bdx_session_established(self, context:any):
+    pass
+
+  def on_bdx_session_error(self, context:any):
+    pass
+
+  def on_query_image_response(self, response: QueryImageResponse):
+    pass
+
+  def on_query_image_failed(self, status_code: int):
+    pass
+
+  def on_apply_update_response(self, response: ApplyUpdateResponse):
+    pass
+
+  def on_apply_request_failed(self, status_code: int):
+    pass
+
+  def on_announce_ota_provider(self, response: AnnounceOtaProvider):
+    pass
+
+  def on_bdx_error(self, status_code: int):
+    pass
+
+  def on_bdx_block(self, block_content: bytes):
+    # TODO: Call into image_processor
+    pass
+
+  def on_ota_prepared(self, status_code: int):
+    pass
+
+  def on_ota_applied(self):
+    pass
+
+class BlockReceivedEvent(Event):
+  def __init__(self, block_data: bytes):
+    pass
+
+class TriggerImmediateQueryEvent(Event):
+  def __init__(self, callbacks: OtaRequestorCallbacks):
+    self.callbacks = callbacks
+
+class TriggerImmediateQueryEvent(Event):
+  def __init__(self, callbacks: OtaRequestorCallbacks):
+    self.callbacks = callbacks
+
 ### For adapting a platform's OTA backend to the OTA Requestor logic
-class OtaRequestorDriver(OtaImageProcessor):
-  def __init__(self, platform: Platform, session_establisher: SessionEstablisher) -> None:
+class OtaRequestorDriver():
+  def __init__(self, callbacks: OtaRequestorCallbacks, platform: Platform, session_establisher: SessionEstablisher) -> None:
+      self._callbacks = callbacks
       self._platform = platform
       self._session_establisher = session_establisher
 
   def schedule_requestor_work(self, work_item: RequestorWorkItem):
-    pass
+    if work_item == RequestorWorkItem.TRIGGER_IMMEDIATE:
+      self._platform.post_event(TriggerImmediateQueryEvent(self._callbacks))
+    elif work_item == RequestorWorkItem.SEND_QUERY_IMAGE_REQUEST:
+      self._platform.schedule_work(self.send_query_image. self._callbacks)
+    else:
+      print("Unexpected schedule request: %s" % str(work_item))
 
   def start_query_timer(self, duration_ms: int) -> Status:
     pass
@@ -262,8 +337,12 @@ class OtaRequestorDriver(OtaImageProcessor):
 
   # TODO: Account for timer cancels?
 
+  def send_query_image(self, context):
+    callbacks = context
+
+
   def establish_provider_session(self, fabric_index: int, node_id: int):
-    pass
+    self._session_establisher.establish_session(fabric_index, node_id, self._callbacks.on_provider_session_established, self._callbacks.on_provider_session_error)
 
   def establish_bdx_session(self, fabric_index: int, node_id: int):
     pass
@@ -326,61 +405,9 @@ class OtaRequestorInterface:
   def cancel_ongoing_ota(self):
     pass
 
-  # Call-ins to be done by platform/application
-  def on_trigger_immediate_query(self):
-    pass
-
-  def on_cancel_ongoing_ota(self):
-    pass
-
-  def on_query_timer_hit(self):
-    pass
-
-  def on_delayed_action_timer_hit(self):
-    pass
-
-  def on_provider_session_established(self, context:any):
-    pass
-
-  def on_provider_session_error(self):
-    pass
-
-  def on_bdx_session_established(self, context:any):
-    pass
-
-  def on_bdx_session_error(self, context:any):
-    pass
-
-  def on_query_image_response(self, response: QueryImageResponse):
-    pass
-
-  def on_query_image_failed(self, status_code: int):
-    pass
-
-  def on_apply_update_response(self, response: ApplyUpdateResponse):
-    pass
-
-  def on_apply_request_failed(self, status_code: int):
-    pass
-
-  def on_announce_ota_provider(self, response: AnnounceOtaProvider):
-    pass
-
-  def on_bdx_error(self, status_code: int):
-    pass
-
-  def on_bdx_block(self, block_content: bytes):
-    # TODO: Call into image_processor
-    pass
-
-  def on_ota_prepared(self, status_code: int):
-    pass
-
-  def on_ota_applied(self):
-    pass
 
 
-class OtaRequestor(OtaRequestorInterface):
+class OtaRequestor(OtaRequestorInterface, OtaRequestorCallbacks):
   STATE_IDLE = 0
   STATE_QUERYING = 1
   STATE_WAITING_FOR_NEXT_QUERY = 2
@@ -397,11 +424,17 @@ class OtaRequestor(OtaRequestorInterface):
     self._state = self.STATE_IDLE
 
   def ensure_proper_thread(self):
-    if current_thread.name != "event_loop":
+    if current_thread().name != "event_loop":
       raise RuntimeError("Running from %s instead of event_loop" % current_thread.name)
+
+  def trigger_immediate_query(self):
+    print("trigger_immediate_query")
+    ota_requestor_callbacks = self
+    self._ota_requestor_driver.schedule_requestor_work(RequestorWorkItem.TRIGGER_IMMEDIATE, ota_requestor_callbacks)
 
   def on_trigger_immediate_query(self):
     print("on_trigger_immediate_query")
+    self.ensure_proper_thread()
     if self._state != self.STATE_IDLE:
       print("ERROR: request to trigger immediate query when not idle!")
       return
@@ -441,6 +474,20 @@ class OtaRequestor(OtaRequestorInterface):
   def send_query_image(self):
     self._ota_requestor_driver.send_query_image()
 
+### App-specific event handler that goes from generic platform events to
+### callback dispatch.
+def app_event_handler(event: Event):
+  if isinstance(event, RunWorkEvent):
+    event.callback(event.context)
+  elif isinstance(event, TimerDoneEvent):
+    event.callback(event.context)
+  elif isinstance(event, StartTimerEvent):
+    # TODO: Handle starting a timer
+    pass
+  elif isinstance(event, TriggerImmediateQueryEvent):
+    callbacks = event.callbacks
+    callbacks.on_trigger_immediate_query()
+
 def start_ota():
   pass
 
@@ -466,12 +513,6 @@ def run_ota_process():
 
   ota_requestor = OtaRequestor(ota_requestor_driver, ota_image_processor)
   ota_requestor.trigger_immediate_query()
-
-  def timer_callback(context):
-    print("%.3f: Timer expired: %s" % (time.time(), context))
-    platform.start_timer(expiry_ms=2000, callback=timer_callback, context="TimerN")
-
-  platform.start_timer(expiry_ms=1000, callback=timer_callback, context="Timer1")
 
   try:
     while True:
