@@ -54,7 +54,9 @@ Engine::RetrieveClusterData(const SubjectDescriptor & aSubjectDescriptor, Attrib
     ChipLogDetail(DataManagement, "<RE:Run> Cluster %" PRIx32 ", Attribute %" PRIx32 " is dirty", aPath.mClusterId,
                   aPath.mAttributeId);
     MatterPreAttributeReadCallback(aPath);
-    ReturnErrorOnFailure(ReadSingleClusterData(aSubjectDescriptor, aPath, aAttributeReportIBs, aEncoderState));
+    CHIP_ERROR err = ReadSingleClusterData(aSubjectDescriptor, aPath, aAttributeReportIBs, aEncoderState);
+    ChipLogError(Zcl, "ReadSingleClusterData == %" CHIP_ERROR_FORMAT, err.Format());
+    ReturnErrorOnFailure(err);
     MatterPostAttributeReadCallback(aPath);
     return CHIP_NO_ERROR;
 }

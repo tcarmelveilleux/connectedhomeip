@@ -559,9 +559,9 @@ EmberAfStatus emAfReadOrWriteAttribute(EmberAfAttributeSearchRecord * attRecord,
                                     {
                                         return EMBER_ZCL_STATUS_SUCCESS;
                                     }
-
                                     src = attributeLocation;
                                     dst = buffer;
+                                    ChipLogError(Zcl, "In Read, src: %p, dst: %p", (void*)src, (void*)dst);
                                     if (!emberAfAttributeReadAccessCallback(attRecord->endpoint, attRecord->clusterId,
                                                                             am->attributeId))
                                     {
@@ -582,7 +582,9 @@ EmberAfStatus emAfReadOrWriteAttribute(EmberAfAttributeSearchRecord * attRecord,
                                     // Internal storage is only supported for fixed endpoints
                                     if (!isDynamicEndpoint)
                                     {
-                                        return typeSensitiveMemCopy(attRecord->clusterId, dst, src, am, write, readLength);
+                                        EmberAfStatus s = typeSensitiveMemCopy(attRecord->clusterId, dst, src, am, write, readLength);
+                                        ChipLogError(Zcl, "EmberStatus: %d", (int)s);
+                                        return s;
                                     }
                                     else
                                     {

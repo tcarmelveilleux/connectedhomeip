@@ -430,6 +430,7 @@ CHIP_ERROR ReadSingleClusterData(const SubjectDescriptor & aSubjectDescriptor, c
             bool triedEncode = false;
             CHIP_ERROR delegatedReadError = ReadViaAccessInterface(aSubjectDescriptor.fabricIndex, aPath, aAttributeReports, apEncoderState,
                                                         attributeOverride, &triedEncode);
+            ChipLogError(Zcl, "ERRRRRROR: %" CHIP_ERROR_FORMAT ", %d", delegatedReadError.Format(), (int)triedEncode);
             if (delegatedReadError == CHIP_NO_ERROR)
             {
                 if (triedEncode)
@@ -442,7 +443,8 @@ CHIP_ERROR ReadSingleClusterData(const SubjectDescriptor & aSubjectDescriptor, c
                     // This will fall-through to read attribute using Ember attribute store as a plan B
                     // if no encoding took place.
                 }
-            } else if (delegatedReadError != CHIP_ERROR_NOT_FOUND)
+            }
+            else if (delegatedReadError != CHIP_ERROR_NOT_FOUND)
             {
                 // Explicitly failed to read, and it wasn't because we may have to
                 // fall back to attribute store, let's return the error immediately.
@@ -615,6 +617,7 @@ CHIP_ERROR ReadSingleClusterData(const SubjectDescriptor & aSubjectDescriptor, c
             }
             else
             {
+                ChipLogError(Zcl, "DataLength: %d, putstring '%.*s'", (int)dataLength, dataLength, actualData);
                 ReturnErrorOnFailure(writer->PutString(tag, actualData, dataLength));
             }
             break;
