@@ -427,10 +427,32 @@ CHIP_ERROR ReadSingleClusterData(const SubjectDescriptor & aSubjectDescriptor, c
             (attributeCluster != nullptr) ? &reader : findAttributeAccessOverride(aPath.mEndpointId, aPath.mClusterId);
         if (attributeOverride)
         {
-            bool triedEncode;
-            ReturnErrorOnFailure(ReadViaAccessInterface(aSubjectDescriptor.fabricIndex, aPath, aAttributeReports, apEncoderState,
-                                                        attributeOverride, &triedEncode));
-            ReturnErrorCodeIf(triedEncode, CHIP_NO_ERROR);
+            bool triedEncode = false;
+            CHIP_ERROR delegatedReadError = ReadViaAccessInterface(aSubjectDescriptor.fabricIndex, aPath, aAttributeReports, apEncoderState,
+                                                        attributeOverride, &triedEncode);
+            if (delegatedReadError == CHIP_NO_ERROR)
+            {
+                if (triedEncode)
+                {
+                    // Successfull and tried encoding: done processing.
+                    return CHIP_NO_ERROR;
+                }
+                else
+                {
+                    // This will fall-through to read attribute using Ember attribute store as a plan B
+                    // if no encoding took place.
+                }
+            } else if (delegatedReadError != CHIP_ERROR_NOT_FOUND)
+            {
+                // Explicitly failed to read, and it wasn't because we may have to
+                // fall back to attribute store, let's return the error immediately.
+                return delegatedReadError;
+            }
+            else
+            {
+                // This will fall-through to read attribute using Ember attribute store as a plan B
+                // due to attribute not supported by override.
+            }
         }
     }
 
