@@ -108,45 +108,50 @@ Server::Server() :
     })
 {}
 
-CHIP_ERROR Server::Init(AppDelegate * delegate, uint16_t secureServicePort, uint16_t unsecureServicePort,
-                        Inet::InterfaceId interfaceId)
+CHIP_ERROR Server::Init(const ServerInitParams & initParams)
 {
     Access::AccessControl::Delegate * accessDelegate = nullptr;
 
-    mSecuredServicePort   = secureServicePort;
-    mUnsecuredServicePort = unsecureServicePort;
-    mInterfaceId          = interfaceId;
+    mOperationalServicePort   = initParams.operationalServicePort;
+    mUserDirectedCommissioningPort = initParams.userDirectedCommissioningPort;
+    mInterfaceId          = initParams.interfaceId;
 
     CHIP_ERROR err = CHIP_NO_ERROR;
+
+    VerifyOrExit(initParams.persistentStorageDelegate != nullptr, err = CHIP_ERROR_INVALID_ARGUMENT);
+    VerifyOrExit(initParams.groupDataProvider != nullptr, err = CHIP_ERROR_INVALID_ARGUMENT);
 
     // TODO: Remove chip::Platform::MemoryInit() call from Server class, it belongs to outer code
     chip::Platform::MemoryInit();
 
     SuccessOrExit(err = mCommissioningWindowManager.Init(this));
-    mCommissioningWindowManager.SetAppDelegate(delegate);
+    mCommissioningWindowManager.SetAppDelegate(initParams.appDelegate);
     mCommissioningWindowManager.SetSessionIDAllocator(&mSessionIDAllocator);
+
+    // Initialize PersistentStorageDelegate-based storage
+    mDeviceStorage = initParams.persistentStorageDelegate;
 
     // Set up attribute persistence before we try to bring up the data model
     // handler.
-    SuccessOrExit(mAttributePersister.Init(&mDeviceStorage));
+    SuccessOrExit(mAttributePersister.Init(mDeviceStorage));
     SetAttributePersistenceProvider(&mAttributePersister);
 
     InitDataModelHandler(&mExchangeMgr);
 
-    err = mFabrics.Init(&mDeviceStorage);
+    err = mFabrics.Init(mDeviceStorage);
     SuccessOrExit(err);
 
     app::DnssdServer::Instance().SetFabricTable(&mFabrics);
     app::DnssdServer::Instance().SetCommissioningModeProvider(&mCommissioningWindowManager);
 
     // Group data provider must be initialized after mDeviceStorage
-    mGroupsProvider.SetStorageDelegate(&mDeviceStorage);
-    err = mGroupsProvider.Init();
+    mGroupsProvider = initParams.groupDataProvider;
+    err = mGroupsProvider->Init();
     SuccessOrExit(err);
-    SetGroupDataProvider(&mGroupsProvider);
+    SetGroupDataProvider(mGroupsProvider);
 
     // Access control must be initialized after mDeviceStorage.
-    accessDelegate = Access::Examples::GetAccessControlDelegate(&mDeviceStorage);
+    accessDelegate = Access::Examples::GetAccessControlDelegate(mDeviceStorage);
     VerifyOrExit(accessDelegate != nullptr, ChipLogError(AppServer, "Invalid access delegate found."));
 
     err = mAccessControl.Init(accessDelegate);
@@ -156,7 +161,7 @@ CHIP_ERROR Server::Init(AppDelegate * delegate, uint16_t secureServicePort, uint
     // Init transport before operations with secure session mgr.
     err = mTransports.Init(UdpListenParameters(DeviceLayer::UDPEndPointManager())
                                .SetAddressType(IPAddressType::kIPv6)
-                               .SetListenPort(mSecuredServicePort)
+                               .SetListenPort(mOperationalServicePort)
 #if CHIP_SYSTEM_CONFIG_USE_OPEN_THREAD_UDP
                                .SetNativeParams(chip::DeviceLayer::ThreadStackMgrImpl().OTInstance())
 #endif // CHIP_SYSTEM_CONFIG_USE_OPEN_THREAD_UDP
@@ -165,7 +170,7 @@ CHIP_ERROR Server::Init(AppDelegate * delegate, uint16_t secureServicePort, uint
                                ,
                            UdpListenParameters(DeviceLayer::UDPEndPointManager())
                                .SetAddressType(IPAddressType::kIPv4)
-                               .SetListenPort(mSecuredServicePort)
+                               .SetListenPort(mOperationalServicePort)
 #endif
 #if CONFIG_NETWORK_LAYER_BLE
                                ,
@@ -175,14 +180,14 @@ CHIP_ERROR Server::Init(AppDelegate * delegate, uint16_t secureServicePort, uint
 
     err = mListener.Init(&mTransports);
     SuccessOrExit(err);
-    mGroupsProvider.SetListener(&mListener);
+    mGroupsProvider->SetListener(&mListener);
 
 #if CONFIG_NETWORK_LAYER_BLE
     mBleLayer = DeviceLayer::ConnectivityMgr().GetBleLayer();
 #endif
     SuccessOrExit(err);
 
-    err = mSessions.Init(&DeviceLayer::SystemLayer(), &mTransports, &mMessageCounterManager, &mDeviceStorage, &GetFabricTable());
+    err = mSessions.Init(&DeviceLayer::SystemLayer(), &mTransports, &mMessageCounterManager, mDeviceStorage, &GetFabricTable());
     SuccessOrExit(err);
 
     err = mFabricDelegate.Init(&mSessions);
@@ -241,8 +246,8 @@ CHIP_ERROR Server::Init(AppDelegate * delegate, uint16_t secureServicePort, uint
 #endif
     }
 
-    app::DnssdServer::Instance().SetSecuredPort(mSecuredServicePort);
-    app::DnssdServer::Instance().SetUnsecuredPort(mUnsecuredServicePort);
+    app::DnssdServer::Instance().SetSecuredPort(mOperationalServicePort);
+    app::DnssdServer::Instance().SetUnsecuredPort(mUserDirectedCommissioningPort);
     app::DnssdServer::Instance().SetInterfaceId(mInterfaceId);
 
     // TODO @bzbarsky-apple @cecille Move to examples
@@ -290,7 +295,7 @@ void Server::RejoinExistingMulticastGroups()
     {
         Credentials::GroupDataProvider::GroupInfo groupInfo;
 
-        auto * iterator = mGroupsProvider.IterateGroupInfo(fabric.GetFabricIndex());
+        auto * iterator = mGroupsProvider->IterateGroupInfo(fabric.GetFabricIndex());
         if (iterator)
         {
             // GroupDataProvider was able to allocate rescources for an iterator

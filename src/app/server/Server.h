@@ -25,7 +25,7 @@
 #include <app/server/AppDelegate.h>
 #include <app/server/CommissioningWindowManager.h>
 #include <credentials/FabricTable.h>
-#include <credentials/GroupDataProviderImpl.h>
+#include <credentials/GroupDataProvider.h>
 #include <inet/InetConfig.h>
 #include <lib/core/CHIPConfig.h>
 #include <lib/support/SafeInt.h>
@@ -57,11 +57,28 @@ using ServerTransportMgr = chip::TransportMgr<chip::Transport::UDP
 #endif
                                               >;
 
+struct ServerInitParams
+{
+    // App delegate to handle some lifecycle events
+    AppDelegate * appDelegate = nullptr;
+    // Port to use for Matter commissioning/operational traffic
+    uint16_t operationalServicePort = CHIP_PORT;
+    // Port to use for UDC if supported
+    uint16_t userDirectedCommissioningPort = CHIP_UDC_PORT;
+    // Interface on which to run daemon
+    Inet::InterfaceId interfaceId = Inet::InterfaceId::Null();
+
+    // Persistent storage delegate: MUST be injected. Used to maintain storage by much common code.
+    PersistentStorageDelegate *persistentStorageDelegate = nullptr;
+    // Group data provider: MUST be injected. Used to maintain critical keys such as the Identity
+    // Protection Key (IPK) for case
+    Credentials::GroupDataProvider *groupDataProvider = nullptr;
+};
+
 class Server
 {
 public:
-    CHIP_ERROR Init(AppDelegate * delegate = nullptr, uint16_t secureServicePort = CHIP_PORT,
-                    uint16_t unsecureServicePort = CHIP_UDC_PORT, Inet::InterfaceId interfaceId = Inet::InterfaceId::Null());
+    CHIP_ERROR Init(const ServerInitParams & initParams);
 
 #if CHIP_DEVICE_CONFIG_ENABLE_COMMISSIONER_DISCOVERY_CLIENT
     CHIP_ERROR SendUserDirectedCommissioningRequest(chip::Transport::PeerAddress commissioner);
@@ -92,7 +109,7 @@ public:
 
     CommissioningWindowManager & GetCommissioningWindowManager() { return mCommissioningWindowManager; }
 
-    PersistentStorageDelegate & GetPersistentStorage() { return mDeviceStorage; }
+    PersistentStorageDelegate & GetPersistentStorage() { return *mDeviceStorage; }
 
     /**
      * This function send the ShutDown event before stopping
@@ -110,64 +127,6 @@ private:
     Server();
 
     static Server sServer;
-
-    class DeviceStorageDelegate : public PersistentStorageDelegate
-    {
-        CHIP_ERROR SyncGetKeyValue(const char * key, void * buffer, uint16_t & size) override
-        {
-            uint8_t emptyPlaceholder = 0;
-            if (buffer == nullptr)
-            {
-                if (size != 0)
-                {
-                    return CHIP_ERROR_INVALID_ARGUMENT;
-                }
-                else
-                {
-                    // When size is zero, let's give a non-nullptr to the KVS backend
-                    buffer = &emptyPlaceholder;
-                }
-            }
-
-            size_t bytesRead = 0;
-            CHIP_ERROR err   = DeviceLayer::PersistedStorage::KeyValueStoreMgr().Get(key, buffer, size, &bytesRead);
-
-            // Update size only if it made sense
-            if ((CHIP_ERROR_BUFFER_TOO_SMALL == err) || (CHIP_NO_ERROR == err))
-            {
-                size = CanCastTo<uint16_t>(bytesRead) ? static_cast<uint16_t>(bytesRead) : 0;
-            }
-
-            if (err == CHIP_NO_ERROR)
-            {
-                ChipLogProgress(AppServer, "Retrieved from server storage: %s", key);
-            }
-
-            return err;
-        }
-
-        CHIP_ERROR SyncSetKeyValue(const char * key, const void * value, uint16_t size) override
-        {
-            uint8_t placeholderForEmpty = 0;
-            if (value == nullptr)
-            {
-                if (size == 0)
-                {
-                    value = &placeholderForEmpty;
-                }
-                else
-                {
-                    return CHIP_ERROR_INVALID_ARGUMENT;
-                }
-            }
-            return DeviceLayer::PersistedStorage::KeyValueStoreMgr().Put(key, value, size);
-        }
-
-        CHIP_ERROR SyncDeleteKeyValue(const char * key) override
-        {
-            return DeviceLayer::PersistedStorage::KeyValueStoreMgr().Delete(key);
-        }
-    };
 
     class GroupDataProviderListener final : public Credentials::GroupDataProvider::GroupListener
     {
@@ -256,19 +215,16 @@ private:
     SecurePairingUsingTestSecret mTestPairing;
     CommissioningWindowManager mCommissioningWindowManager;
 
-    // Both PersistentStorageDelegate, and GroupDataProvider should be injected by the applications
-    // See: https://github.com/project-chip/connectedhomeip/issues/12276
-    DeviceStorageDelegate mDeviceStorage;
-    Credentials::GroupDataProviderImpl mGroupsProvider;
+    PersistentStorageDelegate *mDeviceStorage;
+    Credentials::GroupDataProvider *mGroupsProvider;
     app::DefaultAttributePersistenceProvider mAttributePersister;
     GroupDataProviderListener mListener;
     ServerFabricDelegate mFabricDelegate;
 
     Access::AccessControl mAccessControl;
 
-    // TODO @ceille: Maybe use OperationalServicePort and CommissionableServicePort
-    uint16_t mSecuredServicePort;
-    uint16_t mUnsecuredServicePort;
+    uint16_t mOperationalServicePort;
+    uint16_t mUserDirectedCommissioningPort;
     Inet::InterfaceId mInterfaceId;
 };
 
