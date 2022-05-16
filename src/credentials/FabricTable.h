@@ -37,6 +37,7 @@
 #include <lib/core/ScopedNodeId.h>
 #include <lib/support/CHIPMem.h>
 #include <lib/support/DLLUtil.h>
+#include <lib/support/IntrusiveList.h>
 #include <lib/support/Span.h>
 
 namespace chip {
@@ -321,11 +322,14 @@ private:
 class DLL_EXPORT FabricTable
 {
 public:
-    class DLL_EXPORT FabricTableDelegate
+    /**
+     * @brief Lifecycle notification delegate for FabricTAble
+     */
+    class DLL_EXPORT Delegate : public IntrusiveListNodeBase
     {
     public:
-        FabricTableDelegate() {}
-        virtual ~FabricTableDelegate() {}
+        Delegate() {}
+        virtual ~Delegate() {}
 
         /**
          * Gets called when a fabric is deleted, such as on FabricTable::Delete().
@@ -343,23 +347,9 @@ public:
          * on FabricTable::AddNewFabric().
          **/
         virtual void OnFabricPersistedToStorage(FabricTable & fabricTable, FabricIndex fabricIndex) = 0;
-
-        /**
-         * @brief If set to true, the delegate must be deleted on removal from fabric table,
-         *        since the caller relinquished ownership of a dynamically allocated object.
-         *
-         * @param deleteOnRemoval - true for a delete on removal, false if owned by caller
-         */
-        void SetMustDeleteOnRemoval(bool deleteOnRemoval) { mDeleteOnRemoval = deleteOnRemoval; }
-
-        bool MustDeleteOnRemoval() const { return mDeleteOnRemoval; }
-
-        FabricTableDelegate * next = nullptr;
-
-    protected:
-        bool mDeleteOnRemoval = false;
     };
 
+public:
     FabricTable() {}
     ~FabricTable();
 
@@ -391,7 +381,8 @@ public:
     FabricInfo * FindFabricWithCompressedId(CompressedFabricId fabricId);
 
     CHIP_ERROR Init(PersistentStorageDelegate * storage);
-    CHIP_ERROR AddFabricDelegate(FabricTableDelegate * delegate);
+    CHIP_ERROR AddFabricDelegate(FabricTable::Delegate * delegate);
+    void RemoveFabricDelegate(FabricTable::Delegate * delegate);
 
     uint8_t FabricCount() const { return mFabricCount; }
 
@@ -436,9 +427,8 @@ private:
     FabricInfo mStates[CHIP_CONFIG_MAX_FABRICS];
     PersistentStorageDelegate * mStorage = nullptr;
 
-    // FabricTableDelegate link to first node, since FabricTableDelegate is a form
-    // of intrusive linked-list item.
-    FabricTableDelegate * mDelegateListRoot = nullptr;
+    // All delegates
+    IntrusiveList<Delegate> mDelegateList;
 
     // We may not have an mNextAvailableFabricIndex if our table is as large as
     // it can go and is full.

@@ -438,16 +438,18 @@ CHIP_ERROR FabricInfo::VerifyCredentials(const ByteSpan & noc, const ByteSpan & 
 
 FabricTable::~FabricTable()
 {
-    FabricTableDelegate * delegate = mDelegateListRoot;
-    while (delegate)
+    printf("===========CALLLLLED\n");
+#if 0
+    while (mDelegateList.begin() != mDelegateList.end())
     {
-        FabricTableDelegate * temp = delegate->next;
-        if (delegate->MustDeleteOnRemoval())
-        {
-            chip::Platform::Delete(delegate);
-        }
-        delegate = temp;
+        mDelegateList.Erase(mDelegateList.begin());
     }
+#else
+    while (!mDelegateList.Empty())
+    {
+        mDelegateList.Remove(&*mDelegateList.begin());
+    }
+#endif
 }
 
 FabricInfo * FabricTable::FindFabric(P256PublicKeySpan rootPubKey, FabricId fabricId)
@@ -518,15 +520,13 @@ CHIP_ERROR FabricTable::Store(FabricIndex fabricIndex)
 
     err = fabric->CommitToStorage(mStorage);
 exit:
-    if (err == CHIP_NO_ERROR && mDelegateListRoot != nullptr)
+    if (err == CHIP_NO_ERROR)
     {
         ChipLogProgress(Discovery, "Fabric (0x%x) persisted to storage. Calling OnFabricPersistedToStorage",
                         static_cast<unsigned>(fabricIndex));
-        FabricTableDelegate * delegate = mDelegateListRoot;
-        while (delegate)
+        for (FabricTable::Delegate & delegate : mDelegateList)
         {
-            delegate->OnFabricPersistedToStorage(*this, fabricIndex);
-            delegate = delegate->next;
+            delegate.OnFabricPersistedToStorage(*this, fabricIndex);
         }
     }
     return err;
@@ -540,12 +540,10 @@ CHIP_ERROR FabricTable::LoadFromStorage(FabricInfo * fabric)
     {
         ReturnErrorOnFailure(fabric->LoadFromStorage(mStorage));
 
-        FabricTableDelegate * delegate = mDelegateListRoot;
-        while (delegate)
+        for (FabricTable::Delegate & delegate : mDelegateList)
         {
             ChipLogProgress(Discovery, "Fabric (0x%x) loaded from storage", static_cast<unsigned>(fabric->GetFabricIndex()));
-            delegate->OnFabricRetrievedFromStorage(*this, fabric->GetFabricIndex());
-            delegate = delegate->next;
+            delegate.OnFabricRetrievedFromStorage(*this, fabric->GetFabricIndex());
         }
     }
     return CHIP_NO_ERROR;
@@ -704,26 +702,22 @@ CHIP_ERROR FabricTable::Delete(FabricIndex fabricIndex)
     // index.
     StoreFabricIndexInfo();
 
-    if (mDelegateListRoot != nullptr)
+    if (mFabricCount == 0)
     {
-        if (mFabricCount == 0)
-        {
-            ChipLogError(Discovery, "Trying to delete a fabric, but the current fabric count is already 0");
-        }
-        else
-        {
-            mFabricCount--;
-            ChipLogProgress(Discovery, "Fabric (0x%x) deleted. Calling OnFabricDeletedFromStorage",
-                            static_cast<unsigned>(fabricIndex));
-        }
-
-        FabricTableDelegate * delegate = mDelegateListRoot;
-        while (delegate)
-        {
-            delegate->OnFabricDeletedFromStorage(*this, fabricIndex);
-            delegate = delegate->next;
-        }
+        ChipLogError(Discovery, "Trying to delete a fabric, but the current fabric count is already 0");
     }
+    else
+    {
+        mFabricCount--;
+        ChipLogProgress(Discovery, "Fabric (0x%x) deleted. Calling OnFabricDeletedFromStorage",
+                        static_cast<unsigned>(fabricIndex));
+    }
+
+    for (FabricTable::Delegate & delegate : mDelegateList)
+    {
+        delegate.OnFabricDeletedFromStorage(*this, fabricIndex);
+    }
+
     return CHIP_NO_ERROR;
 }
 
@@ -775,19 +769,19 @@ CHIP_ERROR FabricTable::Init(PersistentStorageDelegate * storage)
     return CHIP_NO_ERROR;
 }
 
-CHIP_ERROR FabricTable::AddFabricDelegate(FabricTableDelegate * delegate)
+CHIP_ERROR FabricTable::AddFabricDelegate(FabricTable::Delegate * delegate)
 {
     VerifyOrReturnError(delegate != nullptr, CHIP_ERROR_INVALID_ARGUMENT);
-    for (FabricTableDelegate * iter = mDelegateListRoot; iter != nullptr; iter = iter->next)
-    {
-        if (iter == delegate)
-        {
-            return CHIP_NO_ERROR;
-        }
-    }
-    delegate->next    = mDelegateListRoot;
-    mDelegateListRoot = delegate;
+    mDelegateList.PushBack(delegate);
     return CHIP_NO_ERROR;
+}
+
+void FabricTable::RemoveFabricDelegate(FabricTable::Delegate * delegate)
+{
+    if (delegate != nullptr)
+    {
+        mDelegateList.Remove(delegate);
+    }
 }
 
 namespace {
