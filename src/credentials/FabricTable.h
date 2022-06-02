@@ -26,6 +26,7 @@
 #include <app/util/basic-types.h>
 #include <credentials/CHIPCert.h>
 #include <crypto/CHIPCryptoPAL.h>
+#include <crypto/OperationalKeystore.h>
 #include <lib/core/CHIPPersistentStorageDelegate.h>
 #if CHIP_CRYPTO_HSM
 #include <crypto/hsm/CHIPCryptoPALHsm.h>
@@ -102,8 +103,6 @@ public:
     uint16_t GetVendorId() const { return mVendorId; }
 
     void SetVendorId(uint16_t vendorId) { mVendorId = vendorId; }
-
-    Crypto::P256Keypair * GetOperationalKey() const { return mOperationalKey; }
 
     /**
      * Sets the P256Keypair used for this fabric.  This will make a copy of the keypair
@@ -214,7 +213,18 @@ public:
     // Test-only, build a fabric using given root cert and NOC
     CHIP_ERROR TestOnlyBuildFabric(ByteSpan rootCert, ByteSpan icacCert, ByteSpan nocCert, ByteSpan nocKey);
 
-private:
+protected:
+    /**
+     * @brief Sign a message with the fabric's operational private key. This ONLY
+     *        works if `SetOperationalKeypair` or `SetExternallyOwnedOperationalKeypair`
+     *        had been called and is an API that is present ONLY to be called by FabricTable.
+     *
+     * @param message - message to sign
+     * @param outSignature - buffer to hold the signature
+     * @return CHIP_NO_ERROR on success or another CHIP_ERROR on crypto internal errors
+     */
+    CHIP_ERROR SignWithOpKeypair(ByteSpan message, P256ECDSASignature & outSignature) const;
+
     static constexpr size_t MetadataTLVMaxSize()
     {
         return TLV::EstimateStructOverhead(sizeof(VendorId), kFabricLabelMaxLengthInBytes);
@@ -388,6 +398,8 @@ public:
     FabricInfo * FindFabricWithCompressedId(CompressedFabricId fabricId);
 
     CHIP_ERROR Init(PersistentStorageDelegate * storage);
+    CHIP_ERROR Init(PersistentStorageDelegate * storage, Crypto::OperationalKeystore * operationalKeystore);
+
     CHIP_ERROR AddFabricDelegate(FabricTable::Delegate * delegate);
     void RemoveFabricDelegate(FabricTable::Delegate * delegate);
 
@@ -397,6 +409,15 @@ public:
     ConstFabricIterator cend() const { return ConstFabricIterator(mStates, CHIP_CONFIG_MAX_FABRICS, CHIP_CONFIG_MAX_FABRICS); }
     ConstFabricIterator begin() const { return cbegin(); }
     ConstFabricIterator end() const { return cend(); }
+
+    CHIP_ERROR SignWithOpKeypair(FabricIndex fabricIndex, ByteSpan message, P256ECDSASignature & outSignature) const;
+
+    CHIP_ERROR AllocatePendingOperationalKey(bool isForUpdateNoc, MutableByteSpan & outputCsr);
+    CHIP_ERROR ActivatePendingOperationalKey();
+
+    // Currently only operational key is managed by this API.
+    CHIP_ERROR CommitPendingFabricData();
+    void RevertPendingFabricData();
 
 private:
     static constexpr size_t IndexInfoTLVMaxSize()
@@ -433,6 +454,7 @@ private:
 
     FabricInfo mStates[CHIP_CONFIG_MAX_FABRICS];
     PersistentStorageDelegate * mStorage = nullptr;
+    Crypto::OperationalKeystore * mOperationalKeystore = nullptr;
 
     // FabricTable::Delegate link to first node, since FabricTable::Delegate is a form
     // of intrusive linked-list item.
@@ -442,6 +464,8 @@ private:
     // it can go and is full.
     Optional<FabricIndex> mNextAvailableFabricIndex;
     uint8_t mFabricCount = 0;
+
+    bool mIsPendingFabricDataPresent = false;
 };
 
 } // namespace chip

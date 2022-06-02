@@ -33,6 +33,7 @@
 #include <credentials/FabricTable.h>
 #include <credentials/GroupDataProvider.h>
 #include <credentials/GroupDataProviderImpl.h>
+#include <crypto/OperationalKeystore.h>
 #include <inet/InetConfig.h>
 #include <lib/core/CHIPConfig.h>
 #include <lib/support/SafeInt.h>
@@ -109,6 +110,8 @@ struct ServerInitParams
     // Optional. Support test event triggers when provided. Must be initialized before being
     // provided.
     TestEventTriggerDelegate * testEventTriggerDelegate = nullptr;
+    // Operational keystore with access to the operational keys: MUST be injected.
+    Crypto::OperationalKeystore * operationalKeystore = nullptr;
 };
 
 /**
@@ -247,6 +250,8 @@ public:
     PersistentStorageDelegate & GetPersistentStorage() { return *mDeviceStorage; }
 
     TestEventTriggerDelegate * GetTestEventTriggerDelegate() { return mTestEventTriggerDelegate; }
+
+    Crypto::OperationalKeystore * GetOperationalKeystore() { return mOperationalKeystore; }
 
     /**
      * This function send the ShutDown event before stopping
@@ -388,6 +393,7 @@ private:
     app::AclStorage * mAclStorage;
 
     TestEventTriggerDelegate * mTestEventTriggerDelegate;
+    Crypto::OperationalKeystore * mOperationalKeystore;
 
     uint16_t mOperationalServicePort;
     uint16_t mUserDirectedCommissioningPort;

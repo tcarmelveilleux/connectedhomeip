@@ -242,9 +242,9 @@ private:
     SessionResumptionStorage * mSessionResumptionStorage = nullptr;
 
     FabricTable * mFabricsTable    = nullptr;
-    const FabricInfo * mFabricInfo = nullptr;
     NodeId mPeerNodeId             = kUndefinedNodeId;
     NodeId mLocalNodeId            = kUndefinedNodeId;
+    FabricIndex mFabricIndex       = kUndefinedFabricIndex;
     CATValues mPeerCATs;
 
     SessionResumptionStorage::ResumptionIdStorage mResumeResumptionId; // ResumptionId which is used to resume this session

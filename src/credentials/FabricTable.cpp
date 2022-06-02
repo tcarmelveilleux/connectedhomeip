@@ -392,6 +392,13 @@ CHIP_ERROR FabricInfo::SetCert(MutableByteSpan & dstCert, const ByteSpan & srcCe
     return CHIP_NO_ERROR;
 }
 
+CHIP_ERROR FabricInfo::SignWithOpKeypair(ByteSpan message, P256ECDSASignature & outSignature) const
+{
+    VerifyOrReturnError(mOperationalKey != nullptr, CHIP_ERROR_KEY_NOT_FOUND);
+
+    return mOperationalKey->ECDSA_sign_msg(message.data(), message.size(), outSignature);
+}
+
 CHIP_ERROR FabricInfo::VerifyCredentials(const ByteSpan & noc, const ByteSpan & icac, ValidationContext & context,
                                          PeerId & nocPeerId, FabricId & fabricId, Crypto::P256PublicKey & nocPubkey) const
 {
@@ -629,6 +636,27 @@ CHIP_ERROR FabricInfo::SetFabricInfo(FabricInfo & newFabric)
                     IsInitialized());
     ChipLogProgress(Discovery, "Assigned compressed fabric ID: 0x" ChipLogFormatX64 ", node ID: 0x" ChipLogFormatX64,
                     ChipLogValueX64(mOperationalId.GetCompressedFabricId()), ChipLogValueX64(mOperationalId.GetNodeId()));
+    return CHIP_NO_ERROR;
+}
+
+CHIP_ERROR FabricInfo::TestOnlyBuildFabric(ByteSpan rootCert, ByteSpan icacCert, ByteSpan nocCert, ByteSpan nocKey)
+{
+    Reset();
+
+    ReturnErrorOnFailure(SetRootCert(rootCert));
+    ReturnErrorOnFailure(SetICACert(icacCert));
+    ReturnErrorOnFailure(SetNOCCert(nocCert));
+
+    // NOTE: this requres ENABLE_HSM_CASE_OPS_KEY is not defined
+    P256SerializedKeypair opKeysSerialized;
+    memcpy(static_cast<uint8_t *>(opKeysSerialized), nocKey.data(), nocKey.size());
+    ReturnErrorOnFailure(opKeysSerialized.SetLength(nocKey.size()));
+
+    P256Keypair opKey;
+    ReturnErrorOnFailure(opKey.Deserialize(opKeysSerialized));
+    ReturnErrorOnFailure(SetOperationalKeypair(&opKey));
+
+    // NOTE: mVendorId and mFabricLabel are not initialize, because they are not used in tests.
     return CHIP_NO_ERROR;
 }
 
@@ -1009,25 +1037,43 @@ CHIP_ERROR FabricTable::ReadFabricInfo(TLV::ContiguousBufferTLVReader & reader)
     return CHIP_NO_ERROR;
 }
 
-CHIP_ERROR FabricInfo::TestOnlyBuildFabric(ByteSpan rootCert, ByteSpan icacCert, ByteSpan nocCert, ByteSpan nocKey)
+CHIP_ERROR FabricTable::SignWithOpKeypair(FabricIndex fabricIndex, ByteSpan message, P256ECDSASignature & outSignature) const
 {
-    Reset();
+    if (mOperationalKeystore != nullptr)
+    {
+        // If we have a keystore, it's the first source of truth for signing
+        return mOperationalKeystore->SignWithOpKeypair(fabricIndex, message, outSignature);
+    }
+    else
+    {
+        // If we don't have a keystore: legacy case of manually injected FabricInfo
+        // states, so delegate to those directly.
+        auto * fabricInfo = FindFabricWithIndex(fabricIndex);
+        VerifyOrReturnError(fabricInfo != nullptr, CHIP_ERROR_KEY_NOT_FOUND);
+        return fabricInfo->SignWithOpKeypair(message, out_signature)
+    }
 
-    ReturnErrorOnFailure(SetRootCert(rootCert));
-    ReturnErrorOnFailure(SetICACert(icacCert));
-    ReturnErrorOnFailure(SetNOCCert(nocCert));
-
-    // NOTE: this requres ENABLE_HSM_CASE_OPS_KEY is not defined
-    P256SerializedKeypair opKeysSerialized;
-    memcpy(static_cast<uint8_t *>(opKeysSerialized), nocKey.data(), nocKey.size());
-    ReturnErrorOnFailure(opKeysSerialized.SetLength(nocKey.size()));
-
-    P256Keypair opKey;
-    ReturnErrorOnFailure(opKey.Deserialize(opKeysSerialized));
-    ReturnErrorOnFailure(SetOperationalKeypair(&opKey));
-
-    // NOTE: mVendorId and mFabricLabel are not initialize, because they are not used in tests.
-    return CHIP_NO_ERROR;
+    return mOperationalKey->ECDSA_sign_msg(message.data(), message.size(), outSignature);
 }
+
+CHIP_ERROR FabricTable::AllocatePendingOperationalKey(bool isForUpdateNoc, MutableByteSpan & outputCsr)
+{
+    // We can only allocate a pending key if no pending state already present,
+    // since there can only be one pending state per fail-safe.
+    VerifyOrReturnError(!mIsPendingFabricDataPresent, CHIP_ERROR_INCORRECT_STATE);
+
+    // We can only manage commissionable pending fail-safe state if we have a keystore
+    VerifyOrReturnError(mOperationalKeystore != nullptr, CHIP_ERROR_INCORRECT_STATE);
+
+    XXXXX GET FABRIC INDEX
+    ReturnErrorOnFailure(mOperationalKeystore->NewOpKeypairForFabric(fabricIndex, outputCsr));
+
+    mIsPendingFabricDataPresent = true;
+}
+CHIP_ERROR FabricTable::ActivatePendingOperationalKey();
+
+// Currently only operational key is managed by this API.
+CHIP_ERROR FabricTable::CommitPendingFabricData();
+void FabricTable::RevertPendingFabricData();
 
 } // namespace chip

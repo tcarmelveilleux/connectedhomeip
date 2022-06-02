@@ -194,6 +194,7 @@ CHIP_ERROR OperationalCredentialsAttrAccess::ReadRootCertificates(EndpointId end
     return aEncoder.EncodeList([](const auto & encoder) -> CHIP_ERROR {
         for (auto & fabricInfo : Server::GetInstance().GetFabricTable())
         {
+            // TODO: Need an iterator over the roots WITHOUT FABRIC INDEX
             ByteSpan cert;
             ReturnErrorOnFailure(fabricInfo.GetRootCert(cert));
             ReturnErrorOnFailure(encoder.Encode(cert));

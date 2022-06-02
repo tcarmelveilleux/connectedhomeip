@@ -470,7 +470,7 @@ CHIP_ERROR CASESession::FindLocalNodeFromDestionationId(const ByteSpan & destina
                 found = true;
                 MutableByteSpan ipkSpan(mIPK);
                 CopySpanToMutableSpan(candidateIpkSpan, ipkSpan);
-                mFabricInfo  = &fabricInfo;
+                mFabricIndex = fabricInfo.GetFabricIndex();
                 mLocalNodeId = nodeId;
                 break;
             }
@@ -499,12 +499,13 @@ CHIP_ERROR CASESession::TryResumeSession(SessionResumptionStorage::ConstResumpti
     ReturnErrorOnFailure(
         ValidateSigmaResumeMIC(resume1MIC, initiatorRandom, resumptionId, ByteSpan(kKDFS1RKeyInfo), ByteSpan(kResume1MIC_Nonce)));
 
-    mFabricInfo = mFabricsTable->FindFabricWithIndex(node.GetFabricIndex());
-    if (mFabricInfo == nullptr)
+    mFabricIndex = node.GetFabricIndex();
+    auto * fabricInfo = mFabricsTable->FindFabricWithIndex(node.GetFabricIndex());
+    if (fabricInfo == nullptr)
         return CHIP_ERROR_INTERNAL;
 
     mPeerNodeId  = node.GetNodeId();
-    mLocalNodeId = mFabricInfo->GetNodeId();
+    mLocalNodeId = fabricInfo->GetNodeId();
 
     return CHIP_NO_ERROR;
 }
@@ -558,9 +559,9 @@ CHIP_ERROR CASESession::HandleSigma1(System::PacketBufferHandle && msg)
     if (err == CHIP_NO_ERROR)
     {
         ChipLogProgress(SecureChannel, "CASE matched destination ID: fabricIndex %u, NodeID 0x" ChipLogFormatX64,
-                        static_cast<unsigned>(mFabricInfo->GetFabricIndex()), ChipLogValueX64(mLocalNodeId));
+                        static_cast<unsigned>(mFabricIndex), ChipLogValueX64(mLocalNodeId));
 
-        // Side-effect of FindLocalNodeFromDestionationId success was that mFabricInfo/mLocalNodeId are now
+        // Side-effect of FindLocalNodeFromDestionationId success was that mFabricIndex/mLocalNodeId are now
         // set to the local fabric and associated NodeId that was targeted by the initiator.
     }
     else
@@ -652,13 +653,14 @@ CHIP_ERROR CASESession::SendSigma2()
 
     VerifyOrReturnError(GetLocalSessionId().HasValue(), CHIP_ERROR_INCORRECT_STATE);
 
-    VerifyOrReturnError(mFabricInfo != nullptr, CHIP_ERROR_INCORRECT_STATE);
+    auto * fabricInfo = mFabricsTable->FindFabricWithIndex(mFabricIndex);
+    VerifyOrReturnError(fabricInfo != nullptr, CHIP_ERROR_INCORRECT_STATE);
 
     ByteSpan icaCert;
-    ReturnErrorOnFailure(mFabricInfo->GetICACert(icaCert));
+    ReturnErrorOnFailure(fabricInfo->GetICACert(icaCert));
 
     ByteSpan nocCert;
-    ReturnErrorOnFailure(mFabricInfo->GetNOCCert(nocCert));
+    ReturnErrorOnFailure(fabricInfo->GetNOCCert(nocCert));
 
     // Fill in the random value
     uint8_t msg_rand[kSigmaParamRandomNumberSize];
@@ -694,12 +696,9 @@ CHIP_ERROR CASESession::SendSigma2()
                                           ByteSpan(mRemotePubKey, mRemotePubKey.Length()), msg_R2_Signed.Get(), msg_r2_signed_len));
 
     // Generate a Signature
-    VerifyOrReturnError(mFabricInfo->GetOperationalKey() != nullptr, CHIP_ERROR_INCORRECT_STATE);
-
     P256ECDSASignature tbsData2Signature;
     ReturnErrorOnFailure(
-        mFabricInfo->GetOperationalKey()->ECDSA_sign_msg(msg_R2_Signed.Get(), msg_r2_signed_len, tbsData2Signature));
-
+        mFabricTable->SignWithOpKeypair(mFabricIndex, ByteSpan{msg_R2_Signed.Get(), msg_r2_signed_len}, tbsData2Signature));
     msg_R2_Signed.Free();
 
     // Construct Sigma2 TBE Data
@@ -1035,10 +1034,11 @@ CHIP_ERROR CASESession::SendSigma3()
     ByteSpan icaCert;
     ByteSpan nocCert;
 
-    VerifyOrExit(mFabricInfo != nullptr, err = CHIP_ERROR_INCORRECT_STATE);
+    auto * fabricInfo = mFabricsTable->FindFabricWithIndex(mFabricIndex);
+    VerifyOrExit(fabricInfo != nullptr, err = CHIP_ERROR_INCORRECT_STATE);
 
-    SuccessOrExit(err = mFabricInfo->GetICACert(icaCert));
-    SuccessOrExit(err = mFabricInfo->GetNOCCert(nocCert));
+    SuccessOrExit(err = fabricInfo->GetICACert(icaCert));
+    SuccessOrExit(err = fabricInfo->GetNOCCert(nocCert));
 
     // Prepare Sigma3 TBS Data Blob
     msg_r3_signed_len = TLV::EstimateStructOverhead(icaCert.size(), nocCert.size(), kP256_PublicKey_Length, kP256_PublicKey_Length);
@@ -1049,8 +1049,7 @@ CHIP_ERROR CASESession::SendSigma3()
                                          ByteSpan(mRemotePubKey, mRemotePubKey.Length()), msg_R3_Signed.Get(), msg_r3_signed_len));
 
     // Generate a signature
-    VerifyOrExit(mFabricInfo->GetOperationalKey() != nullptr, err = CHIP_ERROR_INCORRECT_STATE);
-    err = mFabricInfo->GetOperationalKey()->ECDSA_sign_msg(msg_R3_Signed.Get(), msg_r3_signed_len, tbsData3Signature);
+    err = mFabricTable->SignWithOpKeypair(mFabricIndex, ByteSpan{msg_R3_Signed.Get(), msg_r3_signed_len}, tbsData3Signature);
     SuccessOrExit(err);
 
     // Prepare Sigma3 TBE Data Blob
@@ -1396,15 +1395,16 @@ CHIP_ERROR CASESession::ValidateSigmaResumeMIC(const ByteSpan & resumeMIC, const
 CHIP_ERROR CASESession::ValidatePeerIdentity(const ByteSpan & peerNOC, const ByteSpan & peerICAC, NodeId & peerNodeId,
                                              Crypto::P256PublicKey & peerPublicKey)
 {
-    ReturnErrorCodeIf(mFabricInfo == nullptr, CHIP_ERROR_INCORRECT_STATE);
+    auto * fabricInfo = mFabricsTable->FindFabricWithIndex(mFabricIndex);
+    ReturnErrorCodeIf(fabricInfo == nullptr, CHIP_ERROR_INCORRECT_STATE);
 
     ReturnErrorOnFailure(SetEffectiveTime());
 
     PeerId peerId;
     FabricId peerNOCFabricId;
-    ReturnErrorOnFailure(mFabricInfo->VerifyCredentials(peerNOC, peerICAC, mValidContext, peerId, peerNOCFabricId, peerPublicKey));
+    ReturnErrorOnFailure(fabricInfo->VerifyCredentials(peerNOC, peerICAC, mValidContext, peerId, peerNOCFabricId, peerPublicKey));
 
-    VerifyOrReturnError(mFabricInfo->GetFabricId() == peerNOCFabricId, CHIP_ERROR_INVALID_CASE_PARAMETER);
+    VerifyOrReturnError(fabricInfo->GetFabricId() == peerNOCFabricId, CHIP_ERROR_INVALID_CASE_PARAMETER);
 
     peerNodeId = peerId.GetNodeId();
 
