@@ -175,6 +175,7 @@ CHIP_ERROR DeviceController::InitControllerNOCChain(const ControllerInitParams &
 
     ReturnErrorOnFailure(ConvertX509CertToChipCert(params.controllerRCAC, chipCertSpan));
     ReturnErrorOnFailure(newFabric.SetRootCert(chipCertSpan));
+    ReturnErrorOnFailure(Credentials::ExtractPublicKeyFromChipCert(chipCertSpan, rootPublicKey));
 
     if (params.controllerICAC.empty())
     {
@@ -194,7 +195,7 @@ CHIP_ERROR DeviceController::InitControllerNOCChain(const ControllerInitParams &
     ReturnErrorOnFailure(newFabric.SetNOCCert(chipCertSpan));
     ReturnErrorOnFailure(ExtractFabricIdFromCert(chipCertSpan, &fabricId));
 
-    ReturnErrorOnFailure(newFabric.GetRootPubkey(rootPublicKey));
+XXXXX: This needs to be revisited...
     mFabricInfo = params.systemState->Fabrics()->FindFabric(rootPublicKey, fabricId);
     if (mFabricInfo != nullptr)
     {

@@ -135,7 +135,6 @@ public:
 
     // TODO - Update these APIs to take ownership of the buffer, instead of copying
     //        internally.
-    // TODO - Optimize persistent storage of NOC and Root Cert in FabricInfo.
     CHIP_ERROR SetRootCert(const chip::ByteSpan & cert) { return SetCert(mRootCert, cert); }
     CHIP_ERROR SetICACert(const chip::ByteSpan & cert) { return SetCert(mICACert, cert); }
     CHIP_ERROR SetICACert(const Optional<ByteSpan> & cert) { return SetICACert(cert.ValueOr(ByteSpan())); }
@@ -144,39 +143,6 @@ public:
     bool IsInitialized() const { return IsOperationalNodeId(mOperationalId.GetNodeId()); }
 
     bool HasOperationalKey() const { return mOperationalKey != nullptr; }
-
-    // TODO - Refactor storing and loading of fabric info from persistent storage.
-    //        The op cert array doesn't need to be in RAM except when it's being
-    //        transmitted to peer node during CASE session setup.
-    CHIP_ERROR GetRootCert(ByteSpan & cert) const
-    {
-        ReturnErrorCodeIf(mRootCert.empty(), CHIP_ERROR_INCORRECT_STATE);
-        cert = mRootCert;
-        return CHIP_NO_ERROR;
-    }
-
-    CHIP_ERROR GetICACert(ByteSpan & cert) const
-    {
-        cert = mICACert;
-        return CHIP_NO_ERROR;
-    }
-
-    CHIP_ERROR GetNOCCert(ByteSpan & cert) const
-    {
-        ReturnErrorCodeIf(mNOCCert.empty(), CHIP_ERROR_INCORRECT_STATE);
-        cert = mNOCCert;
-        return CHIP_NO_ERROR;
-    }
-
-    CHIP_ERROR GetTrustedRootId(Credentials::CertificateKeyId & skid) const
-    {
-        return Credentials::ExtractSKIDFromChipCert(mRootCert, skid);
-    }
-
-    CHIP_ERROR GetRootPubkey(Credentials::P256PublicKeySpan & publicKey) const
-    {
-        return Credentials::ExtractPublicKeyFromChipCert(mRootCert, publicKey);
-    }
 
     // Verifies credentials, using this fabric info's root certificate.
     CHIP_ERROR VerifyCredentials(const ByteSpan & noc, const ByteSpan & icac, Credentials::ValidationContext & context,
@@ -247,6 +213,34 @@ protected:
      */
     CHIP_ERROR SignWithOpKeypair(ByteSpan message, Crypto::P256ECDSASignature & outSignature) const;
 
+    // TODO - Refactor storing and loading of fabric info from persistent storage.
+    //        The op cert array doesn't need to be in RAM except when it's being
+    //        transmitted to peer node during CASE session setup.
+    CHIP_ERROR GetRootCert(ByteSpan & cert) const
+    {
+        ReturnErrorCodeIf(mRootCert.empty(), CHIP_ERROR_INCORRECT_STATE);
+        cert = mRootCert;
+        return CHIP_NO_ERROR;
+    }
+
+    CHIP_ERROR GetICACert(ByteSpan & cert) const
+    {
+        cert = mICACert;
+        return CHIP_NO_ERROR;
+    }
+
+    CHIP_ERROR GetNOCCert(ByteSpan & cert) const
+    {
+        ReturnErrorCodeIf(mNOCCert.empty(), CHIP_ERROR_INCORRECT_STATE);
+        cert = mNOCCert;
+        return CHIP_NO_ERROR;
+    }
+
+    CHIP_ERROR GetRootPubkey(Credentials::P256PublicKeySpan & publicKey) const
+    {
+        return Credentials::ExtractPublicKeyFromChipCert(mRootCert, publicKey);
+    }
+
     static constexpr size_t MetadataTLVMaxSize()
     {
         return TLV::EstimateStructOverhead(sizeof(VendorId), kFabricLabelMaxLengthInBytes);
@@ -269,6 +263,7 @@ protected:
     mutable Crypto::P256Keypair * mOperationalKey = nullptr;
 #endif
     bool mHasExternallyOwnedOperationalKey = false;
+    bool mHasExternallyOwnedCertificates = false;
 
     MutableByteSpan mRootCert;
     MutableByteSpan mICACert;
