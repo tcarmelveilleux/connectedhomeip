@@ -454,4 +454,219 @@ CHIP_ERROR Server::SendUserDirectedCommissioningRequest(chip::Transport::PeerAdd
 }
 #endif // CHIP_DEVICE_CONFIG_ENABLE_COMMISSIONER_DISCOVERY_CLIENT
 
+/* ================ START OF STORAGE API AUDIT (#) ==================== */
+#ifdef NL_TEST_ASSERT
+#undef NL_TEST_ASSERT
+#endif
+
+#define NL_TEST_ASSERT(inSuite, inCondition)                              \
+    do {                                                                  \
+        (inSuite)->performedAssertions += 1;                              \
+                                                                          \
+        if (!(inCondition))                                               \
+        {                                                                 \
+            ChipLogError(Automation, "%s:%u: assertion failed: \"%s\"\n", \
+                         __FILE__, __LINE__, #inCondition);               \
+            (inSuite)->failedAssertions += 1;                             \
+            (inSuite)->flagError = true;                                  \
+        }                                                                 \
+    } while (0)
+
+// The following test is a copy of `src/lib/support/tests/TestTestPersistentStorageDelegate.cpp` 's
+// `TestBasicApi()` test. It has to be copied since we currently are not setup to
+// run on-device unit tests at large on all embedded platforms part of the SDK.
+CHIP_ERROR AuditPersistentStorageDelegateImplementation(PersistentStorageDelegate & storage)
+{
+    struct fakeTestSuite
+    {
+        int performedAssertions = 0;
+        int failedAssertions = 0;
+        bool flagError = false;
+    } theSuite;
+    auto * inSuite = &theSuite;
+
+    // Start fresh.
+    (void)storage.SyncDeleteKeyValue("roboto");
+    (void)storage.SyncDeleteKeyValue("key2");
+    (void)storage.SyncDeleteKeyValue("key3");
+    (void)storage.SyncDeleteKeyValue("key4");
+    (void)storage.SyncDeleteKeyValue("keyDOES_NOT_EXIST");
+
+    // ========== Start of actual audit =========
+
+    uint8_t buf[16];
+    uint16_t size = sizeof(buf);
+
+    // Key not there
+    CHIP_ERROR err;
+    memset(&buf[0], 0, sizeof(buf));
+    size = sizeof(buf);
+    err  = storage.SyncGetKeyValue("roboto", &buf[0], size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_ERROR_PERSISTED_STORAGE_VALUE_NOT_FOUND);
+    NL_TEST_ASSERT(inSuite, size == sizeof(buf));
+
+#if 0
+    NL_TEST_ASSERT(inSuite, storage.GetNumKeys() == 0);
+#endif
+
+    err = storage.SyncDeleteKeyValue("roboto");
+    NL_TEST_ASSERT(inSuite, err == CHIP_ERROR_PERSISTED_STORAGE_VALUE_NOT_FOUND);
+
+    // Add basic key, read it back, erase it
+    const char * kStringValue1 = "abcd";
+    err                        = storage.SyncSetKeyValue("roboto", kStringValue1, static_cast<uint16_t>(strlen(kStringValue1)));
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+
+    memset(&buf[0], 0, sizeof(buf));
+    size = sizeof(buf);
+    err  = storage.SyncGetKeyValue("roboto", &buf[0], size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+    NL_TEST_ASSERT(inSuite, size == strlen(kStringValue1));
+    NL_TEST_ASSERT(inSuite, 0 == memcmp(&buf[0], kStringValue1, strlen(kStringValue1)));
+
+    err = storage.SyncDeleteKeyValue("roboto");
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+
+    memset(&buf[0], 0, sizeof(buf));
+    size = sizeof(buf);
+    err  = storage.SyncGetKeyValue("roboto", &buf[0], size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_ERROR_PERSISTED_STORAGE_VALUE_NOT_FOUND);
+    NL_TEST_ASSERT(inSuite, size == sizeof(buf));
+
+    // Validate adding 2 different keys
+    const char * kStringValue2 = "0123abcd";
+    const char * kStringValue3 = "cdef89";
+    err                        = storage.SyncSetKeyValue("key2", kStringValue2, static_cast<uint16_t>(strlen(kStringValue2)));
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+
+    err = storage.SyncSetKeyValue("key3", kStringValue3, static_cast<uint16_t>(strlen(kStringValue3)));
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+
+#if 0
+    NL_TEST_ASSERT(inSuite, storage.GetNumKeys() == 2);
+    auto keys = storage.GetKeys();
+    std::array<std::string, 2> kExpectedKeys{ "key2", "key3" };
+    NL_TEST_ASSERT(inSuite, SetMatches(keys, kExpectedKeys) == true);
+#endif
+
+    // Read them back
+
+    memset(&buf[0], 0, sizeof(buf));
+    size = sizeof(buf);
+    err  = storage.SyncGetKeyValue("key2", &buf[0], size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+    NL_TEST_ASSERT(inSuite, size == strlen(kStringValue2));
+    NL_TEST_ASSERT(inSuite, 0 == memcmp(&buf[0], kStringValue2, strlen(kStringValue2)));
+
+    memset(&buf[0], 0, sizeof(buf));
+    size = sizeof(buf);
+    err  = storage.SyncGetKeyValue("key3", &buf[0], size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+    NL_TEST_ASSERT(inSuite, size == strlen(kStringValue3));
+    NL_TEST_ASSERT(inSuite, 0 == memcmp(&buf[0], kStringValue3, strlen(kStringValue3)));
+
+    memset(&buf[0], 0, sizeof(buf));
+    size = sizeof(buf);
+    err  = storage.SyncGetKeyValue("key2", &buf[0], size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+    NL_TEST_ASSERT(inSuite, size == strlen(kStringValue2));
+    NL_TEST_ASSERT(inSuite, 0 == memcmp(&buf[0], kStringValue2, strlen(kStringValue2)));
+
+    // Pre-clear buffer to make sure next operations don't change contents
+    uint8_t all_zeroes[sizeof(buf)];
+    memset(&buf[0], 0, sizeof(buf));
+    memset(&all_zeroes[0], 0, sizeof(all_zeroes));
+
+    // Read in too small a buffer: no data read, but correct size given
+    memset(&buf[0], 0, sizeof(buf));
+    size = static_cast<uint16_t>(strlen(kStringValue2) - 1);
+    err  = storage.SyncGetKeyValue("key2", &buf[0], size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_ERROR_BUFFER_TOO_SMALL);
+    NL_TEST_ASSERT(inSuite, size == strlen(kStringValue2));
+    NL_TEST_ASSERT(inSuite, 0 == memcmp(&buf[0], &all_zeroes[0], sizeof(buf)));
+
+    // Read in too small a buffer, which is nullptr and size == 0: check correct size given
+    size = 0;
+    err  = storage.SyncGetKeyValue("key2", nullptr, size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_ERROR_BUFFER_TOO_SMALL);
+    NL_TEST_ASSERT(inSuite, size == strlen(kStringValue2));
+    NL_TEST_ASSERT(inSuite, 0 == memcmp(&buf[0], &all_zeroes[0], sizeof(buf)));
+
+    // Read in too small a buffer, which is nullptr and size != 0: error
+    size = static_cast<uint16_t>(strlen(kStringValue2) - 1);
+    err  = storage.SyncGetKeyValue("key2", nullptr, size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_ERROR_INVALID_ARGUMENT);
+    NL_TEST_ASSERT(inSuite, 0 == memcmp(&buf[0], &all_zeroes[0], sizeof(buf)));
+
+    // Read in zero size buffer, which is also nullptr (i.e. just try to find if key exists without
+    // using a buffer).
+    size = 0;
+    err  = storage.SyncGetKeyValue("key2", nullptr, size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_ERROR_BUFFER_TOO_SMALL);
+    NL_TEST_ASSERT(inSuite, size == strlen(kStringValue2));
+    NL_TEST_ASSERT(inSuite, 0 == memcmp(&buf[0], &all_zeroes[0], sizeof(buf)));
+
+    // When key not found, size is not touched.
+    size = sizeof(buf);
+    err  = storage.SyncGetKeyValue("keyDOES_NOT_EXIST", &buf[0], size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_ERROR_PERSISTED_STORAGE_VALUE_NOT_FOUND);
+    NL_TEST_ASSERT(inSuite, sizeof(buf) == size);
+    NL_TEST_ASSERT(inSuite, 0 == memcmp(&buf[0], &all_zeroes[0], sizeof(buf)));
+
+    size = 0;
+    err  = storage.SyncGetKeyValue("keyDOES_NOT_EXIST", nullptr, size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_ERROR_PERSISTED_STORAGE_VALUE_NOT_FOUND);
+    NL_TEST_ASSERT(inSuite, 0 == size);
+    NL_TEST_ASSERT(inSuite, 0 == memcmp(&buf[0], &all_zeroes[0], sizeof(buf)));
+
+    // Even when key not found, cannot pass nullptr with size != 0.
+    size = static_cast<uint16_t>(sizeof(buf));
+    err  = storage.SyncGetKeyValue("keyDOES_NOT_EXIST", nullptr, size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_ERROR_INVALID_ARGUMENT);
+    NL_TEST_ASSERT(inSuite, sizeof(buf) == size);
+    NL_TEST_ASSERT(inSuite, 0 == memcmp(&buf[0], &all_zeroes[0], size));
+
+    // Attempt an empty key write with either nullptr or zero size works
+    err = storage.SyncSetKeyValue("key2", kStringValue2, 0);
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+
+    size = 0;
+    err  = storage.SyncGetKeyValue("key2", &buf[0], size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+    NL_TEST_ASSERT(inSuite, size == 0);
+
+    err = storage.SyncSetKeyValue("key2", nullptr, 0);
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+
+    size = 0;
+    err  = storage.SyncGetKeyValue("key2", &buf[0], size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+    NL_TEST_ASSERT(inSuite, size == 0);
+
+    // Failure to set key if buffer is nullptr and size != 0
+    size = 10;
+    err  = storage.SyncSetKeyValue("key4", nullptr, size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_ERROR_INVALID_ARGUMENT);
+
+    // Can delete empty key
+    err = storage.SyncDeleteKeyValue("key2");
+    NL_TEST_ASSERT(inSuite, err == CHIP_NO_ERROR);
+
+    size = static_cast<uint16_t>(sizeof(buf));
+    err  = storage.SyncGetKeyValue("key2", &buf[0], size);
+    NL_TEST_ASSERT(inSuite, err == CHIP_ERROR_PERSISTED_STORAGE_VALUE_NOT_FOUND);
+    NL_TEST_ASSERT(inSuite, size == sizeof(buf));
+
+    if (inSuite->flagError)
+    {
+        ChipLogError(Automation, "==== STORAGE AUDIT FAILED: %d/%d failed assertions ====", inSuite->failedAssertions, inSuite->performedAssertions);
+        return CHIP_ERROR_PERSISTED_STORAGE_FAILED;
+    }
+
+    ChipLogError(Automation, "==== STORAGE AUDIT SUCCESS ====");
+    return CHIP_NO_ERROR;
+}
+
+/* ================ END OF STORAGE API AUDIT (#) ==================== */
+
 } // namespace chip

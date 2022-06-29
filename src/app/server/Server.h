@@ -510,4 +510,8 @@ private:
     Inet::InterfaceId mInterfaceId;
 };
 
+/* ================ START OF STORAGE API AUDIT (#) ==================== */
+CHIP_ERROR AuditPersistentStorageDelegateImplementation(PersistentStorageDelegate & storage);
+/* ================= END OF STORAGE API AUDIT (#) ===================== */
+
 } // namespace chip

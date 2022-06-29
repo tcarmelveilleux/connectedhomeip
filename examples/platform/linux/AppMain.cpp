@@ -315,7 +315,9 @@ void ChipLinuxAppMainLoop()
     initParams.testEventTriggerDelegate = &testEventTriggerDelegate;
 #endif
 
-    // Init ZCL Data Model and CHIP App Server
+    VerifyOrDie(AuditPersistentStorageDelegateImplementation(*initParams.persistentStorageDelegate) == CHIP_NO_ERROR);
+
+    // Init Data Model and App Server
     Server::GetInstance().Init(initParams);
 
     gExampleDeviceInfoProvider.SetStorageDelegate(&chip::Server::GetInstance().GetPersistentStorage());
