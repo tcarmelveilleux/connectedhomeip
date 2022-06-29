@@ -1011,6 +1011,7 @@ CHIP_ERROR FabricTable::Init(const FabricTable::InitParams & initParams)
     }
     else
     {
+// XXXXXXXXX: Buffer Too Small will cause buffer overrun of size set to actual key size!!!!
         ReturnErrorOnFailure(err);
         TLV::ContiguousBufferTLVReader reader;
         reader.Init(buf, size);

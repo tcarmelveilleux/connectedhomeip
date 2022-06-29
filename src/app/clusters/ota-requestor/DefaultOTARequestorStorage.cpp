@@ -140,6 +140,10 @@ CHIP_ERROR DefaultOTARequestorStorage::StoreCurrentUpdateState(OTAUpdateStateEnu
                                                sizeof(currentUpdateState));
 }
 
+// TODO: This reads storage raw: CAN BREAK ACROSS VERSIONS ON DATA SIZE CHANGES TO THE KEY!
+// If you write an update state of N bytes and next version assumes smaller buffer, the
+// read will see CHIP_ERROR_BUFFER_TOO_SMALL and the error path will propagate up... This
+// can happen on changes of the actual data types read/written
 CHIP_ERROR DefaultOTARequestorStorage::LoadCurrentUpdateState(OTAUpdateStateEnum & currentUpdateState)
 {
     uint16_t size = static_cast<uint16_t>(sizeof(currentUpdateState));

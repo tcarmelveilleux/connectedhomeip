@@ -78,6 +78,8 @@ CHIP_ERROR CustomCSRResponseOperationalKeyStore::ReuseOpKeypair(FabricIndex fabr
             err = CHIP_ERROR_INVALID_FABRIC_INDEX;
         }
         ReturnErrorOnFailure(err);
+
+// XXX: BUFFER_TOO_SMALL corner???
         buf.SetLength(static_cast<size_t>(size));
 
         // Read-out the operational key TLV entry.
