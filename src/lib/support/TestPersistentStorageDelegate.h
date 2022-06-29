@@ -211,17 +211,23 @@ protected:
         bool contains = HasKey(key);
         VerifyOrReturnError(contains, CHIP_ERROR_PERSISTED_STORAGE_VALUE_NOT_FOUND);
 
+        CHIP_ERROR returnValue = CHIP_NO_ERROR;
+
         std::vector<uint8_t> & value = mStorage[key];
         size_t valueSize             = value.size();
         if (size < valueSize)
         {
-            size = CanCastTo<uint16_t>(valueSize) ? static_cast<uint16_t>(valueSize) : 0;
-            return CHIP_ERROR_BUFFER_TOO_SMALL;
+            returnValue = CHIP_ERROR_BUFFER_TOO_SMALL;
+            // Don't touch size: we will read as much as the buffer allows
+        }
+        else
+        {
+            // Size of value was smaller: update size argument to match
+            size = static_cast<uint16_t>(valueSize);
         }
 
-        size = static_cast<uint16_t>(valueSize);
         memcpy(buffer, value.data(), size);
-        return CHIP_NO_ERROR;
+        return returnValue;
     }
 
     virtual CHIP_ERROR SyncSetKeyValueInternal(const char * key, const void * value, uint16_t size)
