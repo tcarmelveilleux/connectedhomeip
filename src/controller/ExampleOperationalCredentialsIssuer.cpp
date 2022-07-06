@@ -39,6 +39,17 @@ using namespace Credentials;
 using namespace Crypto;
 using namespace TLV;
 
+namespace
+{
+CHIP_ERROR CHIP_ERROR NewRootX509CertLarge(const X509CertRequestParams & requestParams, Crypto::P256Keypair & issuerKeypair,
+                                           MutableByteSpan & x509Cert)
+{
+    CHIP_ERROR err = CHIP_NO_ERROR;
+
+}
+
+} // namespace
+
 CHIP_ERROR ExampleOperationalCredentialsIssuer::Initialize(PersistentStorageDelegate & storage)
 {
     using namespace ASN1;

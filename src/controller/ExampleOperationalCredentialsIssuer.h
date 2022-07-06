@@ -65,6 +65,11 @@ public:
         mNodeIdRequested     = true;
     }
 
+    void SetMaximallyLargeCertsUsed(bool areMaximallyLargeCertsUsed)
+    {
+        mUseMaximallySizedCerts = areMaximallyLargeCertsUsed;
+    }
+
     void SetFabricIdForNextNOCRequest(FabricId fabricId) override { mNextFabricId = fabricId; }
 
     /**
@@ -117,6 +122,7 @@ private:
 
     NodeId mNextAvailableNodeId          = 1;
     PersistentStorageDelegate * mStorage = nullptr;
+    bool mUseMaximallySizedCerts         = true;
 
     NodeId mNextRequestedNodeId = 1;
     FabricId mNextFabricId      = 1;
