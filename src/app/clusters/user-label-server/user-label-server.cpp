@@ -121,7 +121,7 @@ CHIP_ERROR UserLabelAttrAccess::WriteLabelList(const ConcreteDataAttributePath &
     EndpointId endpoint                        = aPath.mEndpointId;
     DeviceLayer::DeviceInfoProvider * provider = DeviceLayer::GetDeviceInfoProvider();
 
-    VerifyOrReturnError(provider != nullptr, CHIP_ERROR_NOT_IMPLEMENTED);
+    VerifyOrReturnError(provider != nullptr, CHIP_IM_GLOBAL_STATUS(UnsupportedAttribute));
 
     if (!aPath.IsListItemOperation())
     {
@@ -129,24 +129,32 @@ CHIP_ERROR UserLabelAttrAccess::WriteLabelList(const ConcreteDataAttributePath &
         LabelList::TypeInfo::DecodableType decodablelist;
 
         ReturnErrorOnFailure(aDecoder.Decode(decodablelist));
-        ReturnErrorCodeIf(!IsValidLabelEntryList(decodablelist), CHIP_ERROR_INVALID_ARGUMENT);
+        ReturnErrorCodeIf(!IsValidLabelEntryList(decodablelist), CHIP_IM_GLOBAL_STATUS(ConstraintError));
 
         auto iter = decodablelist.begin();
         while (iter.Next())
         {
             auto & entry = iter.GetValue();
-            ReturnErrorOnFailure(labelList.add(entry));
+            CHIP_ERROR err = labelList.add(entry);
+            VerifyOrReturnError(err != CHIP_ERROR_NO_MEMORY, CHIP_IM_GLOBAL_STATUS(ResourceExhausted));
+
+            // Other errors likely map to failure
+            ReturnErrorOnFailure(err);
         }
         ReturnErrorOnFailure(iter.GetStatus());
 
-        return provider->SetUserLabelList(endpoint, labelList);
+        CHIP_ERROR err = provider->SetUserLabelList(endpoint, labelList);
+        VerifyOrReturnError(err != CHIP_ERROR_NO_MEMORY, CHIP_IM_GLOBAL_STATUS(ResourceExhausted));
+        // Other errors likely map to failure
+        ReturnErrorOnFailure(err);
     }
     if (aPath.mListOp == ConcreteDataAttributePath::ListOperation::AppendItem)
     {
         Structs::LabelStruct::DecodableType entry;
 
-        ReturnErrorOnFailure(aDecoder.Decode(entry));
-        ReturnErrorCodeIf(!IsValidLabelEntry(entry), CHIP_ERROR_INVALID_ARGUMENT);
+        CHIP_ERROR err = aDecoder.Decode(entry);
+        ReturnErrorCodeIf(err != CHIP_NO_ERROR, CHIP_IM_GLOBAL_STATUS(ConstraintError));
+        ReturnErrorCodeIf(!IsValidLabelEntryList(decodablelist), CHIP_IM_GLOBAL_STATUS(ConstraintError));
 
         return provider->AppendUserLabel(endpoint, entry);
     }
