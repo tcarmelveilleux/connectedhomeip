@@ -24,15 +24,7 @@ buildconfig_header("crypto_buildconfig") {
   header = "CryptoBuildConfig.h"
   header_dir = "crypto"
 
-  chip_crypto_mbedtls = chip_crypto == "mbedtls"
-  chip_crypto_openssl = chip_crypto == "openssl"
-  chip_crypto_boringssl = chip_crypto == "boringssl"
-
-  defines = [
-    "CHIP_CRYPTO_MBEDTLS=${chip_crypto_mbedtls}",
-    "CHIP_CRYPTO_OPENSSL=${chip_crypto_openssl}",
-    "CHIP_CRYPTO_BORINGSSL=${chip_crypto_boringssl}",
-  ]
+  defines = []
 
   if (chip_with_se05x == 1) {
     defines += [ "CHIP_CRYPTO_HSM=1" ]
@@ -45,6 +37,18 @@ buildconfig_header("crypto_buildconfig") {
   if (chip_with_se05x_da == 1) {
     defines += [ "ENABLE_HSM_DEVICE_ATTESTATION=1" ]
   }
+}
+
+config("crypto_config") {
+  chip_crypto_mbedtls = chip_crypto == "mbedtls"
+  chip_crypto_openssl = chip_crypto == "openssl"
+  chip_crypto_boringssl = chip_crypto == "boringssl"
+
+  defines = [
+    "CHIP_CRYPTO_MBEDTLS=${chip_crypto_mbedtls}",
+    "CHIP_CRYPTO_OPENSSL=${chip_crypto_openssl}",
+    "CHIP_CRYPTO_BORINGSSL=${chip_crypto_boringssl}",
+  ]
 }
 
 if (chip_crypto == "openssl") {
@@ -82,7 +86,7 @@ static_library("crypto") {
     "${nlassert_root}:nlassert",
   ]
 
-  public_configs = []
+  public_configs = [ ":crypto_config" ]
 
   if (chip_crypto == "mbedtls") {
     sources += [ "CHIPCryptoPALmbedTLS.cpp" ]

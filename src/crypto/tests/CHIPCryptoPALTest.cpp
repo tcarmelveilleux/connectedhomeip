@@ -1948,6 +1948,8 @@ static void TestX509_CertChainValidation(nlTestSuite * inSuite, void * inContext
     // Trying to validate ICA (as a leaf) which chains to Root - should fail bacause Root is loaded as untrusted intermediate cert.
     err = ValidateCertificateChain(wrong_root_cert.data(), wrong_root_cert.size(), root_cert.data(), root_cert.size(),
                                    ica_cert.data(), ica_cert.size(), chainValidationResult);
+
+    printf("======== err = %" CHIP_ERROR_FORMAT "\n", err.Format());
     NL_TEST_ASSERT(inSuite, err == CHIP_ERROR_CERT_NOT_TRUSTED);
     NL_TEST_ASSERT(inSuite, chainValidationResult == CertificateChainValidationResult::kChainInvalid);
 }
