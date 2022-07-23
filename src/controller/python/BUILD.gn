@@ -281,6 +281,7 @@ chip_python_wheel_action("chip-core") {
     "pyyaml",
     "ipdb",
     "deprecation",
+    "mobly",
   ]
 
   if (current_os == "mac") {
@@ -397,6 +398,7 @@ chip_python_wheel_action("chip-repl") {
     "ipython!=8.1.0",
     "rich",
     "ipykernel",
+    "mobly",
   ]
 
   py_package_name = "chip-repl"

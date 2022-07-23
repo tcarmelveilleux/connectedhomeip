@@ -170,7 +170,14 @@ class PersistentStorage:
     def GetUnderlyingStorageAdapter(self):
         return self._storageAdapterObj
 
+
+
+
     def __del__(self):
+        try:
+            raise ValueError("roboto")
+        except:
+            logging.getLogger("roboto").exception("patate")
         builtins.chipStack.Call(
             lambda: self._handle.pychip_Storage_ShutdownAdapter()
         )

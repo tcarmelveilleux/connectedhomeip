@@ -47,10 +47,10 @@ class FabricAdmin:
 
         Each instance of the fabric admin is associated with a single instance
         of the OperationalCredentialsAdapter. This adapter instance implements
-        the OperationalCredentialsDelegate and is meant to provide a Python 
+        the OperationalCredentialsDelegate and is meant to provide a Python
         adapter to the functions in that delegate so that the fabric admin
         can in turn, provide users the ability to generate their own NOCs for devices
-        on the network (not implemented yet). For now, it relies on the in-built 
+        on the network (not implemented yet). For now, it relies on the in-built
         ExampleOperationalCredentialsIssuer to do that.
 
         TODO: Add support for FabricAdmin to permit callers to hook up their own GenerateNOC
@@ -88,21 +88,14 @@ class FabricAdmin:
             nextFabricId = nextFabricId + 1
         return nextFabricId
 
-    def __init__(self, vendorId: int, rcac: bytes = None, icac: bytes = None, fabricIndex: int = None, fabricId: int = None):
+    def __init__(self, vendorId: int, fabricIndex: int = None, fabricId: int = None):
         ''' Creates a valid FabricAdmin object with valid RCAC/ICAC, and registers itself as an OperationalCredentialsDelegate
             for other parts of the system (notably, DeviceController) to vend NOCs.
 
             vendorId:       Valid operational Vendor ID associated with this fabric.
-            rcac, icac:     Specify the RCAC and ICAC to be used with this fabric (not-supported). If not specified, an RCAC and ICAC will
-                            be automatically generated.
-
             fabricIndex:    Local fabric index to be associated with this fabric. If omitted, one will be automatically assigned.
             fabricId:       Local fabric ID to be associated with this fabric. If omitted, one will be automatically assigned.
         '''
-        if (rcac is not None or icac is not None):
-            raise ValueError(
-                "Providing valid rcac/icac values is not supported right now!")
-
         if (vendorId is None or vendorId == 0):
             raise ValueError(
                 f"Invalid VendorID ({vendorId}) provided!")
