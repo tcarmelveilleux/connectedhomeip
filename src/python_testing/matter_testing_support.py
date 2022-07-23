@@ -86,8 +86,8 @@ class MatterStackState:
             # Unfortunately, all the below are singleton and possibly
             # managed elsewhere so we have to be careful not to touch unless
             # we initialized ourselves.
-            chip.FabricAdmin.ShutdownAll()
             ChipDeviceCtrl.ChipDeviceController.ShutdownAll()
+            chip.FabricAdmin.FabricAdmin.ShutdownAll()
             global_chip_stack = builtins.chipStack
             global_chip_stack.Shutdown()
 
@@ -202,6 +202,7 @@ class MatterBaseTest:
 if __name__ == "__main__":
     config = MatterTestConfig()
     config.storage_path = "admin_storage.json"
+
     stack = MatterStackState(config)
     devCtrl = stack.fabric_admins[0].NewController()
     print(devCtrl.GetFabricId())

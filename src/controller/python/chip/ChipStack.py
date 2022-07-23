@@ -327,6 +327,7 @@ class ChipStack(object):
     def Shutdown(self):
         # Make sure PersistentStorage is destructed before chipStack
         # to avoid accessing builtins.chipStack after destruction.
+        self._persistentStorage.Shutdown()
         self._persistentStorage = None
         self.Call(lambda: self._ChipStackLib.pychip_DeviceController_StackShutdown())
 
@@ -341,6 +342,8 @@ class ChipStack(object):
         self._chipDLLPath = None
         self.devMgr = None
         self.callbackRes = None
+
+        delattr(builtins, "chipStack")
 
     def Call(self, callFunct, timeoutMs: int = None):
         '''Run a Python function on CHIP stack, and wait for the response.
