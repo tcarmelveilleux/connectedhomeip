@@ -40,6 +40,7 @@ from .clusters import ClusterObjects as ClusterObjects
 from .clusters import Objects as GeneratedObjects
 from .clusters.CHIPClusters import *
 from . import clusters as Clusters
+from .FabricAdmin import FabricAdmin
 import enum
 import threading
 import typing
@@ -133,7 +134,7 @@ class DiscoveryFilterType(enum.IntEnum):
 class ChipDeviceController():
     activeList = set()
 
-    def __init__(self, opCredsContext: ctypes.c_void_p, fabricId: int, nodeId: int, adminVendorId: int, paaTrustStorePath: str = "", useTestCommissioner: bool = False):
+    def __init__(self, opCredsContext: ctypes.c_void_p, fabricId: int, nodeId: int, adminVendorId: int, paaTrustStorePath: str = "", useTestCommissioner: bool = False, fabricAdmin: FabricAdmin = None):
         self.state = DCState.NOT_INITIALIZED
         self.devCtrl = None
         self._ChipStack = builtins.chipStack
@@ -150,18 +151,16 @@ class ChipDeviceController():
                 opCredsContext), pointer(devCtrl), fabricId, nodeId, adminVendorId, ctypes.c_char_p(None if len(paaTrustStorePath) == 0 else str.encode(paaTrustStorePath)), useTestCommissioner)
         )
 
-        self.nodeId = nodeId
+        self._nodeId = nodeId
 
         if res != 0:
             raise self._ChipStack.ErrorToException(res)
 
         self.devCtrl = devCtrl
+        self._fabricAdmin = fabricAdmin
 
         self._Cluster = ChipClusters(builtins.chipStack)
         self._Cluster.InitLib(self._dmLib)
-
-        def GetNodeId(self):
-            return self.nodeId
 
         def HandleCommissioningComplete(nodeid, err):
             if err != 0:
@@ -208,6 +207,17 @@ class ChipDeviceController():
         self.isActive = True
 
         ChipDeviceController.activeList.add(self)
+
+    @property
+    def fabricAdmin(self) -> FabricAdmin:
+        return self._fabricAdmin
+
+    @property
+    def nodeId(self) -> int:
+        return self._nodeId
+
+    def GetNodeId(self) -> int:
+        return self.nodeId
 
     def Shutdown(self):
         ''' Shuts down this controller and reclaims any used resources, including the bound

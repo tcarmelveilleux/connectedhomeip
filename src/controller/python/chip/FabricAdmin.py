@@ -102,7 +102,7 @@ class FabricAdmin:
             raise ValueError(
                 f"Invalid VendorID ({vendorId}) provided!")
 
-        self.vendorId = vendorId
+        self._vendorId = vendorId
         self._fabricId = fabricId
 
         if (adminIndex is None):
@@ -160,7 +160,7 @@ class FabricAdmin:
             f"Allocating new controller with FabricId: 0x{self._fabricId:016X}, NodeId: 0x{nodeId:016X}")
 
         controller = ChipDeviceCtrl.ChipDeviceController(
-            self.closure, self._fabricId, nodeId, self.vendorId, paaTrustStorePath, useTestCommissioner)
+            self.closure, self._fabricId, nodeId, self.vendorId, paaTrustStorePath, useTestCommissioner, fabricAdmin=self)
         return controller
 
     def ShutdownAll():
@@ -200,3 +200,15 @@ class FabricAdmin:
 
     def __del__(self):
         self.Shutdown(False)
+
+    @property
+    def vendorId(self) -> int:
+        return self._vendorId
+
+    @property
+    def fabricId(self) -> int:
+        return self._fabricId
+
+    @property
+    def adminIndex(self) -> int:
+        return self._adminIndex

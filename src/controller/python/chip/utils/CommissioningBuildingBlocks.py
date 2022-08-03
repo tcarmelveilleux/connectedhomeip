@@ -115,23 +115,21 @@ async def CreateControllersOnFabric(fabricAdmin: FabricAdmin, adminDevCtrl: Chip
 
 
 async def AddNOCForNewFabricFromExisting(commissionerDevCtrl, newFabricDevCtrl, existingNodeId, newNodeId):
-    ''' Perform sequence to commission new frabric using existing commissioned fabric.
+    ''' Perform sequence to commission new fabric using existing commissioned fabric.
 
     Args:
         commissionerDevCtrl (ChipDeviceController): Already commissioned device controller used
             to commission a new fabric on `newFabricDevCtrl`.
         newFabricDevCtrl (ChipDeviceController): New device controller which is used for the new
             fabric we are establishing.
-        existingNodeId (int): Node ID of the server we are establishing a CASE session on the
-            existing fabric that we will used to perform AddNOC.
-        newNodeId (int): Node ID that we would like to server to used on the new fabric being
-            added.
+        existingNodeId (int): Node ID of the target where an AddNOC needs to be done for a new fabric.
+        newNodeId (int): Node ID to use for the target node on the new fabric.
 
     Return:
         bool: True if successful, False otherwise.
 
     '''
-
+    # TODO: Why the timedREquestTimeoutMs ?
     resp = await commissionerDevCtrl.SendCommand(existingNodeId, 0, generalCommissioning.Commands.ArmFailSafe(60), timedRequestTimeoutMs=1000)
     if resp.errorCode is not generalCommissioning.Enums.CommissioningError.kOk:
         return False
