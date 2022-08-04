@@ -134,7 +134,7 @@ class DiscoveryFilterType(enum.IntEnum):
 class ChipDeviceController():
     activeList = set()
 
-    def __init__(self, opCredsContext: ctypes.c_void_p, fabricId: int, nodeId: int, adminVendorId: int, paaTrustStorePath: str = "", useTestCommissioner: bool = False, fabricAdmin: FabricAdmin = None):
+    def __init__(self, opCredsContext: ctypes.c_void_p, fabricId: int, nodeId: int, adminVendorId: int, paaTrustStorePath: str = "", useTestCommissioner: bool = False, fabricAdmin: FabricAdmin = None, name: str = None):
         self.state = DCState.NOT_INITIALIZED
         self.devCtrl = None
         self._ChipStack = builtins.chipStack
@@ -158,6 +158,13 @@ class ChipDeviceController():
 
         self.devCtrl = devCtrl
         self._fabricAdmin = fabricAdmin
+        self._fabricId = fabricId
+        self._adminIndex = fabricAdmin.adminIndex
+
+        if name is None:
+            self._name = "adminIndex(%x)/fabricId(0x%016X)/nodeId(0x%016X)" % (fabricAdmin.adminIndex, fabricId, nodeId)
+        else:
+            self._name = name
 
         self._Cluster = ChipClusters(builtins.chipStack)
         self._Cluster.InitLib(self._dmLib)
@@ -215,6 +222,22 @@ class ChipDeviceController():
     @property
     def nodeId(self) -> int:
         return self._nodeId
+
+    @property
+    def fabricId(self) -> int:
+        return self._fabricId
+
+    @property
+    def adminIndex(self) -> int:
+        return self._adminIndex
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @name.setter
+    def name(self, new_name: str):
+        self._name = new_name
 
     def GetNodeId(self) -> int:
         return self.nodeId
@@ -433,6 +456,7 @@ class ChipDeviceController():
         return self._ChipStack.commissioningEventRes == 0
 
     def CommissionIP(self, ipaddr: str, setupPinCode: int, nodeid: int):
+        """ DEPRECATED, DO NOT USE! Use `CommissionOnNetwork` or `CommissionWithCode` """
         self.CheckIsActive()
 
         # IP connection will run through full commissioning, so we need to wait

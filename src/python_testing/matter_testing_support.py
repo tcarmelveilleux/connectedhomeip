@@ -131,6 +131,7 @@ class MatterTestConfig:
     commissioning_method: str = None
     discriminator: int = None
     setup_passcode: int = None
+    commissionee_ip_address_just_for_testing: str = None
 
     qr_code_content: str = None
     manual_code: str = None
@@ -469,6 +470,11 @@ def populate_commissioning_args(args: argparse.Namespace, config: MatterTestConf
             print("error: missing --thread-dataset-hex <DATASET_HEX> for --commissioning-method ble-thread!")
             return False
         config.thread_operational_dataset = args.thread_dataset_hex
+    elif config.commissioning_method == "on-network-ip":
+        if args.ip_addr is None:
+            print("error: missing --ip-addr <IP_ADDRESS> for --commissioning-method on-network-ip")
+            return False
+        config.commissionee_ip_address_just_for_testing = args.ip_addr
 
     return True
 
@@ -641,6 +647,9 @@ class CommissionDeviceTest(MatterBaseTest):
             return dev_ctrl.CommissionWiFi(conf.discriminator, conf.setup_passcode, conf.dut_node_id, conf.wifi_ssid, conf.wifi_passphrase)
         elif conf.commissioning_method == "ble-thread":
             return dev_ctrl.CommissionThread(conf.discriminator, conf.setup_passcode, conf.dut_node_id, conf.thread_operational_dataset)
+        elif conf.commissioning_method == "on-network-ip":
+            logging.warning("==== USING A DIRECT IP COMMISSIONING METHOD NOT SUPPORTED IN THE LONG TERM ====")
+            return dev_ctrl.CommissionIP(ipaddr=conf.commissionee_ip_address_just_for_testing, setupPinCode=conf.setup_passcode, nodeid=conf.dut_node_id)
         else:
             raise ValueError("Invalid commissioning method %s!" % conf.commissioning_method)
 

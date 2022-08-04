@@ -465,7 +465,7 @@ class AttributeCache:
 
 
 class SubscriptionTransaction:
-    def __init__(self, transaction: 'AsyncReadTransaction', subscriptionId, devCtrl):
+    def __init__(self, transaction: AsyncReadTransaction, subscriptionId, devCtrl):
         self._onResubscriptionAttemptedCb = DefaultResubscriptionAttemptedCallback
         self._onAttributeChangeCb = DefaultAttributeChangeCallback
         self._onEventChangeCb = DefaultEventChangeCallback
