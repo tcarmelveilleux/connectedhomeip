@@ -121,6 +121,7 @@ class MatterTestConfig:
     storage_path: pathlib.Path = None
     logs_path: pathlib.Path = None
     paa_trust_store_path: pathlib.Path = None
+    ble_interface_id: int = None
 
     admin_vendor_id: int = _DEFAULT_ADMIN_VENDOR_ID
     global_test_params: dict = field(default_factory=dict)
@@ -158,7 +159,7 @@ class MatterStackState:
         self._fabric_admins = []
 
         if not hasattr(builtins, "chipStack"):
-            chip.native.Init()
+            chip.native.Init(bluetoothAdapter=config.ble_interface_id)
             if config.storage_path is None:
                 raise ValueError("Must have configured a MatterTestConfig.storage_path")
             self._init_stack(already_initialized=False, persistentStoragePath=config.storage_path)
@@ -482,6 +483,7 @@ def convert_args_to_matter_config(args: argparse.Namespace) -> MatterTestConfig:
     config.storage_path = pathlib.Path(_DEFAULT_STORAGE_PATH) if args.storage_path is None else args.storage_path
     config.logs_path = pathlib.Path(_DEFAULT_LOG_PATH) if args.logs_path is None else args.logs_path
     config.paa_trust_store_path = args.paa_trust_store_path
+    config.ble_interface_id = args.ble_interface_id
 
     config.controller_node_id = args.controller_node_id
 
@@ -521,6 +523,8 @@ def parse_matter_test_args(argv: list[str]) -> MatterTestConfig:
     paa_path_default = get_default_paa_trust_store(pathlib.Path.cwd())
     basic_group.add_argument('--paa-trust-store-path', action="store", type=pathlib.Path, metavar="PATH", default=paa_path_default,
                              help="PAA trust store path (default: %s)" % str(paa_path_default))
+    basic_group.add_argument('--ble-interface-id', action="store", type=int,
+                             metavar="INTERFACE_ID", help="ID of BLE adapter (from hciconfig)")
     basic_group.add_argument('-N', '--controller-node-id', type=int_decimal_or_hex,
                              metavar='NODE_ID',
                              default=_DEFAULT_CONTROLLER_NODE_ID,

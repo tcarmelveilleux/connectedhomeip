@@ -760,9 +760,9 @@ class AsyncReadTransaction:
         if not self._future.done():
             if self._resultError:
                 if self._subscription_handler:
-                    self._subscription_handler.OnErrorCb(chipError, self._subscription_handler)
+                    self._subscription_handler.OnErrorCb(self._resultError, self._subscription_handler)
                 else:
-                    self._future.set_exception(chip.exceptions.ChipStackError(chipError))
+                    self._future.set_exception(chip.exceptions.ChipStackError(self._resultError))
             else:
                 self._future.set_result(AsyncReadTransaction.ReadResponse(
                     attributes=self._cache.attributeCache, events=self._events))
