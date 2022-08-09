@@ -99,20 +99,25 @@ CHIP_ERROR IssueX509Cert(uint32_t now, uint32_t validity, ChipDN issuerDn, ChipD
         switch (certType)
         {
             case CertType::kRcac: {
-                finalSizeDesired = 370;
+                finalSizeDesired = 330;
                 break;
             }
             case CertType::kIcac: {
-                finalSizeDesired = 400;
+                finalSizeDesired = 330;
                 break;
             }
             case CertType::kNoc: {
-                finalSizeDesired = 400;
+                finalSizeDesired = 350;
                 break;
             }
         }
 
-        size_t paddingNeeded = finalSizeDesired - tlvSpan.size();
+        size_t derDifference = kMaxDERCertLength - derSpan.size();
+        size_t tlvDifference = finalSizeDesired - tlvSpan.size();
+        size_t paddingNeeded = std::min(derDifference, tlvDifference);
+
+        printf("derdiff: %d, tlvdiff: %d, padding: %d\n", (int)derDifference, (int)tlvDifference, (int)paddingNeeded);
+
         VerifyOrReturnError(paddingNeeded > 1, CHIP_ERROR_INTERNAL);
 
         certDn = desiredDn;
@@ -127,9 +132,9 @@ CHIP_ERROR IssueX509Cert(uint32_t now, uint32_t validity, ChipDN issuerDn, ChipD
 
         // paddingNeeded is now even
         Platform::ScopedMemoryBuffer<char> fillerBuf;
-        fillerBuf.Alloc(paddingNeeded);
+        fillerBuf.Alloc(kMaxDERCertLength);
         VerifyOrReturnError(fillerBuf.Get() != nullptr, CHIP_ERROR_NO_MEMORY);
-        memset(fillerBuf.Get(), 'A', paddingNeeded);
+        memset(fillerBuf.Get(), 'A', kMaxDERCertLength);
 
         size_t paddingToUse = paddingNeeded;
         bool done           = false;
@@ -139,6 +144,7 @@ CHIP_ERROR IssueX509Cert(uint32_t now, uint32_t validity, ChipDN issuerDn, ChipD
             // Need to oversize buffers for the trial loops
             derSpan = MutableByteSpan{ derBuf.Get(), 2 * kMaxDERCertLength };
             tlvSpan = MutableByteSpan{ tlvBuf.Get(), 2 * kMaxCHIPCertLength };
+            paddingToUse = std::max(paddingNeeded, static_cast<size_t>(6));
 
             printf("trial1 paddingToUse: %d, paddingNeeded: %d\n", (int)paddingToUse, (int)paddingNeeded);
             switch (certType)
@@ -171,6 +177,9 @@ CHIP_ERROR IssueX509Cert(uint32_t now, uint32_t validity, ChipDN issuerDn, ChipD
                 return CHIP_ERROR_INVALID_ARGUMENT;
             }
 
+           ReturnErrorOnFailure(ConvertX509CertToChipCert(derSpan, tlvSpan));
+           printf("==============2 DER size: %u TLV size: %u\n", static_cast<unsigned>(derSpan.size()), static_cast<unsigned>(tlvSpan.size()));
+
             if (derSpan.size() <= kMaxCHIPDERCertLength)
             {
                 printf("done done\n");
@@ -179,22 +188,21 @@ CHIP_ERROR IssueX509Cert(uint32_t now, uint32_t validity, ChipDN issuerDn, ChipD
             else
             {
                 // On value too large, we do more regeneration steps until it fits
-                if (derSpan.size() > kMaxCHIPDERCertLength)
+                if (derSpan.size() > kMaxDERCertLength)
                 {
                     // If we overflow the DER buffer, decrease padding to fit it
-                    paddingToUse = paddingNeeded - (derSpan.size() - kMaxCHIPDERCertLength);
+                    size_t decrease = (derSpan.size() - kMaxDERCertLength);
+                    VerifyOrReturnError(decrease <= paddingNeeded, CHIP_ERROR_INTERNAL);
+                    paddingNeeded -= decrease;
                 }
                 else
                 {
-                    ReturnErrorOnFailure(ConvertX509CertToChipCert(derSpan, tlvSpan));
-                    {
-                        done = true;
-                        continue;
-                    }
                     // If we overflow the TLV buffer, reduce padding
                     if (tlvSpan.size() > kMaxCHIPCertLength)
                     {
-                        paddingNeeded -= (tlvSpan.size() - kMaxCHIPCertLength);
+                      size_t decrease = (tlvSpan.size() - kMaxCHIPCertLength);
+                      VerifyOrReturnError(decrease <= paddingNeeded, CHIP_ERROR_INTERNAL);
+                      paddingNeeded -= decrease;
                     }
                 }
             }
@@ -203,7 +211,7 @@ CHIP_ERROR IssueX509Cert(uint32_t now, uint32_t validity, ChipDN issuerDn, ChipD
 
     tlvSpan = MutableByteSpan{ tlvBuf.Get(), kMaxCHIPCertLength };
     ReturnErrorOnFailure(ConvertX509CertToChipCert(derSpan, tlvSpan));
-    printf("==============2 DER size: %u TLV size: %u\n", static_cast<unsigned>(derSpan.size()),
+    printf("==============3 DER size: %u TLV size: %u\n", static_cast<unsigned>(derSpan.size()),
            static_cast<unsigned>(tlvSpan.size()));
 
     return CopySpanToMutableSpan(derSpan, outX509Cert);
@@ -367,14 +375,16 @@ CHIP_ERROR ExampleOperationalCredentialsIssuer::GenerateNOCChainAfterValidation(
     ChipDN noc_dn;
     ReturnErrorOnFailure(noc_dn.AddAttribute_MatterFabricId(fabricId));
     ReturnErrorOnFailure(noc_dn.AddAttribute_MatterNodeId(nodeId));
-    ReturnErrorOnFailure(noc_dn.AddCATs(cats));
+    CATValues actualCats = cats;
+    actualCats.values[0] = 0xFFF1'FFFF;
+    ReturnErrorOnFailure(noc_dn.AddCATs(actualCats));
 
     ChipLogProgress(Controller, "Generating NOC");
+#if 0
     X509CertRequestParams noc_request = { 1, mNow, mNow + mValidity, noc_dn, icac_dn };
     err                               = NewNodeOperationalX509Cert(noc_request, pubkey, mIntermediateIssuer, noc);
-
-    ReturnErrorOnFailure(IssueX509Cert(mNow, mValidity, icac_dn, noc_dn, CertType::kNoc, /* maximizeSize = */ true, pubkey,
-                                       mIntermediateIssuer, noc));
+#endif
+    err = IssueX509Cert(mNow, mValidity, icac_dn, noc_dn, CertType::kNoc, /* maximizeSize = */ true, pubkey, mIntermediateIssuer, noc);
 
     return err;
 }
