@@ -39,6 +39,178 @@ using namespace Credentials;
 using namespace Crypto;
 using namespace TLV;
 
+namespace {
+
+enum CertType : uint8_t
+{
+    kRcac = 0,
+    kIcac = 1,
+    kNoc  = 2
+};
+
+CHIP_ERROR IssueX509Cert(uint32_t now, uint32_t validity, ChipDN issuerDn, ChipDN desiredDn, CertType certType, bool maximizeSize,
+                         const Crypto::P256PublicKey & subjectPublicKey, Crypto::P256Keypair & issuerKeypair,
+                         MutableByteSpan & outX509Cert)
+{
+    Platform::ScopedMemoryBuffer<uint8_t> derBuf;
+    // Need to oversize DER buffer since size maximization may cause > 600 bytes until it converges
+    derBuf.Alloc(2 * kMaxDERCertLength);
+    VerifyOrReturnError(derBuf.Get() != nullptr, CHIP_ERROR_NO_MEMORY);
+    MutableByteSpan derSpan{ derBuf.Get(), 2 * kMaxDERCertLength };
+
+    ChipDN certDn = desiredDn;
+
+    int64_t serialNumber = 1;
+
+    printf("cert type: %d, maximize_size: %d\n", (int)certType, (int)maximizeSize);
+    switch (certType)
+    {
+    case CertType::kRcac: {
+        X509CertRequestParams rcacRequest = { serialNumber, now, now + validity, certDn, certDn };
+        ReturnErrorOnFailure(NewRootX509Cert(rcacRequest, issuerKeypair, derSpan));
+        break;
+    }
+    case CertType::kIcac: {
+        X509CertRequestParams icacRequest = { serialNumber, now, now + validity, certDn, issuerDn };
+        ReturnErrorOnFailure(NewICAX509Cert(icacRequest, subjectPublicKey, issuerKeypair, derSpan));
+        break;
+    }
+    case CertType::kNoc: {
+        X509CertRequestParams nocRequest = { serialNumber, now, now + validity, certDn, issuerDn };
+        ReturnErrorOnFailure(NewNodeOperationalX509Cert(nocRequest, subjectPublicKey, issuerKeypair, derSpan));
+        break;
+    }
+    default:
+        return CHIP_ERROR_INVALID_ARGUMENT;
+    }
+
+    Platform::ScopedMemoryBuffer<uint8_t> tlvBuf;
+    tlvBuf.Alloc(kMaxCHIPCertLength * 2);
+    VerifyOrReturnError(tlvBuf.Get() != nullptr, CHIP_ERROR_NO_MEMORY);
+    MutableByteSpan tlvSpan{ tlvBuf.Get(), kMaxCHIPCertLength * 2 };
+
+    if (maximizeSize)
+    {
+        ReturnErrorOnFailure(ConvertX509CertToChipCert(derSpan, tlvSpan));
+        printf("=============== DER size: %u TLV size: %u\n", static_cast<unsigned>(derSpan.size()),
+               static_cast<unsigned>(tlvSpan.size()));
+
+        size_t finalSizeDesired = kMaxCHIPCertLength;
+        switch (certType)
+        {
+            case CertType::kRcac: {
+                finalSizeDesired = 370;
+                break;
+            }
+            case CertType::kIcac: {
+                finalSizeDesired = 400;
+                break;
+            }
+            case CertType::kNoc: {
+                finalSizeDesired = 400;
+                break;
+            }
+        }
+
+        size_t paddingNeeded = finalSizeDesired - tlvSpan.size();
+        VerifyOrReturnError(paddingNeeded > 1, CHIP_ERROR_INTERNAL);
+
+        certDn = desiredDn;
+
+        if (paddingNeeded & 1)
+        {
+            // If padding needed is odd, let's make Serial Number take up 1 more byte of value (since)
+            // leading zeroes are omitted, by shifting the value one byte to the left
+            serialNumber <<= 8;
+            --paddingNeeded;
+        }
+
+        // paddingNeeded is now even
+        Platform::ScopedMemoryBuffer<char> fillerBuf;
+        fillerBuf.Alloc(paddingNeeded);
+        VerifyOrReturnError(fillerBuf.Get() != nullptr, CHIP_ERROR_NO_MEMORY);
+        memset(fillerBuf.Get(), 'A', paddingNeeded);
+
+        size_t paddingToUse = paddingNeeded;
+        bool done           = false;
+
+        while (!done)
+        {
+            // Need to oversize buffers for the trial loops
+            derSpan = MutableByteSpan{ derBuf.Get(), 2 * kMaxDERCertLength };
+            tlvSpan = MutableByteSpan{ tlvBuf.Get(), 2 * kMaxCHIPCertLength };
+
+            printf("trial1 paddingToUse: %d, paddingNeeded: %d\n", (int)paddingToUse, (int)paddingNeeded);
+            switch (certType)
+            {
+            case CertType::kRcac: {
+                // Need padding split in two: issuer/subject DN are the same so padding will be present in both, so doubled
+                certDn.AddAttribute_DNQualifier(CharSpan(fillerBuf.Get(), ((paddingToUse - 6) / 2)), false);
+                X509CertRequestParams rcacRequest = { serialNumber, now, now + validity, certDn, certDn };
+                ReturnErrorOnFailure(NewRootX509Cert(rcacRequest, issuerKeypair, derSpan));
+                printf("trial1 rcac done\n");
+                break;
+            }
+            case CertType::kIcac: {
+                // Fill the rest of padding in the DomainNameQualifier DN
+                certDn.AddAttribute_DNQualifier(CharSpan(fillerBuf.Get(), (paddingToUse - 3)), false);
+                X509CertRequestParams icacRequest = { serialNumber, now, now + validity, certDn, issuerDn };
+                ReturnErrorOnFailure(NewICAX509Cert(icacRequest, subjectPublicKey, issuerKeypair, derSpan));
+                printf("trial1 icac done\n");
+                break;
+            }
+            case CertType::kNoc: {
+                // Fill the rest of padding in the DomainNameQualifier DN
+                certDn.AddAttribute_DNQualifier(CharSpan(fillerBuf.Get(), (paddingToUse - 3)), false);
+                X509CertRequestParams nocRequest = { serialNumber, now, now + validity, certDn, issuerDn };
+                ReturnErrorOnFailure(NewNodeOperationalX509Cert(nocRequest, subjectPublicKey, issuerKeypair, derSpan));
+                printf("trial1 noc done\n");
+                break;
+            }
+            default:
+                return CHIP_ERROR_INVALID_ARGUMENT;
+            }
+
+            if (derSpan.size() <= kMaxCHIPDERCertLength)
+            {
+                printf("done done\n");
+                done = true;
+            }
+            else
+            {
+                // On value too large, we do more regeneration steps until it fits
+                if (derSpan.size() > kMaxCHIPDERCertLength)
+                {
+                    // If we overflow the DER buffer, decrease padding to fit it
+                    paddingToUse = paddingNeeded - (derSpan.size() - kMaxCHIPDERCertLength);
+                }
+                else
+                {
+                    ReturnErrorOnFailure(ConvertX509CertToChipCert(derSpan, tlvSpan));
+                    {
+                        done = true;
+                        continue;
+                    }
+                    // If we overflow the TLV buffer, reduce padding
+                    if (tlvSpan.size() > kMaxCHIPCertLength)
+                    {
+                        paddingNeeded -= (tlvSpan.size() - kMaxCHIPCertLength);
+                    }
+                }
+            }
+        }
+    }
+
+    tlvSpan = MutableByteSpan{ tlvBuf.Get(), kMaxCHIPCertLength };
+    ReturnErrorOnFailure(ConvertX509CertToChipCert(derSpan, tlvSpan));
+    printf("==============2 DER size: %u TLV size: %u\n", static_cast<unsigned>(derSpan.size()),
+           static_cast<unsigned>(tlvSpan.size()));
+
+    return CopySpanToMutableSpan(derSpan, outX509Cert);
+}
+
+} // namespace
+
 CHIP_ERROR ExampleOperationalCredentialsIssuer::Initialize(PersistentStorageDelegate & storage)
 {
     using namespace ASN1;
@@ -134,6 +306,7 @@ CHIP_ERROR ExampleOperationalCredentialsIssuer::GenerateNOCChainAfterValidation(
     // If root certificate not found in the storage, generate new root certificate.
     else
     {
+#if 0
         ReturnErrorOnFailure(rcac_dn.AddAttribute_MatterRCACId(mIssuerId));
 
         ChipLogProgress(Controller, "Generating RCAC");
@@ -141,6 +314,15 @@ CHIP_ERROR ExampleOperationalCredentialsIssuer::GenerateNOCChainAfterValidation(
         ReturnErrorOnFailure(NewRootX509Cert(rcac_request, mIssuer, rcac));
 
         VerifyOrReturnError(CanCastTo<uint16_t>(rcac.size()), CHIP_ERROR_INTERNAL);
+#endif
+        ReturnErrorOnFailure(rcac_dn.AddAttribute_MatterRCACId(mIssuerId));
+        ReturnErrorOnFailure(IssueX509Cert(mNow, mValidity, rcac_dn, rcac_dn, CertType::kRcac, /* maximizeSize = */ true,
+                                           mIssuer.Pubkey(), mIssuer, rcac));
+
+        // Re-extract DN based on final generated cert
+        rcac_dn = ChipDN{};
+        ReturnErrorOnFailure(ExtractSubjectDNFromX509Cert(rcac, rcac_dn));
+
         PERSISTENT_KEY_OP(mIndex, kOperationalCredentialsRootCertificateStorage, key,
                           ReturnErrorOnFailure(mStorage->SyncSetKeyValue(key, rcac.data(), static_cast<uint16_t>(rcac.size()))));
     }
@@ -164,10 +346,20 @@ CHIP_ERROR ExampleOperationalCredentialsIssuer::GenerateNOCChainAfterValidation(
         ReturnErrorOnFailure(icac_dn.AddAttribute_MatterICACId(mIntermediateIssuerId));
 
         ChipLogProgress(Controller, "Generating ICAC");
+#if 0
         X509CertRequestParams icac_request = { 0, mNow, mNow + mValidity, icac_dn, rcac_dn };
         ReturnErrorOnFailure(NewICAX509Cert(icac_request, mIntermediateIssuer.Pubkey(), mIssuer, icac));
 
         VerifyOrReturnError(CanCastTo<uint16_t>(icac.size()), CHIP_ERROR_INTERNAL);
+#endif
+
+        ReturnErrorOnFailure(IssueX509Cert(mNow, mValidity, rcac_dn, icac_dn, CertType::kIcac, /* maximizeSize = */ true,
+                                           mIntermediateIssuer.Pubkey(), mIssuer, icac));
+
+        // Re-extract DN based on final generated cert
+        icac_dn = ChipDN{};
+        ReturnErrorOnFailure(ExtractSubjectDNFromX509Cert(icac, icac_dn));
+
         PERSISTENT_KEY_OP(mIndex, kOperationalCredentialsIntermediateCertificateStorage, key,
                           ReturnErrorOnFailure(mStorage->SyncSetKeyValue(key, icac.data(), static_cast<uint16_t>(icac.size()))));
     }
@@ -179,7 +371,12 @@ CHIP_ERROR ExampleOperationalCredentialsIssuer::GenerateNOCChainAfterValidation(
 
     ChipLogProgress(Controller, "Generating NOC");
     X509CertRequestParams noc_request = { 1, mNow, mNow + mValidity, noc_dn, icac_dn };
-    return NewNodeOperationalX509Cert(noc_request, pubkey, mIntermediateIssuer, noc);
+    err                               = NewNodeOperationalX509Cert(noc_request, pubkey, mIntermediateIssuer, noc);
+
+    ReturnErrorOnFailure(IssueX509Cert(mNow, mValidity, icac_dn, noc_dn, CertType::kNoc, /* maximizeSize = */ true, pubkey,
+                                       mIntermediateIssuer, noc));
+
+    return err;
 }
 
 CHIP_ERROR ExampleOperationalCredentialsIssuer::GenerateNOCChain(const ByteSpan & csrElements, const ByteSpan & csrNonce,

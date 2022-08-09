@@ -314,13 +314,13 @@ CHIP_ERROR FabricTable::ValidateIncomingNOCChain(const ByteSpan & noc, const Byt
     ChipLogProgress(FabricProvisioning, "Validating NOC chain");
     CHIP_ERROR err = FabricTable::VerifyCredentials(noc, icac, rcac, validContext, outCompressedFabricId, outFabricId, outNodeId,
                                                     outNocPubkey, &outRootPubkey);
-    if (err != CHIP_NO_ERROR && err != CHIP_ERROR_WRONG_NODE_ID)
-    {
-        err = CHIP_ERROR_UNSUPPORTED_CERT_FORMAT;
-    }
     if (err != CHIP_NO_ERROR)
     {
         ChipLogError(FabricProvisioning, "Failed NOC chain validation: %" CHIP_ERROR_FORMAT, err.Format());
+    }
+    if (err != CHIP_NO_ERROR && err != CHIP_ERROR_WRONG_NODE_ID)
+    {
+        err = CHIP_ERROR_UNSUPPORTED_CERT_FORMAT;
     }
     ReturnErrorOnFailure(err);
 
