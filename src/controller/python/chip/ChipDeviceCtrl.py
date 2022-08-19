@@ -140,6 +140,32 @@ class DeviceProxyWrapper():
     def deviceProxy(self) -> ctypes.c_void_p:
         return self._deviceProxy
 
+    @property
+    def localSessionId(self) -> int:
+        self._dmLib.pychip_GetLocalSessionId.argtypes = [ctypes.c_void_p, POINTER(ctypes.c_uint16)]
+        self._dmLib.pychip_GetLocalSessionId.restype = ctypes.c_uint32
+
+        localSessionId = ctypes.c_uint16(0)
+
+        builtins.chipStack.Call(
+            lambda: self._dmLib.pychip_GetLocalSessionId(self._deviceProxy, pointer(localSessionId))
+        )
+
+        return localSessionId.value
+
+    @property
+    def numTotalSessions(self) -> int:
+        self._dmLib.pychip_GetNumSessionsToPeer.argtypes = [ctypes.c_void_p, POINTER(ctypes.c_uint32)]
+        self._dmLib.pychip_GetNumSessionsToPeer.restype = ctypes.c_uint32
+
+        numSessions = ctypes.c_uint32(0)
+
+        builtins.chipStack.Call(
+            lambda: self._dmLib.pychip_GetNumSessionsToPeer(self._deviceProxy, pointer(numSessions))
+        )
+
+        return numSessions.value
+
 
 class DiscoveryFilterType(enum.IntEnum):
     # These must match chip::Dnssd::DiscoveryFilterType values (barring the naming convention)

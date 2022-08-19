@@ -30,6 +30,7 @@ from binascii import hexlify
 from threading import Event
 import time
 import random
+import ipdb
 
 from TC_SC_3_6 import AttributeChangeAccumulator, ResubscriptionCatcher
 
@@ -143,6 +144,8 @@ class TC_RR_1_1(MatterBaseTest):
                              num_controllers_per_fabric, "Must have the right number of clients")
 
         client_by_name = {client.name: client for client in client_list}
+        local_session_id_by_client_name = {client.name: client.GetConnectedDeviceSync(
+            self.dut_node_id).localSessionId for client in client_list}
 
         # Step 2: Set the Label field for each fabric and BasicInformation.NodeLabel to 32 characters
         logging.info("Step 2: Setting the Label field for each fabric and BasicInformation.NodeLabel to 32 characters")
@@ -318,8 +321,25 @@ class TC_RR_1_1(MatterBaseTest):
             label_readback = await self.read_single_attribute(client, node_id=self.dut_node_id, endpoint=0, attribute=Clusters.Basic.Attributes.NodeLabel)
             asserts.assert_equal(label_readback, AFTER_LABEL)
 
-            # TODO: Compare before/after session IDs. Requires more native changes, and the
-            #       subcription method above is actually good enough we think.
+        # On each client, read back the local session id for the CASE session to the DUT and ensure it's the same as that of the session established right at the
+        # beginning of the test. In tandem with checking that the number of sessions to the DUT is exactly one, this ensures we have not established any new CASE
+        # sessions in this test.
+        num_failed_clients = 0
+        for client in client_list:
+            beginning_session_id = local_session_id_by_client_name[client.name]
+            end_session_id = client.GetConnectedDeviceSync(self.dut_node_id).localSessionId
+            total_sessions = client.GetConnectedDeviceSync(self.dut_node_id).numTotalSessions
+
+            if (beginning_session_id != end_session_id):
+                logging.error(
+                    f"Test ended with a different session ID created from what we had before for {client.name} (total sessions = {total_sessions})")
+                num_failed_clients = num_failed_clients + 1
+            elif (total_sessions != 1):
+                logging.error(f"Test ended with more than 1 session for {client.name}")
+                num_failed_clients = num_failed_clients + 1
+
+        if (num_failed_clients > 0):
+            asserts.fail("Failed Step 8 ({num_failed_clients} / {len(client_list)} failed)")
 
         # Step 9: Fill user label list
         if has_user_labels and not skip_user_label_cluster_steps:
