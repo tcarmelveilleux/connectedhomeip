@@ -25,8 +25,6 @@
  *
  */
 
-#include "app/OperationalSessionSetup.h"
-#include "lib/core/CHIPError.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <memory>

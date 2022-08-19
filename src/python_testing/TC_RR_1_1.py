@@ -30,7 +30,6 @@ from binascii import hexlify
 from threading import Event
 import time
 import random
-import ipdb
 
 from TC_SC_3_6 import AttributeChangeAccumulator, ResubscriptionCatcher
 
