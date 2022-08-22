@@ -1190,8 +1190,12 @@ void TestPersistence(nlTestSuite * inSuite, void * inContext)
             MutableByteSpan csrSpan{ csrBuf };
             NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
 
+            // Add a CAT to the NOC chain (increases coverage to certs with CATs).
+            CATValues cats;
+            cats.values[0] = 0x0002'1234;
+
             NL_TEST_ASSERT_SUCCESS(
-                inSuite, fabricCertAuthority.SetIncludeIcac(false).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+                inSuite, fabricCertAuthority.SetIncludeIcac(false).GenerateNocChain(fabricId, nodeId, cats, csrSpan).GetStatus());
             ByteSpan rcac = fabricCertAuthority.GetRcac();
             ByteSpan noc  = fabricCertAuthority.GetNoc();
 
