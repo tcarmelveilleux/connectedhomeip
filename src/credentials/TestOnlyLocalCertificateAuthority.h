@@ -34,6 +34,7 @@ class TestOnlyLocalCertificateAuthority : public LocalCertificateAuthority
 {
 public:
     TestOnlyLocalCertificateAuthority() = default;
+    virtual ~TestOnlyLocalCertificateAuthority() {}
 
     // Non-copyable
     TestOnlyLocalCertificateAuthority(TestOnlyLocalCertificateAuthority const &) = delete;
@@ -46,12 +47,12 @@ public:
      *
      * @return *this for call chaining.
      */
-    TestOnlyLocalCertificateAuthority & Init()
+    CHIP_ERROR Init()
     {
         mCurrentStatus = mInnerRootKeypair.Initialize();
         if (mCurrentStatus != CHIP_NO_ERROR)
         {
-            return *this;
+            return mCurrentStatus;
         }
 
         uint32_t kDefaultValiditySeconds = 10 * (365 * 24 * 60 * 60); // 10 years
@@ -62,8 +63,7 @@ public:
         rootEffectiveTime.Month = 1;
         rootEffectiveTime.Day   = 1;
 
-        LocalCertificateAuthority::Init(&mInnerRootKeypair, rootEffectiveTime, kDefaultValiditySeconds);
-        return *this;
+        return LocalCertificateAuthority::Init(&mInnerRootKeypair, rootEffectiveTime, kDefaultValiditySeconds);
     }
 
     /**
@@ -75,13 +75,13 @@ public:
      *
      * @return *this for call chaining.
      */
-    TestOnlyLocalCertificateAuthority & Init(Crypto::P256SerializedKeypair & rootKeyPair)
+    CHIP_ERROR Init(Crypto::P256SerializedKeypair & rootKeyPair)
     {
         if (rootKeyPair.Length() != 0)
         {
             mInnerRootKeypair.Initialize();
             mCurrentStatus = mInnerRootKeypair.Deserialize(rootKeyPair);
-            return *this;
+            return mCurrentStatus;
         }
 
         uint32_t kDefaultValiditySeconds = 10 * (365 * 24 * 60 * 60); // 10 years
@@ -92,8 +92,7 @@ public:
         rootEffectiveTime.Month = 1;
         rootEffectiveTime.Day   = 1;
 
-        LocalCertificateAuthority::Init(&mInnerRootKeypair, rootEffectiveTime, kDefaultValiditySeconds);
-        return *this;
+        return LocalCertificateAuthority::Init(&mInnerRootKeypair, rootEffectiveTime, kDefaultValiditySeconds);
     }
 
 protected:

@@ -508,8 +508,8 @@ void TestBasicAddNocUpdateNocFlow(nlTestSuite * inSuite, void * inContext)
     // storage.SetLoggingLevel(chip::TestPersistentStorageDelegate::LoggingLevel::kLogMutation);
 
     // Initialize test CA and a Fabric 11 externally owned key
-    NL_TEST_ASSERT(inSuite, fabric11CertAuthority.Init().IsSuccess());
-    NL_TEST_ASSERT(inSuite, fabric44CertAuthority.Init().IsSuccess());
+    NL_TEST_ASSERT_SUCCESS(inSuite, fabric11CertAuthority.Init());
+    NL_TEST_ASSERT_SUCCESS(inSuite, fabric44CertAuthority.Init());
 
     constexpr uint16_t kVendorId = 0xFFF1u;
 
@@ -531,10 +531,11 @@ void TestBasicAddNocUpdateNocFlow(nlTestSuite * inSuite, void * inContext)
     {
         FabricId fabricId = 11;
         NodeId nodeId     = 55;
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabric11CertAuthority.SetIncludeIcac(false)
-                                   .GenerateNocChain(fabricId, nodeId, fabric11Node55Keypair.Pubkey())
-                                   .GetStatus());
+
+        fabric11CertAuthority.SetIncludeIcac(false);
+        fabric11CertAuthority.GenerateNocChain(fabricId, nodeId, fabric11Node55Keypair.Pubkey());
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabric11CertAuthority.GetStatus());
+
         ByteSpan rcac = fabric11CertAuthority.GetRcac();
         ByteSpan noc  = fabric11CertAuthority.GetNoc();
 
@@ -672,8 +673,10 @@ void TestBasicAddNocUpdateNocFlow(nlTestSuite * inSuite, void * inContext)
         MutableByteSpan csrSpan{ csrBuf };
         NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
 
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabric44CertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+        fabric44CertAuthority.SetIncludeIcac(true);
+        fabric44CertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabric44CertAuthority.GetStatus());
+
         ByteSpan rcac = fabric44CertAuthority.GetRcac();
         ByteSpan icac = fabric44CertAuthority.GetIcac();
         ByteSpan noc  = fabric44CertAuthority.GetNoc();
@@ -774,8 +777,9 @@ void TestBasicAddNocUpdateNocFlow(nlTestSuite * inSuite, void * inContext)
         NL_TEST_ASSERT_SUCCESS(inSuite,
                                fabricTable.AllocatePendingOperationalKey(chip::MakeOptional(static_cast<FabricIndex>(2)), csrSpan));
 
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabric44CertAuthority.SetIncludeIcac(false).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+        fabric44CertAuthority.SetIncludeIcac(false);
+        fabric44CertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabric44CertAuthority.GetStatus());
         ByteSpan rcac = fabric44CertAuthority.GetRcac();
         ByteSpan noc  = fabric44CertAuthority.GetNoc();
 
@@ -983,7 +987,7 @@ void TestAddMultipleSameRootDifferentFabricId(nlTestSuite * inSuite, void * inCo
     Credentials::TestOnlyLocalCertificateAuthority fabricCertAuthority;
 
     chip::TestPersistentStorageDelegate storage;
-    NL_TEST_ASSERT(inSuite, fabricCertAuthority.Init().IsSuccess());
+    NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.Init());
 
     constexpr uint16_t kVendorId = 0xFFF1u;
 
@@ -1006,8 +1010,9 @@ void TestAddMultipleSameRootDifferentFabricId(nlTestSuite * inSuite, void * inCo
         MutableByteSpan csrSpan{ csrBuf };
         NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
 
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabricCertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+        fabricCertAuthority.SetIncludeIcac(true);
+        fabricCertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.GetStatus());
         ByteSpan rcac = fabricCertAuthority.GetRcac();
         // Keep a copy for second scope check
         CopySpanToMutableSpan(rcac, rcac1Span);
@@ -1049,8 +1054,9 @@ void TestAddMultipleSameRootDifferentFabricId(nlTestSuite * inSuite, void * inCo
         MutableByteSpan csrSpan{ csrBuf };
         NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
 
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabricCertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+        fabricCertAuthority.SetIncludeIcac(true);
+        fabricCertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.GetStatus());
         ByteSpan rcac2 = fabricCertAuthority.GetRcac();
         NL_TEST_ASSERT(inSuite, rcac2.data_equal(rcac1Span));
 
@@ -1109,7 +1115,7 @@ void TestPersistence(nlTestSuite * inSuite, void * inContext)
 
     chip::TestPersistentStorageDelegate storage;
 
-    NL_TEST_ASSERT(inSuite, fabricCertAuthority.Init().IsSuccess());
+    NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.Init());
 
     constexpr uint16_t kVendorId = 0xFFF1u;
 
@@ -1131,8 +1137,9 @@ void TestPersistence(nlTestSuite * inSuite, void * inContext)
             MutableByteSpan csrSpan{ csrBuf };
             NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
 
-            NL_TEST_ASSERT_SUCCESS(
-                inSuite, fabricCertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+            fabricCertAuthority.SetIncludeIcac(true);
+            fabricCertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+            NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.GetStatus());
             ByteSpan rcac = fabricCertAuthority.GetRcac();
             ByteSpan icac = fabricCertAuthority.GetIcac();
             ByteSpan noc  = fabricCertAuthority.GetNoc();
@@ -1194,8 +1201,9 @@ void TestPersistence(nlTestSuite * inSuite, void * inContext)
             CATValues cats;
             cats.values[0] = 0x0002'1234;
 
-            NL_TEST_ASSERT_SUCCESS(
-                inSuite, fabricCertAuthority.SetIncludeIcac(false).GenerateNocChain(fabricId, nodeId, cats, csrSpan).GetStatus());
+            fabricCertAuthority.SetIncludeIcac(false);
+            fabricCertAuthority.GenerateNocChain(fabricId, nodeId, cats, csrSpan);
+            NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.GetStatus());
             ByteSpan rcac = fabricCertAuthority.GetRcac();
             ByteSpan noc  = fabricCertAuthority.GetNoc();
 
@@ -1408,8 +1416,8 @@ void TestAddNocFailSafe(nlTestSuite * inSuite, void * inContext)
 
     chip::TestPersistentStorageDelegate storage;
 
-    NL_TEST_ASSERT(inSuite, fabric11CertAuthority.Init().IsSuccess());
-    NL_TEST_ASSERT(inSuite, fabric44CertAuthority.Init().IsSuccess());
+    NL_TEST_ASSERT_SUCCESS(inSuite, fabric11CertAuthority.Init());
+    NL_TEST_ASSERT_SUCCESS(inSuite, fabric44CertAuthority.Init());
 
     constexpr uint16_t kVendorId = 0xFFF1u;
 
@@ -1433,8 +1441,9 @@ void TestAddNocFailSafe(nlTestSuite * inSuite, void * inContext)
         MutableByteSpan csrSpan{ csrBuf };
         NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
 
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabric11CertAuthority.SetIncludeIcac(false).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+        fabric11CertAuthority.SetIncludeIcac(false);
+        fabric11CertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabric11CertAuthority.GetStatus());
         ByteSpan rcac = fabric11CertAuthority.GetRcac();
         ByteSpan noc  = fabric11CertAuthority.GetNoc();
 
@@ -1506,8 +1515,9 @@ void TestAddNocFailSafe(nlTestSuite * inSuite, void * inContext)
         MutableByteSpan csrSpan{ csrBuf };
         NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
 
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabric44CertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+        fabric44CertAuthority.SetIncludeIcac(true);
+        fabric44CertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabric44CertAuthority.GetStatus());
         ByteSpan rcac = fabric44CertAuthority.GetRcac();
         ByteSpan icac = fabric44CertAuthority.GetIcac();
         ByteSpan noc  = fabric44CertAuthority.GetNoc();
@@ -1627,8 +1637,8 @@ void TestUpdateNocFailSafe(nlTestSuite * inSuite, void * inContext)
 
     storage.SetLoggingLevel(chip::TestPersistentStorageDelegate::LoggingLevel::kLogMutation);
 
-    NL_TEST_ASSERT(inSuite, fabric11CertAuthority.Init().IsSuccess());
-    NL_TEST_ASSERT(inSuite, fabric44CertAuthority.Init().IsSuccess());
+    NL_TEST_ASSERT_SUCCESS(inSuite, fabric11CertAuthority.Init());
+    NL_TEST_ASSERT_SUCCESS(inSuite, fabric44CertAuthority.Init());
 
     constexpr uint16_t kVendorId = 0xFFF1u;
 
@@ -1652,8 +1662,9 @@ void TestUpdateNocFailSafe(nlTestSuite * inSuite, void * inContext)
         MutableByteSpan csrSpan{ csrBuf };
         NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
 
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabric44CertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+        fabric44CertAuthority.SetIncludeIcac(true);
+        fabric44CertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabric44CertAuthority.GetStatus());
         ByteSpan rcac = fabric44CertAuthority.GetRcac();
         ByteSpan icac = fabric44CertAuthority.GetIcac();
         ByteSpan noc  = fabric44CertAuthority.GetNoc();
@@ -1746,8 +1757,9 @@ void TestUpdateNocFailSafe(nlTestSuite * inSuite, void * inContext)
         NL_TEST_ASSERT_SUCCESS(inSuite,
                                fabricTable.AllocatePendingOperationalKey(chip::MakeOptional(static_cast<FabricIndex>(1)), csrSpan));
 
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabric44CertAuthority.SetIncludeIcac(false).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+        fabric44CertAuthority.SetIncludeIcac(false);
+        fabric44CertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabric44CertAuthority.GetStatus());
         ByteSpan rcac = fabric44CertAuthority.GetRcac();
         ByteSpan noc  = fabric44CertAuthority.GetNoc();
 
@@ -1857,8 +1869,9 @@ void TestUpdateNocFailSafe(nlTestSuite * inSuite, void * inContext)
         NL_TEST_ASSERT_SUCCESS(inSuite,
                                fabricTable.AllocatePendingOperationalKey(chip::MakeOptional(static_cast<FabricIndex>(1)), csrSpan));
 
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabric44CertAuthority.SetIncludeIcac(false).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+        fabric44CertAuthority.SetIncludeIcac(false);
+        fabric44CertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabric44CertAuthority.GetStatus());
         ByteSpan rcac = fabric44CertAuthority.GetRcac();
         ByteSpan noc  = fabric44CertAuthority.GetNoc();
 
@@ -1955,7 +1968,7 @@ void TestAddRootCertFailSafe(nlTestSuite * inSuite, void * inContext)
 
     chip::TestPersistentStorageDelegate storage;
 
-    NL_TEST_ASSERT(inSuite, fabric11CertAuthority.Init().IsSuccess());
+    NL_TEST_ASSERT_SUCCESS(inSuite, fabric11CertAuthority.Init());
 
     // Initialize a fabric table.
     ScopedFabricTable fabricTableHolder;
@@ -2004,7 +2017,7 @@ void TestFabricLabelChange(nlTestSuite * inSuite, void * inContext)
     Credentials::TestOnlyLocalCertificateAuthority fabricCertAuthority;
 
     chip::TestPersistentStorageDelegate storage;
-    NL_TEST_ASSERT(inSuite, fabricCertAuthority.Init().IsSuccess());
+    NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.Init());
 
     constexpr uint16_t kVendorId = 0xFFF1u;
 
@@ -2024,8 +2037,9 @@ void TestFabricLabelChange(nlTestSuite * inSuite, void * inContext)
         MutableByteSpan csrSpan{ csrBuf };
         NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
 
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabricCertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+        fabricCertAuthority.SetIncludeIcac(true);
+        fabricCertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.GetStatus());
         ByteSpan rcac = fabricCertAuthority.GetRcac();
         ByteSpan icac = fabricCertAuthority.GetIcac();
         ByteSpan noc  = fabricCertAuthority.GetNoc();
@@ -2096,8 +2110,9 @@ void TestFabricLabelChange(nlTestSuite * inSuite, void * inContext)
         NL_TEST_ASSERT_SUCCESS(inSuite,
                                fabricTable.AllocatePendingOperationalKey(chip::MakeOptional(static_cast<FabricIndex>(1)), csrSpan));
 
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabricCertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+        fabricCertAuthority.SetIncludeIcac(true);
+        fabricCertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.GetStatus());
         ByteSpan icac = fabricCertAuthority.GetIcac();
         ByteSpan noc  = fabricCertAuthority.GetNoc();
 
@@ -2224,7 +2239,7 @@ void TestAddNocRootCollision(nlTestSuite * inSuite, void * inContext)
     Credentials::TestOnlyLocalCertificateAuthority fabricCertAuthority;
 
     chip::TestPersistentStorageDelegate storage;
-    NL_TEST_ASSERT(inSuite, fabricCertAuthority.Init().IsSuccess());
+    NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.Init());
 
     constexpr uint16_t kVendorId = 0xFFF1u;
 
@@ -2244,8 +2259,9 @@ void TestAddNocRootCollision(nlTestSuite * inSuite, void * inContext)
         MutableByteSpan csrSpan{ csrBuf };
         NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
 
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabricCertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+        fabricCertAuthority.SetIncludeIcac(true);
+        fabricCertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.GetStatus());
         ByteSpan rcac = fabricCertAuthority.GetRcac();
         ByteSpan icac = fabricCertAuthority.GetIcac();
         ByteSpan noc  = fabricCertAuthority.GetNoc();
@@ -2294,8 +2310,9 @@ void TestAddNocRootCollision(nlTestSuite * inSuite, void * inContext)
         MutableByteSpan csrSpan{ csrBuf };
         NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
 
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabricCertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+        fabricCertAuthority.SetIncludeIcac(true);
+        fabricCertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.GetStatus());
         ByteSpan rcac = fabricCertAuthority.GetRcac();
         ByteSpan icac = fabricCertAuthority.GetIcac();
         ByteSpan noc  = fabricCertAuthority.GetNoc();
@@ -2348,8 +2365,9 @@ void TestAddNocRootCollision(nlTestSuite * inSuite, void * inContext)
         MutableByteSpan csrSpan{ csrBuf };
         NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
 
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabricCertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+        fabricCertAuthority.SetIncludeIcac(true);
+        fabricCertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.GetStatus());
         ByteSpan rcac = fabricCertAuthority.GetRcac();
         ByteSpan icac = fabricCertAuthority.GetIcac();
         ByteSpan noc  = fabricCertAuthority.GetNoc();
@@ -2397,8 +2415,8 @@ void TestInvalidChaining(nlTestSuite * inSuite, void * inContext)
     Credentials::TestOnlyLocalCertificateAuthority differentCertAuthority;
 
     chip::TestPersistentStorageDelegate storage;
-    NL_TEST_ASSERT(inSuite, fabricCertAuthority.Init().IsSuccess());
-    NL_TEST_ASSERT(inSuite, differentCertAuthority.Init().IsSuccess());
+    NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.Init());
+    NL_TEST_ASSERT_SUCCESS(inSuite, differentCertAuthority.Init());
 
     constexpr uint16_t kVendorId = 0xFFF1u;
 
@@ -2420,10 +2438,13 @@ void TestInvalidChaining(nlTestSuite * inSuite, void * inContext)
         NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
 
         // Generate same cert chain from two different roots
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabricCertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               differentCertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+        fabricCertAuthority.SetIncludeIcac(true);
+        fabricCertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.GetStatus());
+
+        differentCertAuthority.SetIncludeIcac(true);
+        differentCertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, differentCertAuthority.GetStatus());
 
         ByteSpan rcac = fabricCertAuthority.GetRcac();
         ByteSpan icac = fabricCertAuthority.GetIcac();
@@ -2467,10 +2488,14 @@ void TestInvalidChaining(nlTestSuite * inSuite, void * inContext)
 
         csrSpan = MutableByteSpan{ csrBuf };
         NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
-        NL_TEST_ASSERT_SUCCESS(inSuite,
-                               fabricCertAuthority.SetIncludeIcac(false).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
-        NL_TEST_ASSERT_SUCCESS(
-            inSuite, differentCertAuthority.SetIncludeIcac(false).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+
+        fabricCertAuthority.SetIncludeIcac(false);
+        fabricCertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.GetStatus());
+
+        differentCertAuthority.SetIncludeIcac(false);
+        differentCertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+        NL_TEST_ASSERT_SUCCESS(inSuite, differentCertAuthority.GetStatus());
 
         rcac = fabricCertAuthority.GetRcac();
         noc  = fabricCertAuthority.GetNoc();
@@ -2578,7 +2603,7 @@ void TestCommitMarker(nlTestSuite * inSuite, void * inContext)
     // Log verbosity on this test helps debug significantly
     storage.SetLoggingLevel(chip::TestPersistentStorageDelegate::LoggingLevel::kLogMutationAndReads);
 
-    NL_TEST_ASSERT(inSuite, fabricCertAuthority.Init().IsSuccess());
+    NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.Init());
 
     constexpr uint16_t kVendorId = 0xFFF1u;
 
@@ -2606,8 +2631,9 @@ void TestCommitMarker(nlTestSuite * inSuite, void * inContext)
             MutableByteSpan csrSpan{ csrBuf };
             NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
 
-            NL_TEST_ASSERT_SUCCESS(
-                inSuite, fabricCertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+            fabricCertAuthority.SetIncludeIcac(true);
+            fabricCertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+            NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.GetStatus());
             ByteSpan rcac = fabricCertAuthority.GetRcac();
             ByteSpan icac = fabricCertAuthority.GetIcac();
             ByteSpan noc  = fabricCertAuthority.GetNoc();
@@ -2672,8 +2698,9 @@ void TestCommitMarker(nlTestSuite * inSuite, void * inContext)
             MutableByteSpan csrSpan{ csrBuf };
             NL_TEST_ASSERT_SUCCESS(inSuite, fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan));
 
-            NL_TEST_ASSERT_SUCCESS(
-                inSuite, fabricCertAuthority.SetIncludeIcac(false).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus());
+            fabricCertAuthority.SetIncludeIcac(false);
+            fabricCertAuthority.GenerateNocChain(fabricId, nodeId, csrSpan);
+            NL_TEST_ASSERT_SUCCESS(inSuite, fabricCertAuthority.GetStatus());
             ByteSpan rcac = fabricCertAuthority.GetRcac();
             ByteSpan noc  = fabricCertAuthority.GetNoc();
 

@@ -66,7 +66,7 @@ public:
     void operator=(LocalCertificateAuthority const &) = delete;
 
     // TODO: Allow passing existing root cert
-    LocalCertificateAuthority & Init(Crypto::P256Keypair * rootKeypair, chip::ASN1::ASN1UniversalTime effectiveTime,
+    CHIP_ERROR Init(Crypto::P256Keypair * rootKeypair, chip::ASN1::ASN1UniversalTime effectiveTime,
                                      uint32_t validitySeconds)
     {
         uint8_t hashBuf[Crypto::kSHA256_Hash_Length];
@@ -99,7 +99,7 @@ public:
         SuccessOrExit(mCurrentStatus);
         mRootCertAvailable = true;
     exit:
-        return *this;
+        return mCurrentStatus;
     }
 
     /**
@@ -110,7 +110,7 @@ public:
      *
      * @return *this for call chaining.
      */
-    LocalCertificateAuthority & SetValidity(chip::ASN1::ASN1UniversalTime effectiveTime, uint32_t validitySeconds)
+    CHIP_ERROR SetValidity(chip::ASN1::ASN1UniversalTime effectiveTime, uint32_t validitySeconds)
     {
         constexpr uint32_t kOneHourAsSeconds = (60 * 60);
 
@@ -122,13 +122,13 @@ public:
         {
             uint32_t matterEffectiveTime = 0;
             mCurrentStatus               = ASN1ToChipEpochTime(effectiveTime, matterEffectiveTime);
-            VerifyOrReturnValue(mCurrentStatus == CHIP_NO_ERROR, *this);
+            VerifyOrReturnValue(mCurrentStatus == CHIP_NO_ERROR, mCurrentStatus);
 
             mValiditySeconds     = validitySeconds;
             mMatterEffectiveTime = matterEffectiveTime;
         }
 
-        return *this;
+        return mCurrentStatus;
     }
 
     /**
@@ -137,11 +137,11 @@ public:
      * @param includeIcac - include an ICAC if true, omit it if false
      * @return *this for call chaining.
      */
-    LocalCertificateAuthority & SetIncludeIcac(bool includeIcac)
+    CHIP_ERROR SetIncludeIcac(bool includeIcac)
     {
         mIncludeIcac   = includeIcac;
         mCurrentStatus = (mCurrentStatus != CHIP_NO_ERROR) ? mCurrentStatus : CHIP_NO_ERROR;
-        return *this;
+        return mCurrentStatus;
     }
 
     void ResetIssuer()
@@ -268,18 +268,18 @@ public:
      *
      * @return *this for call chaining.
      */
-    virtual LocalCertificateAuthority & GenerateNocChain(FabricId fabricId, NodeId nodeId, const CATValues & cats,
+    virtual CHIP_ERROR GenerateNocChain(FabricId fabricId, NodeId nodeId, const CATValues & cats,
                                                          const Crypto::P256PublicKey & nocPublicKey)
     {
         if (mCurrentStatus != CHIP_NO_ERROR)
         {
-            return *this;
+            return mCurrentStatus;
         }
 
         if (mRootKeypair == nullptr)
         {
             mCurrentStatus = CHIP_ERROR_INCORRECT_STATE;
-            return *this;
+            return mCurrentStatus;
         }
 
         mTlvIcac.Free();
@@ -288,13 +288,13 @@ public:
         mDerNoc.Free();
 
         mCurrentStatus = GenerateCertChainInternal(fabricId, nodeId, cats, nocPublicKey);
-        return *this;
+        return mCurrentStatus;
     }
 
     /**
      * @brief Same as GenerateNocChain above but with no CAT tags included
      */
-    virtual LocalCertificateAuthority & GenerateNocChain(FabricId fabricId, NodeId nodeId,
+    virtual CHIP_ERROR GenerateNocChain(FabricId fabricId, NodeId nodeId,
                                                          const Crypto::P256PublicKey & nocPublicKey)
     {
         return GenerateNocChain(fabricId, nodeId, kUndefinedCATs, nocPublicKey);
@@ -319,19 +319,19 @@ public:
      *
      * @return *this for call chaining.
      */
-    virtual LocalCertificateAuthority & GenerateNocChain(FabricId fabricId, NodeId nodeId, const CATValues & cats,
+    virtual CHIP_ERROR GenerateNocChain(FabricId fabricId, NodeId nodeId, const CATValues & cats,
                                                          const ByteSpan & csr)
     {
         if (mCurrentStatus != CHIP_NO_ERROR)
         {
-            return *this;
+            return mCurrentStatus;
         }
 
         Crypto::P256PublicKey nocPublicKey;
         mCurrentStatus = Crypto::VerifyCertificateSigningRequest(csr.data(), csr.size(), nocPublicKey);
         if (mCurrentStatus != CHIP_NO_ERROR)
         {
-            return *this;
+            return mCurrentStatus;
         }
 
         return GenerateNocChain(fabricId, nodeId, cats, nocPublicKey);
@@ -340,7 +340,7 @@ public:
     /**
      * @brief Same as above but with no CAT tags included.
      */
-    virtual LocalCertificateAuthority & GenerateNocChain(FabricId fabricId, NodeId nodeId, const ByteSpan & csr)
+    virtual CHIP_ERROR GenerateNocChain(FabricId fabricId, NodeId nodeId, const ByteSpan & csr)
     {
         return GenerateNocChain(fabricId, nodeId, kUndefinedCATs, csr);
     }
@@ -374,6 +374,9 @@ protected:
             Platform::ScopedMemoryBufferWithSize<uint8_t> tlvIcacBuf;
             ReturnErrorCodeIf(!derIcacBuf.Alloc(Credentials::kMaxDERCertLength), CHIP_ERROR_NO_MEMORY);
             ReturnErrorCodeIf(!tlvIcacBuf.Alloc(Credentials::kMaxCHIPCertLength), CHIP_ERROR_NO_MEMORY);
+
+            memset(derIcacBuf.Get(), 0, derIcacBuf.AllocatedSize());
+            memset(tlvIcacBuf.Get(), 0, tlvIcacBuf.AllocatedSize());
 
             // ICAC Identifier in subject is first 8 octets of subject public key SHA256
             Crypto::P256PublicKey icacPublicKey = icacKeypair.Pubkey();
@@ -415,6 +418,9 @@ protected:
             ReturnErrorCodeIf(!derNocBuf.Alloc(Credentials::kMaxDERCertLength), CHIP_ERROR_NO_MEMORY);
             ReturnErrorCodeIf(!tlvNocBuf.Alloc(Credentials::kMaxCHIPCertLength), CHIP_ERROR_NO_MEMORY);
 
+            memset(derNocBuf.Get(), 0, derNocBuf.AllocatedSize());
+            memset(tlvNocBuf.Get(), 0, tlvNocBuf.AllocatedSize());
+
             ReturnErrorOnFailure(noc_dn.AddAttribute_MatterFabricId(fabricId));
             ReturnErrorOnFailure(noc_dn.AddAttribute_MatterNodeId(nodeId));
             ReturnErrorOnFailure(noc_dn.AddCATs(cats));
@@ -441,6 +447,7 @@ protected:
     virtual CHIP_ERROR GenerateRootCert(uint64_t rootIdentifier)
     {
         ChipDN rcac_dn;
+        rcac_dn.Clear();
 
         VerifyOrReturnError(mRootKeypair != nullptr, CHIP_ERROR_INCORRECT_STATE);
 
@@ -448,6 +455,9 @@ protected:
         Platform::ScopedMemoryBufferWithSize<uint8_t> tlvRcacBuf;
         VerifyOrReturnError(derRcacBuf.Alloc(Credentials::kMaxDERCertLength), CHIP_ERROR_NO_MEMORY);
         VerifyOrReturnError(tlvRcacBuf.Alloc(Credentials::kMaxCHIPCertLength), CHIP_ERROR_NO_MEMORY);
+
+        memset(derRcacBuf.Get(), 0, derRcacBuf.AllocatedSize());
+        memset(tlvRcacBuf.Get(), 0, tlvRcacBuf.AllocatedSize());
 
         ReturnErrorOnFailure(rcac_dn.AddAttribute_MatterRCACId(rootIdentifier));
 
