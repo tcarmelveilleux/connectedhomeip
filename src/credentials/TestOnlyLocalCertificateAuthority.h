@@ -21,6 +21,7 @@
 #include <credentials/LocalCertificateAuthority.h>
 #include <lib/core/CHIPError.h>
 #include <lib/core/DataModelTypes.h>
+#include <lib/core/Optional.h>
 #include <lib/support/CodeUtils.h>
 
 namespace chip {
@@ -63,7 +64,7 @@ public:
         rootEffectiveTime.Month = 1;
         rootEffectiveTime.Day   = 1;
 
-        return LocalCertificateAuthority::Init(&mInnerRootKeypair, rootEffectiveTime, kDefaultValiditySeconds);
+        return LocalCertificateAuthority::Init(&mInnerRootKeypair, rootEffectiveTime, kDefaultValiditySeconds, NullOptional);
     }
 
     /**
@@ -92,7 +93,7 @@ public:
         rootEffectiveTime.Month = 1;
         rootEffectiveTime.Day   = 1;
 
-        return LocalCertificateAuthority::Init(&mInnerRootKeypair, rootEffectiveTime, kDefaultValiditySeconds);
+        return LocalCertificateAuthority::Init(&mInnerRootKeypair, rootEffectiveTime, kDefaultValiditySeconds, NullOptional);
     }
 
 protected:

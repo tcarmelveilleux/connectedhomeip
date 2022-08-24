@@ -17,484 +17,580 @@
 
 #pragma once
 
+#include <stdio.h>
 #include <credentials/CHIPCert.h>
 #include <crypto/CHIPCryptoPAL.h>
 #include <lib/core/CASEAuthTag.h>
 #include <lib/core/CHIPEncoding.h>
 #include <lib/core/CHIPError.h>
 #include <lib/core/DataModelTypes.h>
+#include <lib/support/BytesToHex.h>
 #include <lib/support/CHIPMem.h>
 #include <lib/support/CodeUtils.h>
 
 namespace chip {
 namespace Credentials {
 
+inline void DumpHex(const char * label, ByteSpan span)
+{
+    size_t remaining = span.size();
+    const uint8_t * cursor = span.data();
+    while (remaining > 0)
+    {
+        size_t chunk_size = (remaining < 16) ? remaining : 16;
+        char hex_buf[16*2 + 1];
+
+        CHIP_ERROR err = chip::Encoding::BytesToUppercaseHexString(cursor, chunk_size, &hex_buf[0], sizeof(hex_buf));
+        if (err  != CHIP_NO_ERROR)
+        {
+            ChipLogProgress(Controller, "Err: %" CHIP_ERROR_FORMAT, err.Format() );
+            return;
+        }
+
+        ChipLogProgress(Controller, "%s>>>%s", label, hex_buf);
+        cursor += chunk_size;
+        remaining -= chunk_size;
+    }
+}
+
 /**
- * @brief Local operational certificate authority. Generates operational certificate
- *        chains rooted to a given root key pair object.
+ * @brief Local operational certificate authority. Generates operational
+ * certificate chains rooted to a given root key pair object.
  *
- * The Root Keypair is **externally owned** and the caller has to manage the lifecycle.
- * While instances of this class are live, the root key pair must be available. This is
- * done to support wrapped P256Keypair objects that implement different versions of
- * their internals and that cannot be copied.
+ * The Root Keypair is **externally owned** and the caller has to manage the
+ * lifecycle. While instances of this class are live, the root key pair must be
+ * available. This is done to support wrapped P256Keypair objects that implement
+ * different versions of their internals and that cannot be copied.
  *
- * This class owns the memory for the generated certificates so that the followign methods
- * can safely return spans after successful operations:
+ * This class owns the memory for the generated certificates so that the
+ * followign methods can safely return spans after successful operations:
  *
- * - GetNoc/GetIcac/GetRcac --> Return Matter Operational Certificate Encoding (TLV) format
+ * - GetNoc/GetIcac/GetRcac --> Return Matter Operational Certificate Encoding
+ * (TLV) format
  * - GetDerNoc/GetDerIcac/GetDerRcac --> Return ASN.1 DER X.509 format
  *
  */
-class LocalCertificateAuthority
-{
-public:
-    LocalCertificateAuthority() = default;
+class LocalCertificateAuthority {
+ public:
+  LocalCertificateAuthority() = default;
 
-    virtual ~LocalCertificateAuthority()
-    {
-        mRootKeypair = nullptr;
-        mDerRcac.Free();
-        mTlvRcac.Free();
-        mDerIcac.Free();
-        mTlvIcac.Free();
-        mDerNoc.Free();
-        mTlvNoc.Free();
+  virtual ~LocalCertificateAuthority() {
+    mRootKeypair = nullptr;
+    mDerRcac.Free();
+    mTlvRcac.Free();
+    mDerIcac.Free();
+    mTlvIcac.Free();
+    mDerNoc.Free();
+    mTlvNoc.Free();
+  }
+
+  // Non-copyable
+  LocalCertificateAuthority(LocalCertificateAuthority const &) = delete;
+  void operator=(LocalCertificateAuthority const &) = delete;
+
+  // TODO: Allow passing existing root cer
+
+  CHIP_ERROR Init(Crypto::P256Keypair *rootKeypair,
+                  chip::ASN1::ASN1UniversalTime effectiveTime,
+                  uint32_t validitySeconds, Optional<ByteSpan> derRootCert) {
+    ChipLogProgress(Controller, "LocalCertificateAuthority Init() started");
+    uint8_t hashBuf[Crypto::kSHA256_Hash_Length];
+    Crypto::P256PublicKey rootPublicKey;
+    uint64_t rootIdentifier = 0;
+    uint32_t matterEffectiveTime = 0;
+    constexpr uint32_t kOneHourAsSeconds = (60 * 60);
+
+    VerifyOrExit(rootKeypair != nullptr,
+                 mCurrentStatus = CHIP_ERROR_INVALID_ARGUMENT);
+    VerifyOrExit(validitySeconds >= kOneHourAsSeconds,
+                 mCurrentStatus = CHIP_ERROR_INVALID_ARGUMENT);
+
+    mDerRcac.Free();
+    mTlvRcac.Free();
+    mRootCertAvailable = false;
+
+    // Truncated SHA256 of root public key is going to be the RCAC ID
+    rootPublicKey = rootKeypair->Pubkey();
+    SuccessOrExit(Crypto::Hash_SHA256(rootPublicKey.ConstBytes(),
+                                      rootPublicKey.Length(), &hashBuf[0]));
+    rootIdentifier = Encoding::BigEndian::Get64(&hashBuf[0]);
+
+    mRootKeypair = rootKeypair;
+
+    mCurrentStatus = ASN1ToChipEpochTime(effectiveTime, matterEffectiveTime);
+    SuccessOrExit(mCurrentStatus);
+
+    mMatterEffectiveTime = matterEffectiveTime;
+    mValiditySeconds = validitySeconds;
+
+    // TODO(tennessee): Refactor this sub-block into an inner method since it's
+    // big
+    if (derRootCert.HasValue()) {
+      // If we got given a root cert, we use that as our internal version
+      // and do not regenerate a cert.
+      auto derRootCertSpan = derRootCert.Value();
+
+      Platform::ScopedMemoryBufferWithSize<uint8_t> tlvRcacBuf;
+      VerifyOrExit(tlvRcacBuf.Calloc(Credentials::kMaxCHIPCertLength),
+                   CHIP_ERROR_NO_MEMORY);
+
+      MutableByteSpan rcacTlvSpan{tlvRcacBuf.Get(), tlvRcacBuf.AllocatedSize()};
+      CHIP_ERROR err =
+          Credentials::ConvertX509CertToChipCert(derRootCertSpan, rcacTlvSpan);
+      VerifyOrExit(err == CHIP_NO_ERROR, mCurrentStatus = err);
+
+      // Validate the root cert has correct Root ID and subject public key to
+      // match our args
+      ChipDN rcac_dn;
+      err = ExtractSubjectDNFromChipCert(rcacTlvSpan, rcac_dn);
+      VerifyOrExit(err == CHIP_NO_ERROR, mCurrentStatus = err);
+
+      // TODO(tennessee): Validate subject public key and root ID match
+
+      VerifyOrExit(mDerRcac.Calloc(derRootCertSpan.size()),
+                   mCurrentStatus = CHIP_ERROR_NO_MEMORY);
+      VerifyOrExit(mTlvRcac.Calloc(rcacTlvSpan.size()),
+                   mCurrentStatus = CHIP_ERROR_NO_MEMORY);
+
+      memcpy(mDerRcac.Get(), derRootCertSpan.data(), derRootCertSpan.size());
+      memcpy(mTlvRcac.Get(), rcacTlvSpan.data(), rcacTlvSpan.size());
+    } else {
+      // We didn't get an existing root cert: let's generate one for ourselves.
+      mCurrentStatus = GenerateRootCert(rootIdentifier);
+    }
+    SuccessOrExit(mCurrentStatus);
+    mRootCertAvailable = true;
+  exit:
+    ChipLogProgress(Controller, "LocalCertificateAuthority Init() exit");
+    return mCurrentStatus;
+  }
+
+  /**
+   * @brief Set the validity period for the next GenerateNocChain call.
+   *
+   * @param effectiveTime - notBefore date to use
+   * @param validitySeconds - validaty period in seconds
+   *
+   * @return *this for call chaining.
+   */
+  CHIP_ERROR SetValidity(chip::ASN1::ASN1UniversalTime effectiveTime,
+                         uint32_t validitySeconds) {
+    constexpr uint32_t kOneHourAsSeconds = (60 * 60);
+
+    if (validitySeconds < kOneHourAsSeconds) {
+      mCurrentStatus = CHIP_ERROR_INVALID_ARGUMENT;
+    } else {
+      uint32_t matterEffectiveTime = 0;
+      mCurrentStatus = ASN1ToChipEpochTime(effectiveTime, matterEffectiveTime);
+      VerifyOrReturnValue(mCurrentStatus == CHIP_NO_ERROR, mCurrentStatus);
+
+      mValiditySeconds = validitySeconds;
+      mMatterEffectiveTime = matterEffectiveTime;
     }
 
-    // Non-copyable
-    LocalCertificateAuthority(LocalCertificateAuthority const &) = delete;
-    void operator=(LocalCertificateAuthority const &) = delete;
+    return mCurrentStatus;
+  }
 
-    // TODO: Allow passing existing root cert
-    CHIP_ERROR Init(Crypto::P256Keypair * rootKeypair, chip::ASN1::ASN1UniversalTime effectiveTime,
-                                     uint32_t validitySeconds)
-    {
-        uint8_t hashBuf[Crypto::kSHA256_Hash_Length];
-        Crypto::P256PublicKey rootPublicKey;
-        uint64_t rootIdentifier              = 0;
-        uint32_t matterEffectiveTime         = 0;
-        constexpr uint32_t kOneHourAsSeconds = (60 * 60);
+  /**
+   * @brief Sets whether the next GenerateNocChain call has an ICAC included in
+   * the chain
+   *
+   * @param includeIcac - include an ICAC if true, omit it if false
+   * @return *this for call chaining.
+   */
+  CHIP_ERROR SetIncludeIcac(bool includeIcac) {
+    mIncludeIcac = includeIcac;
+    mCurrentStatus =
+        (mCurrentStatus != CHIP_NO_ERROR) ? mCurrentStatus : CHIP_NO_ERROR;
+    return mCurrentStatus;
+  }
 
-        VerifyOrExit(rootKeypair != nullptr, mCurrentStatus = CHIP_ERROR_INVALID_ARGUMENT);
-        VerifyOrExit(validitySeconds >= kOneHourAsSeconds, mCurrentStatus = CHIP_ERROR_INVALID_ARGUMENT);
+  void ResetIssuer() {
+    if (mRootCertAvailable) {
+      mCurrentStatus = CHIP_NO_ERROR;
+      mIncludeIcac = false;
+      mDerNoc.Free();
+      mTlvNoc.Free();
+      mDerIcac.Free();
+      mTlvIcac.Free();
+    }
+  }
 
-        mDerRcac.Free();
-        mTlvRcac.Free();
-        mRootCertAvailable = false;
+  /**
+   * @brief Return the status of the last operation.
+   *
+   * @return A CHIP_ERROR value
+   */
+  CHIP_ERROR GetStatus() { return mCurrentStatus; }
 
-        // Truncated SHA256 of root public key is going to be the RCAC ID
-        rootPublicKey = rootKeypair->Pubkey();
-        SuccessOrExit(Crypto::Hash_SHA256(rootPublicKey.ConstBytes(), rootPublicKey.Length(), &hashBuf[0]));
-        rootIdentifier = Encoding::BigEndian::Get64(&hashBuf[0]);
+  /**
+   * @return true if the last operation was successful (i.e. GetStatus() ==
+   * CHIP_NO_ERROR)
+   */
+  bool IsSuccess() { return mCurrentStatus == CHIP_NO_ERROR; }
 
-        mRootKeypair = rootKeypair;
+  /**
+   * @brief Get span pointing to internally-owned TLV version of last generated
+   * NOC
+   *
+   * Return value is empty on error or if not yet initialized.
+   *
+   * @return a bytespan pointing to internal memory
+   */
+  ByteSpan GetNoc() const {
+    VerifyOrReturnValue((mCurrentStatus == CHIP_NO_ERROR) &&
+                            (mTlvNoc.Get() != nullptr) && mRootCertAvailable,
+                        ByteSpan{});
+    return ByteSpan{mTlvNoc.Get(), mTlvNoc.AllocatedSize()};
+  }
 
-        mCurrentStatus = ASN1ToChipEpochTime(effectiveTime, matterEffectiveTime);
-        SuccessOrExit(mCurrentStatus);
+  /**
+   * @brief Get span pointing to internally-owned TLV version of last generated
+   * ICAC
+   *
+   * Return value is empty on error, if not yet initialized or if no ICAC was
+   * generated/used
+   *
+   * @return a bytespan pointing to internal memory
+   */
+  ByteSpan GetIcac() const {
+    VerifyOrReturnValue(mIncludeIcac, ByteSpan{});
+    VerifyOrReturnValue((mCurrentStatus == CHIP_NO_ERROR) &&
+                            (mTlvIcac.Get() != nullptr) && mRootCertAvailable,
+                        ByteSpan{});
+    return ByteSpan{mTlvIcac.Get(), mTlvIcac.AllocatedSize()};
+  }
 
-        mMatterEffectiveTime = matterEffectiveTime;
-        mValiditySeconds     = validitySeconds;
+  /**
+   * @brief Get span pointing to internally-owned TLV version of last generated
+   * RCAC
+   *
+   * Return value is empty on error or if not yet initialized
+   *
+   * @return a bytespan pointing to internal memory
+   */
+  ByteSpan GetRcac() const {
+    VerifyOrReturnValue((mCurrentStatus == CHIP_NO_ERROR) &&
+                            (mTlvRcac.Get() != nullptr) && mRootCertAvailable,
+                        ByteSpan{});
+    return ByteSpan{mTlvRcac.Get(), mTlvRcac.AllocatedSize()};
+  }
 
-        mCurrentStatus = GenerateRootCert(rootIdentifier);
-        SuccessOrExit(mCurrentStatus);
-        mRootCertAvailable = true;
-    exit:
-        return mCurrentStatus;
+  /**
+   * @brief Get span pointing to internally-owned DER version of last generated
+   * NOC
+   *
+   * Return value is empty on error or if not yet initialized.
+   *
+   * @return a bytespan pointing to internal memory
+   */
+  ByteSpan GetDerNoc() const {
+    VerifyOrReturnValue((mCurrentStatus == CHIP_NO_ERROR) &&
+                            (mDerNoc.Get() != nullptr) && mRootCertAvailable,
+                        ByteSpan{});
+    return ByteSpan{mDerNoc.Get(), mDerNoc.AllocatedSize()};
+  }
+
+  /**
+   * @brief Get span pointing to internally-owned DER version of last generated
+   * ICAC
+   *
+   * Return value is empty on error, if not yet initialized or if no ICAC was
+   * generated/used
+   *
+   * @return a bytespan pointing to internal memory
+   */
+  ByteSpan GetDerIcac() const {
+    VerifyOrReturnValue(mIncludeIcac, ByteSpan{});
+    VerifyOrReturnValue((mCurrentStatus == CHIP_NO_ERROR) &&
+                            (mDerIcac.Get() != nullptr) && mRootCertAvailable,
+                        ByteSpan{});
+    return ByteSpan{mDerIcac.Get(), mDerIcac.AllocatedSize()};
+  }
+
+  /**
+   * @brief Get span pointing to internally-owned DER version of last generated
+   * RCAC
+   *
+   * Return value is empty on error or if not yet initialized
+   *
+   * @return a bytespan pointing to internal memory
+   */
+  ByteSpan GetDerRcac() const {
+    VerifyOrReturnValue((mCurrentStatus == CHIP_NO_ERROR) &&
+                            (mDerRcac.Get() != nullptr) && mRootCertAvailable,
+                        ByteSpan{});
+    return ByteSpan{mDerRcac.Get(), mDerRcac.AllocatedSize()};
+  }
+
+  /**
+   * @brief Generate a NOC chain for a given identity, given the subject public
+   * key.
+   *
+   * If `SetIncludeIcac(true)` had been called, an ICAC will be generated with a
+   * random key, and with an ICA ID containing the first 64 bits of the SHA256
+   * of the ICA subject public key. This policy is mostly useful just for
+   * testing.
+   *
+   * notBefore date and validity period will match that given at time of Init or
+   * set by the last call to SetValidity.
+   *
+   * On failure, `GetStatus()` will return an error code, and `IsSuccess()` will
+   * return false.
+   *
+   * @param fabricId - fabric ID to use
+   * @param nodeId - node ID to use
+   * @param cats - cat tags to include
+   * @param nocPublicKey - subject public key for the NOC
+   *
+   * @return *this for call chaining.
+   */
+  virtual CHIP_ERROR GenerateNocChain(
+      FabricId fabricId, NodeId nodeId, const CATValues &cats,
+      const Crypto::P256PublicKey &nocPublicKey) {
+    if (mCurrentStatus != CHIP_NO_ERROR) {
+      return mCurrentStatus;
     }
 
-    /**
-     * @brief Set the validity period for the next GenerateNocChain call.
-     *
-     * @param effectiveTime - notBefore date to use
-     * @param validitySeconds - validaty period in seconds
-     *
-     * @return *this for call chaining.
-     */
-    CHIP_ERROR SetValidity(chip::ASN1::ASN1UniversalTime effectiveTime, uint32_t validitySeconds)
-    {
-        constexpr uint32_t kOneHourAsSeconds = (60 * 60);
-
-        if (validitySeconds < kOneHourAsSeconds)
-        {
-            mCurrentStatus = CHIP_ERROR_INVALID_ARGUMENT;
-        }
-        else
-        {
-            uint32_t matterEffectiveTime = 0;
-            mCurrentStatus               = ASN1ToChipEpochTime(effectiveTime, matterEffectiveTime);
-            VerifyOrReturnValue(mCurrentStatus == CHIP_NO_ERROR, mCurrentStatus);
-
-            mValiditySeconds     = validitySeconds;
-            mMatterEffectiveTime = matterEffectiveTime;
-        }
-
-        return mCurrentStatus;
+    if (mRootKeypair == nullptr) {
+      mCurrentStatus = CHIP_ERROR_INCORRECT_STATE;
+      return mCurrentStatus;
     }
 
-    /**
-     * @brief Sets whether the next GenerateNocChain call has an ICAC included in the chain
-     *
-     * @param includeIcac - include an ICAC if true, omit it if false
-     * @return *this for call chaining.
-     */
-    CHIP_ERROR SetIncludeIcac(bool includeIcac)
-    {
-        mIncludeIcac   = includeIcac;
-        mCurrentStatus = (mCurrentStatus != CHIP_NO_ERROR) ? mCurrentStatus : CHIP_NO_ERROR;
-        return mCurrentStatus;
+    printf("GenerateNocChain start: %p\n", this);
+    mTlvIcac.Free();
+    mDerIcac.Free();
+    mTlvNoc.Free();
+    mDerNoc.Free();
+
+    mCurrentStatus =
+        GenerateCertChainInternal(fabricId, nodeId, cats, nocPublicKey);
+    printf("GenerateNocChain end: %p\n", this);
+    return mCurrentStatus;
+  }
+
+  /**
+   * @brief Same as GenerateNocChain above but with no CAT tags included
+   */
+  virtual CHIP_ERROR GenerateNocChain(
+      FabricId fabricId, NodeId nodeId,
+      const Crypto::P256PublicKey &nocPublicKey) {
+    return GenerateNocChain(fabricId, nodeId, kUndefinedCATs, nocPublicKey);
+  }
+
+  /**
+   * @brief Generate a NOC chain for a given identity, given a CSR for the
+   * subject public key.
+   *
+   * If `SetIncludeIcac(true)` had been called, an ICAC will be generated with a
+   * random key, and with an ICA ID containing the first 64 bits of the SHA256
+   * of the ICA subject public key. This policy is mostly useful just for
+   * testing.
+   *
+   * notBefore date and validity period will match that given at time of Init or
+   * set by the last call to SetValidity.
+   *
+   * On failure, `GetStatus()` will return an error code, and `IsSuccess()` will
+   * return false.
+   *
+   * @param fabricId - fabric ID to use
+   * @param nodeId - node ID to use
+   * @param cats - cat tags to include
+   * @param csr - span containing a PKCS10 CSR for the subject public key to use
+   *
+   * @return *this for call chaining.
+   */
+  virtual CHIP_ERROR GenerateNocChain(FabricId fabricId, NodeId nodeId,
+                                      const CATValues &cats,
+                                      const ByteSpan &csr) {
+    if (mCurrentStatus != CHIP_NO_ERROR) {
+      return mCurrentStatus;
     }
 
-    void ResetIssuer()
-    {
-        if (mRootCertAvailable)
-        {
-            mCurrentStatus = CHIP_NO_ERROR;
-            mIncludeIcac   = false;
-            mDerNoc.Free();
-            mTlvNoc.Free();
-            mDerIcac.Free();
-            mTlvIcac.Free();
-        }
+    Crypto::P256PublicKey nocPublicKey;
+    mCurrentStatus = Crypto::VerifyCertificateSigningRequest(
+        csr.data(), csr.size(), nocPublicKey);
+    if (mCurrentStatus != CHIP_NO_ERROR) {
+      return mCurrentStatus;
     }
 
-    /**
-     * @brief Return the status of the last operation.
-     *
-     * @return A CHIP_ERROR value
-     */
-    CHIP_ERROR GetStatus() { return mCurrentStatus; }
+    return GenerateNocChain(fabricId, nodeId, cats, nocPublicKey);
+  }
 
-    /**
-     * @return true if the last operation was successful (i.e. GetStatus() == CHIP_NO_ERROR)
-     */
-    bool IsSuccess() { return mCurrentStatus == CHIP_NO_ERROR; }
+  /**
+   * @brief Same as above but with no CAT tags included.
+   */
+  virtual CHIP_ERROR GenerateNocChain(FabricId fabricId, NodeId nodeId,
+                                      const ByteSpan &csr) {
+    return GenerateNocChain(fabricId, nodeId, kUndefinedCATs, csr);
+  }
 
-    /**
-     * @brief Get span pointing to internally-owned TLV version of last generated NOC
-     *
-     * Return value is empty on error or if not yet initialized.
-     *
-     * @return a bytespan pointing to internal memory
-     */
-    ByteSpan GetNoc() const
-    {
-        VerifyOrReturnValue((mCurrentStatus == CHIP_NO_ERROR) && (mTlvNoc.Get() != nullptr) && mRootCertAvailable, ByteSpan{});
-        return ByteSpan{ mTlvNoc.Get(), mTlvNoc.AllocatedSize() };
+ protected:
+  virtual CHIP_ERROR GenerateCertChainInternal(
+      FabricId fabricId, NodeId nodeId, const CATValues &cats,
+      const Crypto::P256PublicKey &nocPublicKey) {
+    ChipDN rcac_dn;
+    ChipDN icac_dn;
+    ChipDN noc_dn;
+
+    ReturnErrorCodeIf(fabricId == kUndefinedFabricId,
+                      CHIP_ERROR_INVALID_ARGUMENT);
+    ReturnErrorCodeIf(nodeId == kUndefinedNodeId, CHIP_ERROR_INVALID_ARGUMENT);
+    ReturnErrorCodeIf(!cats.AreValid(), CHIP_ERROR_INVALID_ARGUMENT);
+
+    // Get subject DN of RCAC as our issuer field for ICAC and/or NOC depending
+    // on if ICAC is present
+    ReturnErrorOnFailure(ExtractSubjectDNFromChipCert(
+        ByteSpan{mTlvRcac.Get(), mTlvRcac.AllocatedSize()}, rcac_dn));
+
+    Crypto::P256Keypair *nocIssuerKeypair = mRootKeypair;
+    ChipDN *issuer_dn = &rcac_dn;
+
+    Crypto::P256Keypair icacKeypair;
+
+    // Generate ICAC if needed
+    if (mIncludeIcac) {
+      ReturnErrorOnFailure(icacKeypair.Initialize());
+
+      Platform::ScopedMemoryBufferWithSize<uint8_t> derIcacBuf;
+      Platform::ScopedMemoryBufferWithSize<uint8_t> tlvIcacBuf;
+      ReturnErrorCodeIf(!derIcacBuf.Calloc(Credentials::kMaxDERCertLength),
+                        CHIP_ERROR_NO_MEMORY);
+      ReturnErrorCodeIf(!tlvIcacBuf.Calloc(Credentials::kMaxCHIPCertLength),
+                        CHIP_ERROR_NO_MEMORY);
+
+      // ICAC Identifier in subject is first 8 octets of subject public key
+      // SHA256
+      Crypto::P256PublicKey icacPublicKey = icacKeypair.Pubkey();
+      uint8_t hashBuf[Crypto::kSHA256_Hash_Length];
+      ReturnErrorOnFailure(Crypto::Hash_SHA256(
+          icacPublicKey.ConstBytes(), icacPublicKey.Length(), &hashBuf[0]));
+      uint64_t icacIdentifier = Encoding::BigEndian::Get64(&hashBuf[0]);
+
+      ReturnErrorOnFailure(icac_dn.AddAttribute_MatterFabricId(fabricId));
+      ReturnErrorOnFailure(icac_dn.AddAttribute_MatterICACId(icacIdentifier));
+
+      X509CertRequestParams icac_request = {
+          0, mMatterEffectiveTime, mMatterEffectiveTime + mValiditySeconds,
+          icac_dn, rcac_dn};
+
+      MutableByteSpan icacDerSpan{derIcacBuf.Get(), derIcacBuf.AllocatedSize()};
+      ReturnErrorOnFailure(Credentials::NewICAX509Cert(
+          icac_request, icacKeypair.Pubkey(), *mRootKeypair, icacDerSpan));
+
+      MutableByteSpan icacTlvSpan{tlvIcacBuf.Get(), tlvIcacBuf.AllocatedSize()};
+      ReturnErrorOnFailure(
+          Credentials::ConvertX509CertToChipCert(icacDerSpan, icacTlvSpan));
+
+      ReturnErrorCodeIf(!mDerIcac.Calloc(icacDerSpan.size()),
+                        CHIP_ERROR_NO_MEMORY);
+      ReturnErrorCodeIf(!mTlvIcac.Calloc(icacTlvSpan.size()),
+                        CHIP_ERROR_NO_MEMORY);
+
+      memcpy(mDerIcac.Get(), icacDerSpan.data(), icacDerSpan.size());
+      memcpy(mTlvIcac.Get(), icacTlvSpan.data(), icacTlvSpan.size());
+
+      nocIssuerKeypair = &icacKeypair;
+      issuer_dn = &icac_dn;
+    } else {
+      mDerIcac.Free();
+      mTlvIcac.Free();
     }
 
-    /**
-     * @brief Get span pointing to internally-owned TLV version of last generated ICAC
-     *
-     * Return value is empty on error, if not yet initialized or if no ICAC was generated/used
-     *
-     * @return a bytespan pointing to internal memory
-     */
-    ByteSpan GetIcac() const
+    // Generate NOC always, either issued from ICAC if present or from RCAC
     {
-        VerifyOrReturnValue(mIncludeIcac, ByteSpan{});
-        VerifyOrReturnValue((mCurrentStatus == CHIP_NO_ERROR) && (mTlvIcac.Get() != nullptr) && mRootCertAvailable, ByteSpan{});
-        return ByteSpan{ mTlvIcac.Get(), mTlvIcac.AllocatedSize() };
+      Platform::ScopedMemoryBufferWithSize<uint8_t> derNocBuf;
+      Platform::ScopedMemoryBufferWithSize<uint8_t> tlvNocBuf;
+      ReturnErrorCodeIf(!derNocBuf.Calloc(Credentials::kMaxDERCertLength),
+                        CHIP_ERROR_NO_MEMORY);
+      ReturnErrorCodeIf(!tlvNocBuf.Calloc(Credentials::kMaxCHIPCertLength),
+                        CHIP_ERROR_NO_MEMORY);
+
+      ReturnErrorOnFailure(noc_dn.AddAttribute_MatterFabricId(fabricId));
+      ReturnErrorOnFailure(noc_dn.AddAttribute_MatterNodeId(nodeId));
+      ReturnErrorOnFailure(noc_dn.AddCATs(cats));
+
+      X509CertRequestParams noc_request = {
+          0, mMatterEffectiveTime, mMatterEffectiveTime + mValiditySeconds,
+          noc_dn, *issuer_dn};
+
+      MutableByteSpan nocDerSpan{derNocBuf.Get(), derNocBuf.AllocatedSize()};
+      ReturnErrorOnFailure(Credentials::NewNodeOperationalX509Cert(
+          noc_request, nocPublicKey, *nocIssuerKeypair, nocDerSpan));
+
+      MutableByteSpan nocTlvSpan{tlvNocBuf.Get(), tlvNocBuf.AllocatedSize()};
+      ReturnErrorOnFailure(
+          Credentials::ConvertX509CertToChipCert(nocDerSpan, nocTlvSpan));
+
+      ReturnErrorCodeIf(!mDerNoc.Calloc(nocDerSpan.size()),
+                        CHIP_ERROR_NO_MEMORY);
+      ReturnErrorCodeIf(!mTlvNoc.Calloc(nocTlvSpan.size()),
+                        CHIP_ERROR_NO_MEMORY);
+
+      memcpy(mDerNoc.Get(), nocDerSpan.data(), nocDerSpan.size());
+      memcpy(mTlvNoc.Get(), nocTlvSpan.data(), nocTlvSpan.size());
     }
 
-    /**
-     * @brief Get span pointing to internally-owned TLV version of last generated RCAC
-     *
-     * Return value is empty on error or if not yet initialized
-     *
-     * @return a bytespan pointing to internal memory
-     */
-    ByteSpan GetRcac() const
-    {
-        VerifyOrReturnValue((mCurrentStatus == CHIP_NO_ERROR) && (mTlvRcac.Get() != nullptr) && mRootCertAvailable, ByteSpan{});
-        return ByteSpan{ mTlvRcac.Get(), mTlvRcac.AllocatedSize() };
-    }
+    return CHIP_NO_ERROR;
+  }
 
-    /**
-     * @brief Get span pointing to internally-owned DER version of last generated NOC
-     *
-     * Return value is empty on error or if not yet initialized.
-     *
-     * @return a bytespan pointing to internal memory
-     */
-    ByteSpan GetDerNoc() const
-    {
-        VerifyOrReturnValue((mCurrentStatus == CHIP_NO_ERROR) && (mDerNoc.Get() != nullptr) && mRootCertAvailable, ByteSpan{});
-        return ByteSpan{ mDerNoc.Get(), mDerNoc.AllocatedSize() };
-    }
+  virtual CHIP_ERROR GenerateRootCert(uint64_t rootIdentifier) {
+    ChipDN rcac_dn;
+    rcac_dn.Clear();
 
-    /**
-     * @brief Get span pointing to internally-owned DER version of last generated ICAC
-     *
-     * Return value is empty on error, if not yet initialized or if no ICAC was generated/used
-     *
-     * @return a bytespan pointing to internal memory
-     */
-    ByteSpan GetDerIcac() const
-    {
-        VerifyOrReturnValue(mIncludeIcac, ByteSpan{});
-        VerifyOrReturnValue((mCurrentStatus == CHIP_NO_ERROR) && (mDerIcac.Get() != nullptr) && mRootCertAvailable, ByteSpan{});
-        return ByteSpan{ mDerIcac.Get(), mDerIcac.AllocatedSize() };
-    }
+    VerifyOrReturnError(mRootKeypair != nullptr, CHIP_ERROR_INCORRECT_STATE);
 
-    /**
-     * @brief Get span pointing to internally-owned DER version of last generated RCAC
-     *
-     * Return value is empty on error or if not yet initialized
-     *
-     * @return a bytespan pointing to internal memory
-     */
-    ByteSpan GetDerRcac() const
-    {
-        VerifyOrReturnValue((mCurrentStatus == CHIP_NO_ERROR) && (mDerRcac.Get() != nullptr) && mRootCertAvailable, ByteSpan{});
-        return ByteSpan{ mDerRcac.Get(), mDerRcac.AllocatedSize() };
-    }
+    Platform::ScopedMemoryBufferWithSize<uint8_t> derRcacBuf;
+    Platform::ScopedMemoryBufferWithSize<uint8_t> tlvRcacBuf;
+    VerifyOrReturnError(derRcacBuf.Calloc(Credentials::kMaxDERCertLength),
+                        CHIP_ERROR_NO_MEMORY);
+    VerifyOrReturnError(tlvRcacBuf.Calloc(Credentials::kMaxCHIPCertLength),
+                        CHIP_ERROR_NO_MEMORY);
 
-    /**
-     * @brief Generate a NOC chain for a given identity, given the subject public key.
-     *
-     * If `SetIncludeIcac(true)` had been called, an ICAC will be generated with a random
-     * key, and with an ICA ID containing the first 64 bits of the SHA256 of the ICA subject
-     * public key. This policy is mostly useful just for testing.
-     *
-     * notBefore date and validity period will match that given at time of Init or set by the last
-     * call to SetValidity.
-     *
-     * On failure, `GetStatus()` will return an error code, and `IsSuccess()` will return false.
-     *
-     * @param fabricId - fabric ID to use
-     * @param nodeId - node ID to use
-     * @param cats - cat tags to include
-     * @param nocPublicKey - subject public key for the NOC
-     *
-     * @return *this for call chaining.
-     */
-    virtual CHIP_ERROR GenerateNocChain(FabricId fabricId, NodeId nodeId, const CATValues & cats,
-                                                         const Crypto::P256PublicKey & nocPublicKey)
-    {
-        if (mCurrentStatus != CHIP_NO_ERROR)
-        {
-            return mCurrentStatus;
-        }
+    ReturnErrorOnFailure(rcac_dn.AddAttribute_MatterRCACId(rootIdentifier));
 
-        if (mRootKeypair == nullptr)
-        {
-            mCurrentStatus = CHIP_ERROR_INCORRECT_STATE;
-            return mCurrentStatus;
-        }
+    X509CertRequestParams rcac_request = {
+        0, mMatterEffectiveTime, mMatterEffectiveTime + mValiditySeconds,
+        rcac_dn, rcac_dn};
 
-        mTlvIcac.Free();
-        mDerIcac.Free();
-        mTlvNoc.Free();
-        mDerNoc.Free();
+    MutableByteSpan rcacDerSpan{derRcacBuf.Get(), derRcacBuf.AllocatedSize()};
+    ReturnErrorOnFailure(
+        Credentials::NewRootX509Cert(rcac_request, *mRootKeypair, rcacDerSpan));
 
-        mCurrentStatus = GenerateCertChainInternal(fabricId, nodeId, cats, nocPublicKey);
-        return mCurrentStatus;
-    }
+    MutableByteSpan rcacTlvSpan{tlvRcacBuf.Get(), tlvRcacBuf.AllocatedSize()};
+    ReturnErrorOnFailure(
+        Credentials::ConvertX509CertToChipCert(rcacDerSpan, rcacTlvSpan));
 
-    /**
-     * @brief Same as GenerateNocChain above but with no CAT tags included
-     */
-    virtual CHIP_ERROR GenerateNocChain(FabricId fabricId, NodeId nodeId,
-                                                         const Crypto::P256PublicKey & nocPublicKey)
-    {
-        return GenerateNocChain(fabricId, nodeId, kUndefinedCATs, nocPublicKey);
-    }
+    VerifyOrReturnError(mDerRcac.Calloc(rcacDerSpan.size()),
+                        CHIP_ERROR_NO_MEMORY);
+    VerifyOrReturnError(mTlvRcac.Calloc(rcacTlvSpan.size()),
+                        CHIP_ERROR_NO_MEMORY);
 
-    /**
-     * @brief Generate a NOC chain for a given identity, given a CSR for the subject public key.
-     *
-     * If `SetIncludeIcac(true)` had been called, an ICAC will be generated with a random
-     * key, and with an ICA ID containing the first 64 bits of the SHA256 of the ICA subject
-     * public key. This policy is mostly useful just for testing.
-     *
-     * notBefore date and validity period will match that given at time of Init or set by the last
-     * call to SetValidity.
-     *
-     * On failure, `GetStatus()` will return an error code, and `IsSuccess()` will return false.
-     *
-     * @param fabricId - fabric ID to use
-     * @param nodeId - node ID to use
-     * @param cats - cat tags to include
-     * @param csr - span containing a PKCS10 CSR for the subject public key to use
-     *
-     * @return *this for call chaining.
-     */
-    virtual CHIP_ERROR GenerateNocChain(FabricId fabricId, NodeId nodeId, const CATValues & cats,
-                                                         const ByteSpan & csr)
-    {
-        if (mCurrentStatus != CHIP_NO_ERROR)
-        {
-            return mCurrentStatus;
-        }
+    memcpy(mDerRcac.Get(), rcacDerSpan.data(), rcacDerSpan.size());
+    memcpy(mTlvRcac.Get(), rcacTlvSpan.data(), rcacTlvSpan.size());
 
-        Crypto::P256PublicKey nocPublicKey;
-        mCurrentStatus = Crypto::VerifyCertificateSigningRequest(csr.data(), csr.size(), nocPublicKey);
-        if (mCurrentStatus != CHIP_NO_ERROR)
-        {
-            return mCurrentStatus;
-        }
+    DumpHex("rcac_der", ByteSpan(mDerRcac.Get(), mDerRcac.AllocatedSize()));
 
-        return GenerateNocChain(fabricId, nodeId, cats, nocPublicKey);
-    }
+    return CHIP_NO_ERROR;
+  }
 
-    /**
-     * @brief Same as above but with no CAT tags included.
-     */
-    virtual CHIP_ERROR GenerateNocChain(FabricId fabricId, NodeId nodeId, const ByteSpan & csr)
-    {
-        return GenerateNocChain(fabricId, nodeId, kUndefinedCATs, csr);
-    }
+  bool mRootCertAvailable = false;
 
-protected:
-    virtual CHIP_ERROR GenerateCertChainInternal(FabricId fabricId, NodeId nodeId, const CATValues & cats,
-                                                 const Crypto::P256PublicKey & nocPublicKey)
-    {
-        ChipDN rcac_dn;
-        ChipDN icac_dn;
-        ChipDN noc_dn;
+  uint32_t mMatterEffectiveTime = 0;
+  uint32_t mValiditySeconds = 0;
 
-        ReturnErrorCodeIf(fabricId == kUndefinedFabricId, CHIP_ERROR_INVALID_ARGUMENT);
-        ReturnErrorCodeIf(nodeId == kUndefinedNodeId, CHIP_ERROR_INVALID_ARGUMENT);
-        ReturnErrorCodeIf(!cats.AreValid(), CHIP_ERROR_INVALID_ARGUMENT);
+  CHIP_ERROR mCurrentStatus = CHIP_NO_ERROR;
+  bool mIncludeIcac = false;
 
-        // Get subject DN of RCAC as our issuer field for ICAC and/or NOC depending on if ICAC is present
-        ReturnErrorOnFailure(ExtractSubjectDNFromChipCert(ByteSpan{ mTlvRcac.Get(), mTlvRcac.AllocatedSize() }, rcac_dn));
+  Platform::ScopedMemoryBufferWithSize<uint8_t> mDerNoc;
+  Platform::ScopedMemoryBufferWithSize<uint8_t> mTlvNoc;
+  Platform::ScopedMemoryBufferWithSize<uint8_t> mDerIcac;
+  Platform::ScopedMemoryBufferWithSize<uint8_t> mTlvIcac;
+  Platform::ScopedMemoryBufferWithSize<uint8_t> mDerRcac;
+  Platform::ScopedMemoryBufferWithSize<uint8_t> mTlvRcac;
 
-        Crypto::P256Keypair * nocIssuerKeypair = mRootKeypair;
-        ChipDN * issuer_dn                     = &rcac_dn;
-
-        Crypto::P256Keypair icacKeypair;
-
-        // Generate ICAC if needed
-        if (mIncludeIcac)
-        {
-            ReturnErrorOnFailure(icacKeypair.Initialize());
-
-            Platform::ScopedMemoryBufferWithSize<uint8_t> derIcacBuf;
-            Platform::ScopedMemoryBufferWithSize<uint8_t> tlvIcacBuf;
-            ReturnErrorCodeIf(!derIcacBuf.Alloc(Credentials::kMaxDERCertLength), CHIP_ERROR_NO_MEMORY);
-            ReturnErrorCodeIf(!tlvIcacBuf.Alloc(Credentials::kMaxCHIPCertLength), CHIP_ERROR_NO_MEMORY);
-
-            memset(derIcacBuf.Get(), 0, derIcacBuf.AllocatedSize());
-            memset(tlvIcacBuf.Get(), 0, tlvIcacBuf.AllocatedSize());
-
-            // ICAC Identifier in subject is first 8 octets of subject public key SHA256
-            Crypto::P256PublicKey icacPublicKey = icacKeypair.Pubkey();
-            uint8_t hashBuf[Crypto::kSHA256_Hash_Length];
-            ReturnErrorOnFailure(Crypto::Hash_SHA256(icacPublicKey.ConstBytes(), icacPublicKey.Length(), &hashBuf[0]));
-            uint64_t icacIdentifier = Encoding::BigEndian::Get64(&hashBuf[0]);
-
-            ReturnErrorOnFailure(icac_dn.AddAttribute_MatterFabricId(fabricId));
-            ReturnErrorOnFailure(icac_dn.AddAttribute_MatterICACId(icacIdentifier));
-
-            X509CertRequestParams icac_request = { 0, mMatterEffectiveTime, mMatterEffectiveTime + mValiditySeconds, icac_dn,
-                                                   rcac_dn };
-
-            MutableByteSpan icacDerSpan{ derIcacBuf.Get(), derIcacBuf.AllocatedSize() };
-            ReturnErrorOnFailure(Credentials::NewICAX509Cert(icac_request, icacKeypair.Pubkey(), *mRootKeypair, icacDerSpan));
-
-            MutableByteSpan icacTlvSpan{ tlvIcacBuf.Get(), tlvIcacBuf.AllocatedSize() };
-            ReturnErrorOnFailure(Credentials::ConvertX509CertToChipCert(icacDerSpan, icacTlvSpan));
-
-            ReturnErrorCodeIf(!mDerIcac.Alloc(icacDerSpan.size()), CHIP_ERROR_NO_MEMORY);
-            ReturnErrorCodeIf(!mTlvIcac.Alloc(icacTlvSpan.size()), CHIP_ERROR_NO_MEMORY);
-
-            memcpy(mDerIcac.Get(), icacDerSpan.data(), icacDerSpan.size());
-            memcpy(mTlvIcac.Get(), icacTlvSpan.data(), icacTlvSpan.size());
-
-            nocIssuerKeypair = &icacKeypair;
-            issuer_dn        = &icac_dn;
-        }
-        else
-        {
-            mDerIcac.Free();
-            mTlvIcac.Free();
-        }
-
-        // Generate NOC always, either issued from ICAC if present or from RCAC
-        {
-            Platform::ScopedMemoryBufferWithSize<uint8_t> derNocBuf;
-            Platform::ScopedMemoryBufferWithSize<uint8_t> tlvNocBuf;
-            ReturnErrorCodeIf(!derNocBuf.Alloc(Credentials::kMaxDERCertLength), CHIP_ERROR_NO_MEMORY);
-            ReturnErrorCodeIf(!tlvNocBuf.Alloc(Credentials::kMaxCHIPCertLength), CHIP_ERROR_NO_MEMORY);
-
-            memset(derNocBuf.Get(), 0, derNocBuf.AllocatedSize());
-            memset(tlvNocBuf.Get(), 0, tlvNocBuf.AllocatedSize());
-
-            ReturnErrorOnFailure(noc_dn.AddAttribute_MatterFabricId(fabricId));
-            ReturnErrorOnFailure(noc_dn.AddAttribute_MatterNodeId(nodeId));
-            ReturnErrorOnFailure(noc_dn.AddCATs(cats));
-
-            X509CertRequestParams noc_request = { 0, mMatterEffectiveTime, mMatterEffectiveTime + mValiditySeconds, noc_dn,
-                                                  *issuer_dn };
-
-            MutableByteSpan nocDerSpan{ derNocBuf.Get(), derNocBuf.AllocatedSize() };
-            ReturnErrorOnFailure(Credentials::NewNodeOperationalX509Cert(noc_request, nocPublicKey, *nocIssuerKeypair, nocDerSpan));
-
-            MutableByteSpan nocTlvSpan{ tlvNocBuf.Get(), tlvNocBuf.AllocatedSize() };
-            ReturnErrorOnFailure(Credentials::ConvertX509CertToChipCert(nocDerSpan, nocTlvSpan));
-
-            ReturnErrorCodeIf(!mDerNoc.Alloc(nocDerSpan.size()), CHIP_ERROR_NO_MEMORY);
-            ReturnErrorCodeIf(!mTlvNoc.Alloc(nocTlvSpan.size()), CHIP_ERROR_NO_MEMORY);
-
-            memcpy(mDerNoc.Get(), nocDerSpan.data(), nocDerSpan.size());
-            memcpy(mTlvNoc.Get(), nocTlvSpan.data(), nocTlvSpan.size());
-        }
-
-        return CHIP_NO_ERROR;
-    }
-
-    virtual CHIP_ERROR GenerateRootCert(uint64_t rootIdentifier)
-    {
-        ChipDN rcac_dn;
-        rcac_dn.Clear();
-
-        VerifyOrReturnError(mRootKeypair != nullptr, CHIP_ERROR_INCORRECT_STATE);
-
-        Platform::ScopedMemoryBufferWithSize<uint8_t> derRcacBuf;
-        Platform::ScopedMemoryBufferWithSize<uint8_t> tlvRcacBuf;
-        VerifyOrReturnError(derRcacBuf.Alloc(Credentials::kMaxDERCertLength), CHIP_ERROR_NO_MEMORY);
-        VerifyOrReturnError(tlvRcacBuf.Alloc(Credentials::kMaxCHIPCertLength), CHIP_ERROR_NO_MEMORY);
-
-        memset(derRcacBuf.Get(), 0, derRcacBuf.AllocatedSize());
-        memset(tlvRcacBuf.Get(), 0, tlvRcacBuf.AllocatedSize());
-
-        ReturnErrorOnFailure(rcac_dn.AddAttribute_MatterRCACId(rootIdentifier));
-
-        X509CertRequestParams rcac_request = { 0, mMatterEffectiveTime, mMatterEffectiveTime + mValiditySeconds, rcac_dn, rcac_dn };
-
-        MutableByteSpan rcacDerSpan{ derRcacBuf.Get(), derRcacBuf.AllocatedSize() };
-        ReturnErrorOnFailure(Credentials::NewRootX509Cert(rcac_request, *mRootKeypair, rcacDerSpan));
-
-        MutableByteSpan rcacTlvSpan{ tlvRcacBuf.Get(), tlvRcacBuf.AllocatedSize() };
-        ReturnErrorOnFailure(Credentials::ConvertX509CertToChipCert(rcacDerSpan, rcacTlvSpan));
-
-        VerifyOrReturnError(mDerRcac.Alloc(rcacDerSpan.size()), CHIP_ERROR_NO_MEMORY);
-        VerifyOrReturnError(mTlvRcac.Alloc(rcacTlvSpan.size()), CHIP_ERROR_NO_MEMORY);
-
-        memcpy(mDerRcac.Get(), rcacDerSpan.data(), rcacDerSpan.size());
-        memcpy(mTlvRcac.Get(), rcacTlvSpan.data(), rcacTlvSpan.size());
-
-        return CHIP_NO_ERROR;
-    }
-
-    bool mRootCertAvailable = false;
-
-    uint32_t mMatterEffectiveTime = 0;
-    uint32_t mValiditySeconds     = 0;
-
-    CHIP_ERROR mCurrentStatus = CHIP_NO_ERROR;
-    bool mIncludeIcac         = false;
-
-    Platform::ScopedMemoryBufferWithSize<uint8_t> mDerNoc;
-    Platform::ScopedMemoryBufferWithSize<uint8_t> mTlvNoc;
-    Platform::ScopedMemoryBufferWithSize<uint8_t> mDerIcac;
-    Platform::ScopedMemoryBufferWithSize<uint8_t> mTlvIcac;
-    Platform::ScopedMemoryBufferWithSize<uint8_t> mDerRcac;
-    Platform::ScopedMemoryBufferWithSize<uint8_t> mTlvRcac;
-
-    Crypto::P256Keypair * mRootKeypair;
+  Crypto::P256Keypair *mRootKeypair;
 };
 
-} // namespace Credentials
-} // namespace chip
+}  // namespace Credentials
+}  // namespace chip

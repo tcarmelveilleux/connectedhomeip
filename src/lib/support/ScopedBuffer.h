@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <stdio.h>
 #include <lib/support/CHIPMem.h>
 
 #include <type_traits>
@@ -62,7 +63,10 @@ public:
         return *this;
     }
 
-    ~ScopedMemoryBufferBase() { Free(); }
+    ~ScopedMemoryBufferBase() {
+        printf("Dtor ScopedMemoryBufferBase %p\n", this);
+        Free();
+    }
 
     /** Check if a buffer is valid */
     explicit operator bool() const { return mBuffer != nullptr; }
@@ -75,8 +79,10 @@ public:
         {
             return;
         }
+        printf("Free ScopedMemoryBufferBase start %p\n", this);
         Impl::MemoryFree(mBuffer);
         mBuffer = nullptr;
+        printf("Free ScopedMemoryBufferBase end %p\n", this);
     }
 
 protected:
@@ -96,8 +102,10 @@ protected:
 
     void Alloc(size_t size)
     {
+        printf("Alloc ScopedMemoryBufferBase start %p\n", this);
         Free();
         mBuffer = Impl::MemoryAlloc(size);
+        printf("Alloc ScopedMemoryBufferBase end %p\n", this);
     }
 
     void Calloc(size_t elementCount, size_t elementSize)
@@ -149,12 +157,14 @@ public:
 
     ScopedMemoryBuffer & Calloc(size_t elementCount)
     {
+        printf("Calloc ScopedMemoryBuffer: %p\n", this);
         Base::Calloc(elementCount, sizeof(T));
         return *this;
     }
 
     ScopedMemoryBuffer & Alloc(size_t size)
     {
+        printf("Alloc ScopedMemoryBuffer: %p\n", this);
         Base::Alloc(size * sizeof(T));
         return *this;
     }
@@ -191,6 +201,7 @@ public:
 
     void Free()
     {
+        printf("Free ScopedMemoryBufferWithSize\n");
         mSize = 0;
         ScopedMemoryBuffer<T>::Free();
     }
@@ -204,21 +215,25 @@ public:
 
     ScopedMemoryBufferWithSize & Calloc(size_t elementCount)
     {
+        printf("Calloc ScopedMemoryBufferWithSize start: %p\n", this);
         ScopedMemoryBuffer<T>::Calloc(elementCount);
         if (this->Get() != nullptr)
         {
             mSize = elementCount * sizeof(T);
         }
+        printf("Calloc ScopedMemoryBufferWithSize end: %p\n", this);
         return *this;
     }
 
     ScopedMemoryBufferWithSize & Alloc(size_t size)
     {
+        printf("Alloc ScopedMemoryBufferWithSize start: %p\n", this);
         ScopedMemoryBuffer<T>::Alloc(size);
         if (this->Get() != nullptr)
         {
             mSize = size * sizeof(T);
         }
+        printf("Alloc ScopedMemoryBufferWithSize end: %p\n", this);
         return *this;
     }
 
