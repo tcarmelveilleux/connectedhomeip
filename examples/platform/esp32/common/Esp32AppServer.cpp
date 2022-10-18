@@ -22,6 +22,7 @@
 #include <app/clusters/ota-requestor/OTATestEventTriggerDelegate.h>
 #include <app/server/Dnssd.h>
 #include <app/server/Server.h>
+#include <inet/UDPEndPointImpl.h>
 #include <platform/ESP32/NetworkCommissioningDriver.h>
 #include <string.h>
 
@@ -105,6 +106,7 @@ void Esp32AppServer::Init(AppDelegate * sAppDelegate)
         initParams.appDelegate = sAppDelegate;
     }
     chip::Server::GetInstance().Init(initParams);
+
 
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFI
     sWiFiNetworkCommissioningInstance.Init();

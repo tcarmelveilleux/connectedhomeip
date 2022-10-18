@@ -25,6 +25,7 @@
 
 #include <inet/EndPointStateLwIP.h>
 #include <inet/UDPEndPoint.h>
+#include <inet/EndpointQueueFilter.h>
 
 namespace chip {
 namespace Inet {
@@ -39,6 +40,23 @@ public:
     InterfaceId GetBoundInterface() const override;
     uint16_t GetBoundPort() const override;
     void Free() override;
+
+    /**
+     * @brief Set the queue filter for all UDP endpoints
+     *
+     * Responsibility is on the caller to avoid changing the filter while packets are being
+     * processed. Setting the queue filter to `nullptr` disables the filtering.
+     *
+     * NOTE: There is only one EndpointQueueFilter instance settable. However it's possible
+     *       to create an instance of EndpointQueueFilter that combines several other
+     *       EndpointQueueFilter by composition to achieve the effect of multiple filters.
+     *
+     * @param queueFilter - queue filter instance to set, owned by caller
+     */
+    static void SetQueueFilter(EndpointQueueFilter * queueFilter)
+    {
+        sQueueFilter = queueFilter;
+    }
 
 private:
     // UDPEndPoint overrides.
@@ -62,6 +80,8 @@ private:
 
     udp_pcb * mUDP; // LwIP User datagram protocol (UDP) control block.
     std::atomic_int mDelayReleaseCount{ 0 };
+
+    static EndpointQueueFilter * sQueueFilter = nullptr;
 };
 
 using UDPEndPointImpl = UDPEndPointImplLwIP;

@@ -132,11 +132,25 @@ AndroidDeviceControllerWrapper * AndroidDeviceControllerWrapper::AllocateNew(
 
     // Initialize device attestation verifier
     // TODO: Replace testingRootStore with a AttestationTrustStore that has the necessary official PAA roots available
+
+    // Here we must take a AttestationTrustStore that is implemented in Java!
+    // 0- Make a `DefaultDACVerifier mDefaultDACVerifier` member to the wrapper, inited here.
+    // 1- Make an AttestationTrustStore bridge in Java
+    // 2- Make an AttestationTrustStore impl in Java that can be initialized
+    //    with the necessary PAAs (which can come from app assets and local data)
+    // 3- Add plumbing to Java's `ControllerParams` so that `public ChipDeviceController(ControllerParams params) {`
+    //    can receive a Java based attestation trust store
+    // 4- Make  DeviceAttestationVerifier::SetDeviceAttestationVerifier(bool enabled) get called with true/false from
+    //    commissioner params on the verifier before calling `SetDeviceAttestationVerifier`
+
     const chip::Credentials::AttestationTrustStore * testingRootStore = chip::Credentials::GetTestAttestationTrustStore();
-    SetDeviceAttestationVerifier(GetDefaultDACVerifier(testingRootStore));
+
+    mDefaultDacVerifier = new DefaultDACVerifier(mTrustStore);
+    mDefaultDacVerifier.SetDeviceAttestationVerifier(XXXX params XXXX);
 
     chip::Controller::FactoryInitParams initParams;
     chip::Controller::SetupParams setupParams;
+    setupParams.deviceAttestationVerifier = mDefaultDacVerifier.get();
 
     initParams.systemLayer        = systemLayer;
     initParams.tcpEndPointManager = tcpEndPointManager;

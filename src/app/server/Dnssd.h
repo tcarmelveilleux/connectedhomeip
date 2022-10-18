@@ -139,6 +139,10 @@ private:
     uint16_t mUnsecuredPort        = CHIP_UDC_PORT;
     Inet::InterfaceId mInterfaceId = Inet::InterfaceId::Null();
 
+    // MAC address buffer to generate hostname. We can have a single hostname, it's fine.
+    uint8_t mPrimaryMacBuffer[8];
+    MutableByteSpan mPrimaryMac(mPrimaryMacBuffer);
+
     // Ephemeral discriminator to use instead of the default if set
     Optional<uint16_t> mEphemeralDiscriminator;
 

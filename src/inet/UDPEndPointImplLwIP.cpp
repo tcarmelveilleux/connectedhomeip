@@ -281,7 +281,16 @@ void UDPEndPointImplLwIP::Free()
 
 void UDPEndPointImplLwIP::HandleDataReceived(System::PacketBufferHandle && msg, IPPacketInfo * pktInfo)
 {
-    if ((mState == State::kListening) && (OnMessageReceived != nullptr))
+    // Process packet filter if needed. May cause packet to get dropped before processing.
+    bool dropPacket = false;
+    if ((pktInfo != nullptr) && (sQueueFilter != nullptr))
+    {
+        auto outcome = sQueueFilter.FilterAfterDequeue(this, *pktInfo, msg);
+        dropPacket = (outcome == EndpointQueueFilter::FilterOutcome::kDropPacket);
+    }
+
+    // Process actual packet if allowed
+    if ((mState == State::kListening) && (OnMessageReceived != nullptr) && !dropPacket)
     {
         if (pktInfo != nullptr)
         {
@@ -393,6 +402,18 @@ void UDPEndPointImplLwIP::LwIPReceiveUDPMessage(void * arg, struct udp_pcb * pcb
     pktInfo->SrcPort     = port;
     pktInfo->DestPort    = pcb->local_port;
 
+    auto filterOutcome = QueueFilter::FilterOutcome::kAllowPacket;
+    if (sQueueFilter != nullptr)
+    {
+        filterOutcome = sQueueFilter.FilterBeforeEnqueue(ep, *(pktInfo.get()), buf);
+    }
+
+    if (filterOutcome != QueueFilter::FilterOutcome::kAllowPacket)
+    {
+        // Logging, if any, should be at the choice of the filter impl at time of filtering.
+        return;
+    }
+
     // Increase mDelayReleaseCount to delay release of this UDP EndPoint while the HandleDataReceived call is
     // pending on it.
     ep->mDelayReleaseCount++;
@@ -400,7 +421,15 @@ void UDPEndPointImplLwIP::LwIPReceiveUDPMessage(void * arg, struct udp_pcb * pcb
     CHIP_ERROR err = ep->GetSystemLayer().ScheduleLambda(
         [ep, p = System::LwIPPacketBufferView::UnsafeGetLwIPpbuf(buf), pktInfo = pktInfo.get()] {
             ep->mDelayReleaseCount--;
-            ep->HandleDataReceived(System::PacketBufferHandle::Adopt(p), pktInfo);
+
+            auto handle = System::PacketBufferHandle::Adopt(p);
+            auto filterOutcome = QueueFilter::FilterOutcome::kAllowPacket;
+
+            if (ep->sQueueFilter != nullptr)
+            {
+                (void)ep->sQueueFilter.FilterAfterDequeue(ep, *(pktInfo.get()), handle);
+            }
+            ep->HandleDataReceived(std::move(handle), pktInfo);
         });
 
     if (err == CHIP_NO_ERROR)
@@ -412,6 +441,13 @@ void UDPEndPointImplLwIP::LwIPReceiveUDPMessage(void * arg, struct udp_pcb * pcb
     }
     else
     {
+        // On failure to enqueue the processing, we have to tell the filter that
+        // the packet is basically dequeued, if it tries to keep track of the lifecycle.
+        if (sQueueFilter != nullptr)
+        {
+            (void)sQueueFilter.FilterAfterDequeue(ep, *(pktInfo.get()), buf);
+        }
+
         ep->mDelayReleaseCount--;
     }
 }

@@ -122,6 +122,7 @@ static_library("inet") {
 
   if (chip_inet_config_enable_udp_endpoint) {
     sources += [
+      "EndpointQueueFilter.h",
       "UDPEndPoint.cpp",
       "UDPEndPoint.h",
       "UDPEndPointImpl${chip_system_config_inet}.cpp",
