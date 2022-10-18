@@ -44,6 +44,7 @@
 #include <credentials/GroupDataProvider.h>
 #include <lib/core/CHIPSafeCasts.h>
 #include <lib/core/PeerId.h>
+#include <lib/support/BytesToHex.h>
 #include <lib/support/CodeUtils.h>
 #include <lib/support/ScopedBuffer.h>
 #include <lib/support/logging/CHIPLogging.h>
@@ -654,6 +655,7 @@ bool emberAfOperationalCredentialsClusterAddNOCCallback(app::CommandHandler * co
 
     // Set the Identity Protection Key (IPK)
     // The IPK SHALL be the operational group key under GroupKeySetID of 0
+    Encoding::LogBufferAsHex("IPK", ipkValue);
     keyset.keyset_id     = Credentials::GroupDataProvider::kIdentityProtectionKeySetId;
     keyset.policy        = GroupKeyManagement::GroupKeySecurityPolicy::kTrustFirst;
     keyset.num_keys_used = 1;
