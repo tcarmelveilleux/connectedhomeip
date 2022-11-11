@@ -75,6 +75,9 @@ enum
     kDeviceOption_TestEventTriggerEnableKey             = 0x101f,
     kCommissionerOption_FabricID                        = 0x1020,
     kDeviceOption_InterfaceName                         = 0x1021,
+
+    kTestDropCommissionableAdditional = 0x1022,
+    kTestDropOperationalAdditional = 0x1023,
 };
 
 constexpr unsigned kAppUsageLength = 64;
@@ -122,8 +125,15 @@ OptionDef sDeviceOptionDefs[] = {
     { "cert_error_attestation_signature_invalid", kNoArgument, kOptionCSRResponseAttestationSignatureInvalid },
     { "enable-key", kArgumentRequired, kDeviceOption_TestEventTriggerEnableKey },
     { "commissioner-fabric-id", kArgumentRequired, kCommissionerOption_FabricID },
+    { "test-drop-commissionable-additional", kNoArgument, kTestDropCommissionableAdditional},
+    { "test-drop-operational-additional", kNoArgument, kTestDropOperationalAdditional},
     {}
 };
+
+extern "C" {
+extern bool gDropOperationalMatterAdditional;
+extern bool gDropCommissionableMatterAdditional;
+}
 
 const char * sDeviceOptionHelp =
 #if CHIP_DEVICE_CONFIG_ENABLE_CHIPOBLE
@@ -231,6 +241,10 @@ const char * sDeviceOptionHelp =
     "       Configure the CSRResponse to be build with an AttestationSignature that does not match what is expected.\n"
     "  --enable-key <key>\n"
     "       A 16-byte, hex-encoded key, used to validate TestEventTrigger command of Generial Diagnostics cluster\n"
+    "  --test-drop-commissionable-additional\n"
+    "       Drop A/AAAA from additional data on minimal MDNS _matterc._udp record responses\n"
+    "  --test-drop-operational-additional\n"
+    "       Drop A/AAAA from additional data on minimal MDNS _matter._tcp record responses\n"
     "\n";
 
 bool Base64ArgToVector(const char * arg, size_t maxSize, std::vector<uint8_t> & outVector)
@@ -482,11 +496,22 @@ bool HandleOption(const char * aProgram, OptionSet * aOptions, int aIdentifier, 
         break;
     }
 
+    case kTestDropCommissionableAdditional:
+        printf("============= ENABLING drop of additional data A/AAAA records from commissionable mDNS responses! =========\n");
+        gDropCommissionableMatterAdditional = true;
+        break;
+
+    case kTestDropOperationalAdditional:
+        printf("============= ENABLING drop of additional data A/AAAA records from operational mDNS responses! =========\n");
+        gDropOperationalMatterAdditional = true;
+        break;
+
     default:
         PrintArgError("%s: INTERNAL ERROR: Unhandled option: %s\n", aProgram, aName);
         retval = false;
         break;
     }
+
 
     return (retval);
 }

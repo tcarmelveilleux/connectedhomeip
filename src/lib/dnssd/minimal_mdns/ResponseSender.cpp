@@ -22,6 +22,11 @@
 
 #include <system/SystemClock.h>
 
+extern "C" {
+bool gDropOperationalMatterAdditional = false;
+bool gDropCommissionableMatterAdditional = false;
+}
+
 namespace mdns {
 namespace Minimal {
 
@@ -106,10 +111,6 @@ CHIP_ERROR ResponseSender::Respond(uint32_t messageId, const QueryData & query, 
 {
     mSendState.Reset(messageId, query, querySource);
 
-    SerializedQNameIterator nameIterator = query.GetName();
-    nameIterator.Reset();
-    QNameString name(nameIterator);
-
     // Responder has a stateful 'additional replies required' that is used within the response
     // loop. 'no additionals required' is set at the start and additionals are marked as the query
     // reply is built.
@@ -181,7 +182,7 @@ CHIP_ERROR ResponseSender::Respond(uint32_t messageId, const QueryData & query, 
             }
             for (auto it = responder->begin(&responseFilter); it != responder->end(); it++)
             {
-#if 1
+#if 0
                 auto qtype = it->responder->GetQType();
                 if ((qtype == QType::A) || (qtype == QType::AAAA))
                 {

@@ -18,9 +18,16 @@
 #pragma once
 
 #include <lib/dnssd/minimal_mdns/responders/ReplyFilter.h>
+#include <lib/dnssd/minimal_mdns/core/QNameString.h>
+#include <lib/support/logging/CHIPLogging.h>
 
 #include "Parser.h"
 #include "Query.h"
+
+extern "C" {
+extern bool gDropOperationalMatterAdditional;
+extern bool gDropCommissionableMatterAdditional;
+}
 
 namespace mdns {
 namespace Minimal {
@@ -33,6 +40,30 @@ public:
 
     bool Accept(QType qType, QClass qClass, FullQName qname) override
     {
+        if (mIgnoreNameMatch)
+        {
+            if ((qType == QType::A) || (qType == QType::AAAA))
+            {
+                SerializedQNameIterator nameIterator =  mQueryData.GetName();
+                // Have to reset since the way the iterator copies work, the copies iterator is not from the start!
+                nameIterator.Reset();
+                QNameString name(nameIterator);
+
+                bool commissionableMatches = (strstr(name.c_str(), "_matterc._udp") != nullptr);
+
+                bool shouldDropAdditional = (commissionableMatches && gDropCommissionableMatterAdditional) || (!commissionableMatches && gDropOperationalMatterAdditional);
+                if (shouldDropAdditional)
+                {
+                    ChipLogDetail(Discovery, "Skipped %s additional data for query on %s", (qType == QType::A) ? "A" : "AAAA", name.c_str());
+                    return false;
+                }
+                else
+                {
+                    ChipLogDetail(Discovery, "Allowed %s additional data for query on %s", (qType == QType::A) ? "A" : "AAAA", name.c_str());
+                }
+            }
+        }
+
         if (!AcceptableQueryType(qType))
         {
             return false;
