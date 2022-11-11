@@ -89,6 +89,32 @@ void IteratorTest(nlTestSuite * inSuite, void * inContext)
 
         NL_TEST_ASSERT(inSuite, !it.Next());
         NL_TEST_ASSERT(inSuite, it.IsValid());
+
+        // After reset, we can read again, and reset more than once
+        it.Reset();
+
+        NL_TEST_ASSERT(inSuite, it.Next());
+        NL_TEST_ASSERT(inSuite, strcmp(it.Value(), "this") == 0);
+
+        NL_TEST_ASSERT(inSuite, it.Next());
+        NL_TEST_ASSERT(inSuite, strcmp(it.Value(), "is") == 0);
+
+        it.Reset();
+
+        NL_TEST_ASSERT(inSuite, it.Next());
+        NL_TEST_ASSERT(inSuite, strcmp(it.Value(), "this") == 0);
+
+        NL_TEST_ASSERT(inSuite, it.Next());
+        NL_TEST_ASSERT(inSuite, strcmp(it.Value(), "is") == 0);
+
+        NL_TEST_ASSERT(inSuite, it.Next());
+        NL_TEST_ASSERT(inSuite, strcmp(it.Value(), "a") == 0);
+
+        NL_TEST_ASSERT(inSuite, it.Next());
+        NL_TEST_ASSERT(inSuite, strcmp(it.Value(), "test") == 0);
+
+        NL_TEST_ASSERT(inSuite, !it.Next());
+        NL_TEST_ASSERT(inSuite, it.IsValid());
     }
 }
 
@@ -108,6 +134,11 @@ void ErrorTest(nlTestSuite * inSuite, void * inContext)
         static const uint8_t kData[] = "\02";
         SerializedQNameIterator it   = AsSerializedQName(kData);
 
+        NL_TEST_ASSERT(inSuite, !it.Next());
+        NL_TEST_ASSERT(inSuite, !it.IsValid());
+
+        it.Reset();
+        NL_TEST_ASSERT(inSuite, it.IsValid());
         NL_TEST_ASSERT(inSuite, !it.Next());
         NL_TEST_ASSERT(inSuite, !it.IsValid());
     }

@@ -57,6 +57,13 @@ CHIP_ERROR UDPEndPoint::Bind(IPAddressType addrType, const IPAddress & addr, uin
 
     ReturnErrorOnFailure(BindImpl(addrType, addr, port, intfId));
 
+    char addressStr[IPAddress::kMaxStringLength];
+    addr.ToString(addressStr, IPAddress::kMaxStringLength);
+    char intfName[chip::Inet::InterfaceId::kMaxIfNameLength];
+    intfId.GetInterfaceName(intfName, chip::Inet::InterfaceId::kMaxIfNameLength);
+
+    ChipLogProgress(Discovery, "Bound [%s]:%d on %s", addressStr, (int)port, intfName);
+
     mState = State::kBound;
 
     return CHIP_NO_ERROR;

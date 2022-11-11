@@ -178,6 +178,7 @@ CHIP_ERROR Server::Init(const ServerInitParams & initParams)
                                .SetAddressType(IPAddressType::kIPv6)
                                .SetListenPort(mOperationalServicePort)
                                .SetNativeParams(initParams.endpointNativeParams)
+                               .SetInterfaceId(mInterfaceId)
 
 #if INET_CONFIG_ENABLE_IPV4
                                ,

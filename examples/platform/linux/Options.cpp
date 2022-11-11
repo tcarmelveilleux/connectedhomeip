@@ -74,6 +74,7 @@ enum
     kOptionCSRResponseCSRExistingKeyPair                = 0x101e,
     kDeviceOption_TestEventTriggerEnableKey             = 0x101f,
     kCommissionerOption_FabricID                        = 0x1020,
+    kDeviceOption_InterfaceName                         = 0x1021,
 };
 
 constexpr unsigned kAppUsageLength = 64;
@@ -105,6 +106,7 @@ OptionDef sDeviceOptionDefs[] = {
     { "PICS", kArgumentRequired, kDeviceOption_PICS },
     { "KVS", kArgumentRequired, kDeviceOption_KVS },
     { "interface-id", kArgumentRequired, kDeviceOption_InterfaceId },
+    { "interface-name", kArgumentRequired, kDeviceOption_InterfaceName },
 #if CHIP_CONFIG_TRANSPORT_TRACE_ENABLED
     { "trace_file", kArgumentRequired, kDeviceOption_TraceFile },
     { "trace_log", kArgumentRequired, kDeviceOption_TraceLog },
@@ -198,7 +200,10 @@ const char * sDeviceOptionHelp =
     "       A file to store Key Value Store items.\n"
     "\n"
     "  --interface-id <interface>\n"
-    "       A interface id to advertise on.\n"
+    "       The network interface id on which to operate/advertise.\n"
+    "\n"
+    "  --interface-name <interface name>\n"
+    "       The network interface name on which to operate/advertise.\n"
 #if CHIP_CONFIG_TRANSPORT_TRACE_ENABLED
     "\n"
     "  --trace_file <file>\n"
@@ -405,6 +410,16 @@ bool HandleOption(const char * aProgram, OptionSet * aOptions, int aIdentifier, 
         LinuxDeviceOptions::GetInstance().interfaceId =
             Inet::InterfaceId(static_cast<chip::Inet::InterfaceId::PlatformType>(atoi(aValue)));
         break;
+
+    case kDeviceOption_InterfaceName: {
+        CHIP_ERROR err = Inet::InterfaceId::InterfaceNameToId(aValue, LinuxDeviceOptions::GetInstance().interfaceId);
+        if (err != CHIP_NO_ERROR)
+        {
+           PrintArgError("%s: ERROR: argument %s was not parsable as an interface name\n", aProgram, aName);
+           retval = false;
+        }
+        break;
+    }
 
 #if CHIP_CONFIG_TRANSPORT_TRACE_ENABLED
     case kDeviceOption_TraceFile:

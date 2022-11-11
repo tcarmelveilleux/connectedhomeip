@@ -18,6 +18,7 @@
 #include "ResponseSender.h"
 
 #include "QueryReplyFilter.h"
+#include "lib/dnssd/minimal_mdns/core/QNameString.h"
 
 #include <system/SystemClock.h>
 
@@ -105,6 +106,10 @@ CHIP_ERROR ResponseSender::Respond(uint32_t messageId, const QueryData & query, 
 {
     mSendState.Reset(messageId, query, querySource);
 
+    SerializedQNameIterator nameIterator = query.GetName();
+    nameIterator.Reset();
+    QNameString name(nameIterator);
+
     // Responder has a stateful 'additional replies required' that is used within the response
     // loop. 'no additionals required' is set at the start and additionals are marked as the query
     // reply is built.
@@ -176,6 +181,21 @@ CHIP_ERROR ResponseSender::Respond(uint32_t messageId, const QueryData & query, 
             }
             for (auto it = responder->begin(&responseFilter); it != responder->end(); it++)
             {
+#if 1
+                auto qtype = it->responder->GetQType();
+                if ((qtype == QType::A) || (qtype == QType::AAAA))
+                {
+                    if (strstr(name.c_str(), "_matterc._udp") == nullptr)
+                    {
+                        ChipLogDetail(Discovery, "Skipped A/AAAA (%d) additional data for operational query on %s", (int)qtype, name.c_str());
+                        continue;
+                    }
+                    else
+                    {
+                        ChipLogDetail(Discovery, "Allowed A/AAAA (%d) additional data for operational query on %s", (int)qtype, name.c_str());
+                    }
+                }
+#endif
                 it->responder->AddAllResponses(querySource, this, configuration);
                 ReturnErrorOnFailure(mSendState.GetError());
             }

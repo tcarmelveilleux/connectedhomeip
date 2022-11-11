@@ -67,13 +67,20 @@ struct FullQName
 class SerializedQNameIterator
 {
 public:
-    SerializedQNameIterator() : mLookBehindMax(0), mCurrentPosition(nullptr), mIsValid(false) {}
+    SerializedQNameIterator() : mLookBehindMax(0), mInitialPosition(nullptr), mCurrentPosition(nullptr), mIsValid(false) {}
     SerializedQNameIterator(const SerializedQNameIterator &) = default;
     SerializedQNameIterator & operator=(const SerializedQNameIterator &) = default;
 
     SerializedQNameIterator(const BytesRange validData, const uint8_t * position) :
-        mValidData(validData), mLookBehindMax(static_cast<size_t>(position - validData.Start())), mCurrentPosition(position)
+        mValidData(validData), mLookBehindMax(static_cast<size_t>(position - validData.Start())), mInitialPosition(position), mCurrentPosition(position)
     {}
+
+    void Reset()
+    {
+        VerifyOrReturn(mInitialPosition != nullptr);
+        mCurrentPosition = mInitialPosition;
+        mIsValid = true;
+    }
 
     /// Advances to the next element in the sequence
     /// Returns true if new data was available
@@ -108,6 +115,7 @@ private:
 
     BytesRange mValidData;
     size_t mLookBehindMax; // avoid loops by limiting lookbehind
+    const uint8_t * mInitialPosition;
     const uint8_t * mCurrentPosition;
     bool mIsValid = true;
 
