@@ -75,8 +75,8 @@ struct CommonTestElements
     CommonTestElements(nlTestSuite * inSuite, const char * tag) :
         recordWriter(&requestBufferWriter),
         dnsSd(FlatAllocatedQName::Build(dnsSdServiceStorage, "_services", "_dns-sd", "_udp", "local")),
-        service(FlatAllocatedQName::Build(serviceNameStorage, tag, "service")),
-        instance(FlatAllocatedQName::Build(instanceNameStorage, tag, "instance")),
+        service(FlatAllocatedQName::Build(serviceNameStorage, tag, "_matter", "_tcp", "local")),
+        instance(FlatAllocatedQName::Build(instanceNameStorage, tag, "_matter", "_tcp", "_local")),
         host(FlatAllocatedQName::Build(hostNameStorage, tag, "host")),
         txt(FlatAllocatedQName::Build(txtStorage, tag, "L1=something", "L2=other")), server(inSuite)
     {

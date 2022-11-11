@@ -185,7 +185,7 @@ CHIP_ERROR ResponseSender::Respond(uint32_t messageId, const QueryData & query, 
                 auto qtype = it->responder->GetQType();
                 if ((qtype == QType::A) || (qtype == QType::AAAA))
                 {
-                    if (strstr(name.c_str(), "_matterc._udp") == nullptr)
+                    if (strstr(name.c_str(), "_matter._tcp") != nullptr)
                     {
                         ChipLogDetail(Discovery, "Skipped A/AAAA (%d) additional data for operational query on %s", (int)qtype, name.c_str());
                         continue;
