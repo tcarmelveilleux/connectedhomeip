@@ -146,19 +146,18 @@ CHIP_ERROR DnssdServer::AdvertiseOperational()
 {
     VerifyOrDie(mFabricTable != nullptr);
 
+    mPrimaryMac = MutableByteSpan{mPrimaryMacBuffer};
+    if (chip::DeviceLayer::ConfigurationMgr().GetPrimaryMACAddress(mPrimaryMac) != CHIP_NO_ERROR)
+    {
+        ChipLogError(Discovery, "Failed to get primary mac address of device. Generating a random one.");
+        Crypto::DRBG_get_bytes(mPrimaryMacBuffer, sizeof(mPrimaryMacBuffer));
+    }
+
     for (const FabricInfo & fabricInfo : *mFabricTable)
     {
-        uint8_t macBuffer[DeviceLayer::ConfigurationManager::kPrimaryMACAddressLength];
-        MutableByteSpan mac(macBuffer);
-        if (chip::DeviceLayer::ConfigurationMgr().GetPrimaryMACAddress(mac) != CHIP_NO_ERROR)
-        {
-            ChipLogError(Discovery, "Failed to get primary mac address of device. Generating a random one.");
-            Crypto::DRBG_get_bytes(macBuffer, sizeof(macBuffer));
-        }
-
         const auto advertiseParameters = chip::Dnssd::OperationalAdvertisingParameters()
                                              .SetPeerId(fabricInfo.GetPeerId())
-                                             .SetMac(mac)
+                                             .SetMac(mPrimaryMac)
                                              .SetPort(GetSecuredPort())
                                              .SetInterfaceId(GetInterfaceId())
                                              .SetLocalMRPConfig(GetLocalMRPConfig())
