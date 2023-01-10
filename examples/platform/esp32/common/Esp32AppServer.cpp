@@ -18,11 +18,13 @@
 
 #include "Esp32AppServer.h"
 #include "CHIPDeviceManager.h"
+#include <app/TestEventTriggerDelegate.h>
 #include <app/clusters/network-commissioning/network-commissioning.h>
 #include <app/clusters/ota-requestor/OTATestEventTriggerDelegate.h>
 #include <app/server/Dnssd.h>
 #include <app/server/Server.h>
 #include <platform/ESP32/NetworkCommissioningDriver.h>
+#include "AppTask.h"
 #include <string.h>
 
 using namespace chip;
@@ -37,53 +39,52 @@ app::Clusters::NetworkCommissioning::Instance
     sWiFiNetworkCommissioningInstance(0 /* Endpoint Id */, &(NetworkCommissioning::ESPWiFiDriver::GetInstance()));
 #endif
 
+#if 0
 #if CONFIG_TEST_EVENT_TRIGGER_ENABLED
 static uint8_t sTestEventTriggerEnableKey[TestEventTriggerDelegate::kEnableKeyLength] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55,
                                                                                           0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb,
                                                                                           0xcc, 0xdd, 0xee, 0xff };
 #endif
+#endif
+
+class MidiTestEventTriggerDelegate : public chip::TestEventTriggerDelegate
+{
+  public:
+    bool DoesEnableKeyMatch(const ByteSpan & enableKey) const override
+    {
+        return enableKey.data_equal(ByteSpan{kEnableKey});
+    }
+
+    /**
+     * Expectation is that the caller has already validated the enable key before calling this.
+     * Handles the test event trigger based on `eventTrigger` provided.
+     *
+     * @param[in] eventTrigger Event trigger to handle.
+     *
+     * @return CHIP_NO_ERROR on success or another CHIP_ERROR on failure
+     */
+    virtual CHIP_ERROR HandleEventTrigger(uint64_t eventTrigger)
+    {
+        uint8_t midiData[4] = {};
+        VerifyOrReturnError((eventTrigger & kMidiPrefixMask) == kMidiPrefix, CHIP_ERROR_INVALID_ARGUMENT);
+
+        // If prefix matches, the lower 4 bytes are the MIDI command bytes
+        midiData[0] = static_cast<uint8_t>((eventTrigger >> 24) & 0xFF);
+        midiData[1] = static_cast<uint8_t>((eventTrigger >> 16) & 0xFF);
+        midiData[2] = static_cast<uint8_t>((eventTrigger >> 8) & 0xFF);
+        midiData[3] = static_cast<uint8_t>((eventTrigger >> 0) & 0xFF);
+
+        GetAppTask().PostMidiEvent(ByteSpan{midiData});
+        return CHIP_NO_ERROR;
+    }
+
+  private:
+    static constexpr uint8_t kEnableKey[16] = { 'J', 'i', 'n', 'g', 'l', 'e', ' ', 'T', 'h', 'e', ' ', 'B', 'e', 'l', 'l', 's'};
+    static constexpr uint64_t kMidiPrefix = 0xFFFF'FFFF'0000'0000;
+    static constexpr uint64_t kMidiPrefixMask = 0xFFFF'FFFF'0000'0000;
+};
+
 } // namespace
-
-#if CONFIG_TEST_EVENT_TRIGGER_ENABLED
-static int hex_digit_to_int(char hex)
-{
-    if ('A' <= hex && hex <= 'F')
-    {
-        return 10 + hex - 'A';
-    }
-    if ('a' <= hex && hex <= 'f')
-    {
-        return 10 + hex - 'a';
-    }
-    if ('0' <= hex && hex <= '9')
-    {
-        return hex - '0';
-    }
-    return -1;
-}
-
-static size_t hex_string_to_binary(const char * hex_string, uint8_t * buf, size_t buf_size)
-{
-    int num_char = strlen(hex_string);
-    if (num_char != buf_size * 2)
-    {
-        return 0;
-    }
-    for (size_t i = 0; i < num_char; i += 2)
-    {
-        int digit0 = hex_digit_to_int(hex_string[i]);
-        int digit1 = hex_digit_to_int(hex_string[i + 1]);
-
-        if (digit0 < 0 || digit1 < 0)
-        {
-            return 0;
-        }
-        buf[i / 2] = (digit0 << 4) + digit1;
-    }
-
-    return buf_size;
-}
-#endif // CONFIG_TEST_EVENT_TRIGGER_ENABLED
 
 void Esp32AppServer::Init(AppDelegate * sAppDelegate)
 {
@@ -99,6 +100,10 @@ void Esp32AppServer::Init(AppDelegate * sAppDelegate)
     static OTATestEventTriggerDelegate testEventTriggerDelegate{ ByteSpan(sTestEventTriggerEnableKey) };
     initParams.testEventTriggerDelegate = &testEventTriggerDelegate;
 #endif // CONFIG_TEST_EVENT_TRIGGER_ENABLED
+
+    static MidiTestEventTriggerDelegate sMidiTestEventTriggerHandler;
+    initParams.testEventTriggerDelegate = &sMidiTestEventTriggerHandler;
+
     (void) initParams.InitializeStaticResourcesBeforeServerInit();
     if (sAppDelegate != nullptr)
     {

@@ -26,6 +26,7 @@
 #include "LEDWidget.h"
 #include "freertos/FreeRTOS.h"
 #include <platform/CHIPDeviceLayer.h>
+#include <support/Span.h>
 
 // Application-defined error codes in the CHIP_ERROR space.
 #define APP_ERROR_EVENT_QUEUE_FAILED CHIP_APPLICATION_ERROR(0x01)
@@ -45,6 +46,7 @@ public:
     CHIP_ERROR StartAppTask();
     static void AppTaskMain(void * pvParameter);
     void PostEvent(const AppEvent * event);
+    void PostMidiEvent(chip::ByteSpan midiBytes);
 
     void ButtonEventHandler(const uint8_t buttonHandle, uint8_t btnAction);
 
@@ -56,6 +58,7 @@ private:
     void DispatchEvent(AppEvent * event);
     static void SwitchActionEventHandler(AppEvent * aEvent);
     static void LightingActionEventHandler(AppEvent * aEvent);
+    static void MidiEventHandler(AppEvent * aEvent);
 
     static void ButtonPressCallback();
 

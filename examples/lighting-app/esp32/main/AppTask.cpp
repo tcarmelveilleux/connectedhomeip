@@ -16,9 +16,13 @@
  *    limitations under the License.
  */
 
+#include <array>
 #include "AppTask.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
+#include "driver/gpio.h"
+#include <support/logging/CHIPLogging.h>
+
 
 #include <app-common/zap-generated/attribute-id.h>
 #include <app-common/zap-generated/attribute-type.h>
@@ -41,9 +45,100 @@ LEDWidget AppLED;
 Button AppButton;
 
 namespace {
+
 constexpr EndpointId kLightEndpointId = 1;
 QueueHandle_t sAppEventQueue;
 TaskHandle_t sAppTaskHandle;
+
+constexpr uint8_t kNoteOff = 0x80;
+constexpr uint8_t kNoteOn = 0x90;
+constexpr uint8_t kNoteIdForOne = 62;
+
+static const std::array<gpio_num_t, 4> kMidiGpios = { GPIO_NUM_25, GPIO_NUM_26, GPIO_NUM_14, GPIO_NUM_27 };
+
+template <size_t N>
+class XylophoneMidiHandler
+{
+  public:
+    XylophoneMidiHandler(const std::array<gpio_num_t, N> & gpioPositions, uint8_t noteIdForOne) : mGpioPositions(gpioPositions), mNoteIdForOne(noteIdForOne) {}
+
+    void Init()
+    {
+        for (auto gpioNum : mGpioPositions)
+        {
+            // Start low, before GPIO config
+            gpio_set_level(gpioNum, 0);
+
+            // Configure all pins as outputs
+            gpio_config_t io_conf = {};
+            // interrupt of rising edge
+            io_conf.intr_type = GPIO_INTR_DISABLE;
+            // bit mask of the pins, use GPIO4/5 here
+            io_conf.pin_bit_mask = (1ULL << static_cast<uint64_t>(gpioNum));
+            // set as input mode
+            io_conf.mode = GPIO_MODE_OUTPUT;
+            // enable pull-up mode
+            io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+            gpio_config(&io_conf);
+        }
+    }
+
+    void Handle(ByteSpan midiBytes)
+    {
+        VerifyOrReturn(midiBytes.size() >= 4);
+        // Only Note-ON supported
+        uint8_t command = midiBytes.data()[0] & 0xF0;
+        uint8_t channel = midiBytes.data()[0] & 0x0F;
+        uint8_t note = midiBytes.data()[1];
+        uint8_t velocity = midiBytes.data()[2];
+        uint8_t on_delay_ms = ((midiBytes.data()[3] >> 4) & 0x0F) * 10;
+        uint8_t off_delay_ms = ((midiBytes.data()[3] >> 0) & 0x0F) * 10;
+
+        VerifyOrReturn((command == kNoteOn) || (command == kNoteOff));
+        VerifyOrReturn((note >= mNoteIdForOne) && (channel == 0));
+
+        // Note ID 0 doesn't sound on Xylophone (it is the rest)
+        uint8_t noteId = (note - mNoteIdForOne) + 1;
+        bool useNote = (noteId < kNumPositions);
+        bool isNoteOn = (command == kNoteOn) && (velocity > 0);
+
+        ChipLogProgress(AppServer, "%s 0x%02x, %s (%d)", (isNoteOn ? "NoteOn" : "NoteOff"), static_cast<unsigned>(note), (useNote ? "usable" : "unusable"), static_cast<int>(noteId));
+        if (isNoteOn && useNote)
+        {
+            SetNote(noteId);
+            vTaskDelay(on_delay_ms / portTICK_RATE_MS);
+            ClearNote();
+            vTaskDelay(off_delay_ms / portTICK_RATE_MS);
+        }
+    }
+
+  private:
+    void SetNote(uint8_t noteId)
+    {
+        uint8_t mask = 1;
+        for (auto gpioNum : mGpioPositions)
+        {
+            gpio_set_level(gpioNum, (noteId & mask) ? 1 : 0);
+            mask <<= 1;
+        }
+    }
+
+    // Needed to reset the trigger circuit
+    void ClearNote()
+    {
+        for (auto gpioNum : mGpioPositions)
+        {
+            gpio_set_level(gpioNum, 0);
+        }
+    }
+
+    static constexpr size_t kNumPositions = (1 << N);
+    const std::array<gpio_num_t, N> & mGpioPositions;
+    uint8_t mNoteIdForOne;
+};
+
+XylophoneMidiHandler gXylophoneMidiHandler(kMidiGpios, kNoteIdForOne);
+
 } // namespace
 
 AppTask AppTask::sAppTask;
@@ -69,6 +164,7 @@ CHIP_ERROR AppTask::Init()
 
     AppLED.Init();
     AppButton.Init();
+    gXylophoneMidiHandler.Init();
 
     AppButton.SetButtonPressCallback(ButtonPressCallback);
 
@@ -141,12 +237,30 @@ void AppTask::LightingActionEventHandler(AppEvent * aEvent)
     chip::DeviceLayer::PlatformMgr().UnlockChipStack();
 }
 
+void AppTask::MidiEventHandler(AppEvent * event)
+{
+    gXylophoneMidiHandler.Handle(ByteSpan{event->MidiEvent.midiBytes});
+}
+
 void AppTask::ButtonPressCallback()
 {
     AppEvent button_event;
     button_event.Type     = AppEvent::kEventType_Button;
     button_event.mHandler = AppTask::LightingActionEventHandler;
     sAppTask.PostEvent(&button_event);
+}
+
+void AppTask::PostMidiEvent(chip::ByteSpan midiBytes)
+{
+    AppEvent midiEvent;
+
+    VerifyOrReturn(midiBytes.size() == sizeof(midiEvent.MidiEvent.midiBytes));
+
+    midiEvent.Type = AppEvent::AppEventTypes::kEventType_CustomMidi;
+    midiEvent.mHandler = AppTask::MidiEventHandler;
+    memcpy(&midiEvent.MidiEvent.midiBytes[0], midiBytes.data(), sizeof(midiEvent.MidiEvent.midiBytes));
+
+    sAppTask.PostEvent(&midiEvent);
 }
 
 void AppTask::UpdateClusterState()

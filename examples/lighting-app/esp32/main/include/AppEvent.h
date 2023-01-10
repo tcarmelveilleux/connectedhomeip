@@ -29,6 +29,7 @@ struct AppEvent
         kEventType_Timer,
         kEventType_Light,
         kEventType_Install,
+        kEventType_CustomMidi,
     };
 
     uint16_t Type;
@@ -48,6 +49,10 @@ struct AppEvent
             uint8_t Action;
             int32_t Actor;
         } LightEvent;
+        struct
+        {
+            uint8_t midiBytes[4];
+        } MidiEvent;
     };
 
     EventHandler mHandler;
