@@ -242,6 +242,7 @@ void ExchangeManager::OnMessageReceived(const PacketHeader & packetHeader, const
         mContextPool.ForEachActiveObject([&](auto * ec) {
             if (ec->MatchExchange(session, packetHeader, payloadHeader))
             {
+                // TODO: This log gains us nothing and in common case, is needless (covered by big log above around line 221.
                 ChipLogDetail(ExchangeManager, "Found matching exchange: " ChipLogFormatExchange ", Delegate: %p",
                               ChipLogValueExchange(ec), ec->GetDelegate());
 

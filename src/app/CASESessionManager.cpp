@@ -37,6 +37,7 @@ void CASESessionManager::FindOrEstablishSession(const ScopedNodeId & peerId, Cal
 #endif // CHIP_DEVICE_CONFIG_ENABLE_AUTOMATIC_CASE_RETRIES
 )
 {
+  // TODO: SHould only log on actual starting CASE
     ChipLogDetail(CASESessionManager, "FindOrEstablishSession: PeerId = [%d:" ChipLogFormatX64 "]", peerId.GetFabricIndex(),
                   ChipLogValueX64(peerId.GetNodeId()));
 
@@ -44,6 +45,12 @@ void CASESessionManager::FindOrEstablishSession(const ScopedNodeId & peerId, Cal
     OperationalSessionSetup * session = FindExistingSessionSetup(peerId, forAddressUpdate);
     if (session == nullptr)
     {
+// TODO: This logging is not very useful. For every command sent on existing session, we see it:
+// 05-16 15:43:03.463 30206 30206 I native  : I0000 00:00:1684276983.463578   30206 chip_logging.cc:17] CHIP: CSM: FindOrEstablishSession: PeerId = [1:0000000078F21993]
+// 05-16 15:43:03.463 30206 30206 I native  : I0000 00:00:1684276983.463790   30206 chip_logging.cc:17] CHIP: CSM: FindOrEstablishSession: No existing OperationalSessionSetup instance found
+// 05-16 15:43:03.463 30206 30206 I native  : I0000 00:00:1684276983.463857   30206 chip_logging.cc:17] CHIP: DIS: Found an existing secure session to [1:0000000078F21993]!
+// 05-16 15:43:03.463 30206 30206 I native  : I0000 00:00:1684276983.463911   30206 chip_logging.cc:17] CHIP: DIS: OperationalSessionSetup[1:0000000078F21993]: State change 1 --> 5
+
         ChipLogDetail(CASESessionManager, "FindOrEstablishSession: No existing OperationalSessionSetup instance found");
 
         session = mConfig.sessionSetupPool->Allocate(mConfig.sessionInitParams, mConfig.clientPool, peerId, this);

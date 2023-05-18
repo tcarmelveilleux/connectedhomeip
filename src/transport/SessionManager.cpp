@@ -336,6 +336,8 @@ CHIP_ERROR SessionManager::SendPreparedMessage(const SessionHandle & sessionHand
 
         destination = &secure->GetPeerAddress();
 
+        // TODO: This is covered by exchange layer, 100% duplicate. Out of all the logs, likely the most
+        //       important to trim.
         ChipLogProgress(Inet, "(S) Sending msg " ChipLogFormatMessageCounter " on secure session with LSID: %u",
                         preparedMessage.GetMessageCounter(), secure->GetLocalSessionId());
     }

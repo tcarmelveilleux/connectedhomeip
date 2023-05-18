@@ -50,6 +50,8 @@ void OperationalSessionSetup::MoveToState(State aTargetState)
 {
     if (mState != aTargetState)
     {
+      // TODO: If move is from 1 -- > 5 (NeedsAddress -> Connected), we should not log, it happens
+      // because of already having connections and there is no value to the log.
         ChipLogDetail(Discovery, "OperationalSessionSetup[%u:" ChipLogFormatX64 "]: State change %d --> %d",
                       mPeerId.GetFabricIndex(), ChipLogValueX64(mPeerId.GetNodeId()), to_underlying(mState),
                       to_underlying(aTargetState));
@@ -71,6 +73,7 @@ bool OperationalSessionSetup::AttachToExistingSecureSession()
     if (!sessionHandle.HasValue())
         return false;
 
+// TODO: This is in theory fine, but very spammy in the common case. Should only log when we don't find a secure session.
     ChipLogProgress(Discovery, "Found an existing secure session to [%u:" ChipLogFormatX64 "]!", mPeerId.GetFabricIndex(),
                     ChipLogValueX64(mPeerId.GetNodeId()));
 

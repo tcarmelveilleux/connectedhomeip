@@ -65,6 +65,7 @@ CHIP_ERROR CommandSender::SendCommandRequest(const SessionHandle & session, Opti
 {
     VerifyOrReturnError(mState == State::AddedCommand, CHIP_ERROR_INCORRECT_STATE);
 
+// TODO: Log command here (fabricidx, nodeid, EP, command ID, etc). Do same for read/write clients
     ReturnErrorOnFailure(Finalize(mPendingInvokeData));
 
     // Create a new exchange context.
@@ -99,6 +100,7 @@ CHIP_ERROR CommandSender::SendGroupCommandRequest(const SessionHandle & session)
 {
     VerifyOrReturnError(mState == State::AddedCommand, CHIP_ERROR_INCORRECT_STATE);
 
+// TODO: Log command here, same as for unicast
     ReturnErrorOnFailure(Finalize(mPendingInvokeData));
 
     // Create a new exchange context.
@@ -455,6 +457,7 @@ const char * CommandSender::GetStateStr() const
 void CommandSender::MoveToState(const State aTargetState)
 {
     mState = aTargetState;
+    // REMOVE THIS LOG --> No longer relevant
     ChipLogDetail(DataManagement, "ICR moving to [%10.10s]", GetStateStr());
 }
 
