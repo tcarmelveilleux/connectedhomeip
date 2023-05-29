@@ -124,6 +124,7 @@ if (current_os == "linux" && chip_minmdns_default_policy == "libnl") {
 static_library("minimal_mdns") {
   sources = [
     "Logging.h",
+    "MdnsBasicPacketFilters.h",
     "Parser.cpp",
     "Parser.h",
     "Query.h",

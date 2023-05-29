@@ -513,9 +513,11 @@ public:
         std::string resetWiFi                   = "Reset WiFi";
         std::string resetToFactory              = "Reset to factory";
         std::string forceWiFiCommissioningBasic = "Force WiFi commissioning (basic)";
+        std::string forceDelay                  = "Force Delay";
         options.emplace_back(resetWiFi);
         options.emplace_back(resetToFactory);
         options.emplace_back(forceWiFiCommissioningBasic);
+        options.emplace_back(forceDelay);
     }
     virtual std::string GetTitle() { return "Setup"; }
     virtual int GetItemCount() { return options.size(); }
@@ -539,6 +541,15 @@ public:
             auto & commissionMgr = chip::Server::GetInstance().GetCommissioningWindowManager();
             commissionMgr.OpenBasicCommissioningWindow(commissionMgr.MaxCommissioningTimeout(),
                                                        CommissioningWindowAdvertisement::kDnssdOnly);
+        }
+        else if (i == 3)
+        {
+            ESP_LOGI(TAG, "START DELAY");
+            for (int i = 0; i < 10000; ++i)
+            {
+                TFT_drawCircle(0.3 * DisplayWidth, 0.3 * DisplayHeight, 8, TFT_BLUE);
+            }
+            ESP_LOGI(TAG, "END DELAY");
         }
     }
 
@@ -718,8 +729,8 @@ esp_err_t InitM5Stack(std::string qrCodeText)
                        ScreenManager::PushScreen(chip::Platform::New<ListScreen>(chip::Platform::New<SetupListModel>()));
                    })
             ->Item("Status", [=]() {
-                ESP_LOGI(TAG, "Opening Status screen");
-                ScreenManager::PushScreen(chip::Platform::New<StatusScreen>());
+                       ESP_LOGI(TAG, "Opening Status screen");
+                       ScreenManager::PushScreen(chip::Platform::New<StatusScreen>());
             })));
     return ESP_OK;
 }
