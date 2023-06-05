@@ -308,6 +308,7 @@ chip_python_wheel_action("chip-core") {
     "deprecation",
     "cryptography",
     "ecdsa",
+    "mobly",
   ]
 
   if (current_cpu == "x64") {

@@ -16,19 +16,108 @@
 #
 
 import asyncio
+import base64
+import copy
+from dataclasses import dataclass, field
 import logging
 import queue
 import time
+from typing import Any, Optional
+
+from pprint import pprint
 from threading import Event
 
 from chip import discovery
 import chip.clusters as Clusters
+
 from chip.setup_payload import SetupPayload
 from chip.clusters import ClusterObjects as ClustersObjects
-from chip.clusters.Attribute import SubscriptionTransaction, TypedAttributePath
+from chip.clusters.Attribute import SubscriptionTransaction, TypedAttributePath, ValueDecodeFailure
+from chip.exceptions import ChipStackError
 from chip.utils import CommissioningBuildingBlocks
+
+import chip.tlv
 from matter_testing_support import MatterBaseTest, async_test_body, default_matter_test_main
+
 from mobly import asserts
+
+
+@dataclass
+class Cluster:
+    id: int
+    attributes: dict[str, dict[str,Any]]
+
+@dataclass
+class Endpoint:
+    id: int
+    clusters: dict[str, Cluster] = field(default_factory=dict)
+
+def MatterTlvToJson(tlv_data: dict[int, Any]) -> dict[str, any]:
+    """Given TLV data for a specific cluster instance, convert to the Matter JSON format."""
+
+    matter_json_dict = {}
+
+    key_type_mappings = {
+        chip.tlv.uint: "UINT",
+        int: "INT",
+        bool: "BOOL",
+        list: "ARRAY",
+        dict: "STRUCT",
+        chip.tlv.float32: "FLOAT",
+        float: "DOUBLE",
+        bytes: "BYTES",
+        str: "STRING",
+        ValueDecodeFailure: "ERROR",
+        type(None): "NULL",
+    }
+
+    def ConvertValue(value) -> Any:
+      value_type = type(value)
+
+      if value_type == ValueDecodeFailure:
+          raise ValueError(f"Bad Value: {str(value)}")
+
+      if value_type == bytes:
+          return base64.b64encode(value).decode("UTF-8")
+      elif value_type == list:
+          for idx, item in enumerate(value):
+              value[idx] = ConvertValue(item)
+      elif value_type == dict:
+          value = MatterTlvToJson(value)
+
+      return value
+
+    for key in tlv_data:
+        value_type = type(tlv_data[key])
+        value = copy.deepcopy(tlv_data[key])
+
+        element_type: str = key_type_mappings[value_type]
+        sub_element_type = ""
+
+        new_key = ""
+        if element_type:
+            if sub_element_type:
+                new_key = f"{str(key)}:{element_type}-{sub_element_type}"
+            else:
+                new_key = f"{str(key)}:{element_type}"
+        else:
+            new_key = str(key)
+
+        try:
+            new_value = ConvertValue(value)
+        except ValueError as e:
+            new_value = str(e)
+
+        if element_type:
+            if element_type == "ARRAY":
+                if len(new_value):
+                    sub_element_type = key_type_mappings[type(tlv_data[key][0])]
+                else:
+                  sub_element_type = "?"
+
+        matter_json_dict[new_key] = new_value
+
+    return matter_json_dict
 
 
 class AttributeChangeAccumulator:
@@ -57,34 +146,22 @@ class AttributeChangeAccumulator:
 
 class TC_DeviceBasicComposition(MatterBaseTest):
     @async_test_body
-    async def test_TC_DeviceBasicComposition(self):
+    async def setup_class(self):
         dev_ctrl = self.default_controller
-
-        # Get overrides for debugging the test
-        num_fabrics_to_commission = self.user_params.get("num_fabrics_to_commission", 5)
-        num_controllers_per_fabric = self.user_params.get("num_controllers_per_fabric", 3)
-        # Immediate reporting
-        min_report_interval_sec = self.user_params.get("min_report_interval_sec", 0)
-        # 10 minutes max reporting interval --> We don't care about keep-alives per-se and
-        # want to avoid resubscriptions
-        max_report_interval_sec = self.user_params.get("max_report_interval_sec", 10 * 60)
-        # Time to wait after changing NodeLabel for subscriptions to all hit. This is dependant
-        # on MRP params of subscriber and on actual min_report_interval.
-        # TODO: Determine the correct max value depending on target. Test plan doesn't say!
-        timeout_delay_sec = self.user_params.get("timeout_delay_sec", max_report_interval_sec * 2)
-
-        # Determine final result
-        if False:
-            asserts.fail("Failed test !")
-
-        # Pass is implicit if not failed
 
         if self.matter_test_config.qr_code_content is not None:
             qr_code = self.matter_test_config.qr_code_content
-            setup_payload = SetupPayload().ParseQrCode(qr_code)
+            try:
+                setup_payload = SetupPayload().ParseQrCode(qr_code)
+            except ChipStackError:
+                asserts.fail(f"QR code '{qr_code} failed to parse properly as a Matter setup code.")
+
         elif self.matter_test_config.manual_code is not None:
             manual_code = self.matter_test_config.manual_code
-            setup_payload = SetupPayload().ParseManualPairingCode(manual_code)
+            try:
+                setup_payload = SetupPayload().ParseManualPairingCode(manual_code)
+            except ChipStackError:
+                asserts.fail(f"Manual code code '{manual_code}' failed to parse properly as a Matter setup code. Check that all digits are correct and length is 11 or 21 characters.")
         else:
             asserts.fail("Require either --qr-code or --manual-code to proceed with PASE needed for test.")
 
@@ -108,10 +185,19 @@ class TC_DeviceBasicComposition(MatterBaseTest):
 
             node_id = 1
             dev_ctrl.EstablishPASESessionIP(address, setup_payload.setup_passcode, node_id)
+        else:
+            asserts.fail("Failed to find the DUT according to command line arguments.")
 
-            node_content = await dev_ctrl.ReadAttribute(node_id, [()])
-            print(node_content)
+        self.node_content = (await dev_ctrl.Read(node_id, [()])).tlvAttributes
+        for endpoint in self.node_content:
+            print(type(self.node_content[endpoint]))
+            print(dir(self.node_content[endpoint]))
+            print(f"EP{endpoint}: {MatterTlvToJson(self.node_content[endpoint])}")
 
+
+    @async_test_body
+    async def test_some_cool_stuff(self):
+        pass
 
 if __name__ == "__main__":
     default_matter_test_main()
