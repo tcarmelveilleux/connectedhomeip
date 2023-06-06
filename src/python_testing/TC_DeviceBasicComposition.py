@@ -18,11 +18,15 @@
 import asyncio
 import base64
 import copy
-from dataclasses import dataclass, field
+from dataclasses import dataclass, asdict, field
+from enum import StrEnum, auto
+import json
 import logging
 import queue
+import sys
 import time
-from typing import Any, Optional
+import pickle
+from typing import Any, Optional, Union
 
 from pprint import pprint
 from threading import Event
@@ -43,14 +47,40 @@ from mobly import asserts
 
 
 @dataclass
-class Cluster:
-    id: int
-    attributes: dict[str, dict[str,Any]]
+class AttributePathLocation:
+    endpoint_id: int
+    cluster_id: Optional[int] = None
+    attribute_id: Optional[int] = None
+
 
 @dataclass
-class Endpoint:
-    id: int
-    clusters: dict[str, Cluster] = field(default_factory=dict)
+class EventPathLocation:
+    endpoint_id: int
+    cluster_id: int
+    event_id: int
+
+
+@dataclass
+class CommandPathLocation:
+    endpoint_id: int
+    cluster_id: int
+    command_id: int
+
+
+class ProblemSeverity(StrEnum):
+    NOTE = auto()
+    WARNING = auto()
+    ERROR = auto()
+
+
+@dataclass
+class ProblemNotice:
+    test_name: str
+    location: Union[AttributePathLocation, EventPathLocation, CommandPathLocation]
+    severity: ProblemSeverity
+    problem: str
+    spec_location: str = ""
+
 
 def MatterTlvToJson(tlv_data: dict[int, Any]) -> dict[str, any]:
     """Given TLV data for a specific cluster instance, convert to the Matter JSON format."""
@@ -72,20 +102,20 @@ def MatterTlvToJson(tlv_data: dict[int, Any]) -> dict[str, any]:
     }
 
     def ConvertValue(value) -> Any:
-      value_type = type(value)
+        value_type = type(value)
 
-      if value_type == ValueDecodeFailure:
-          raise ValueError(f"Bad Value: {str(value)}")
+        if value_type == ValueDecodeFailure:
+            raise ValueError(f"Bad Value: {str(value)}")
 
-      if value_type == bytes:
-          return base64.b64encode(value).decode("UTF-8")
-      elif value_type == list:
-          for idx, item in enumerate(value):
-              value[idx] = ConvertValue(item)
-      elif value_type == dict:
-          value = MatterTlvToJson(value)
+        if value_type == bytes:
+            return base64.b64encode(value).decode("UTF-8")
+        elif value_type == list:
+            for idx, item in enumerate(value):
+                value[idx] = ConvertValue(item)
+        elif value_type == dict:
+            value = MatterTlvToJson(value)
 
-      return value
+        return value
 
     for key in tlv_data:
         value_type = type(tlv_data[key])
@@ -113,7 +143,7 @@ def MatterTlvToJson(tlv_data: dict[int, Any]) -> dict[str, any]:
                 if len(new_value):
                     sub_element_type = key_type_mappings[type(tlv_data[key][0])]
                 else:
-                  sub_element_type = "?"
+                    sub_element_type = "?"
 
         matter_json_dict[new_key] = new_value
 
@@ -161,7 +191,8 @@ class TC_DeviceBasicComposition(MatterBaseTest):
             try:
                 setup_payload = SetupPayload().ParseManualPairingCode(manual_code)
             except ChipStackError:
-                asserts.fail(f"Manual code code '{manual_code}' failed to parse properly as a Matter setup code. Check that all digits are correct and length is 11 or 21 characters.")
+                asserts.fail(
+                    f"Manual code code '{manual_code}' failed to parse properly as a Matter setup code. Check that all digits are correct and length is 11 or 21 characters.")
         else:
             asserts.fail("Require either --qr-code or --manual-code to proceed with PASE needed for test.")
 
@@ -174,7 +205,7 @@ class TC_DeviceBasicComposition(MatterBaseTest):
 
         commissionable_nodes = dev_ctrl.DiscoverCommissionableNodes(filter_type, filter_value, stopOnFirst=True, timeoutSecond=15)
         print(commissionable_nodes)
-        #TODO: Support BLE
+        # TODO: Support BLE
         if commissionable_nodes is not None and len(commissionable_nodes) > 0:
             commissionable_node = commissionable_nodes[0]
             instance_name = f"{commissionable_node.instanceName}._matterc._udp.local"
@@ -188,16 +219,96 @@ class TC_DeviceBasicComposition(MatterBaseTest):
         else:
             asserts.fail("Failed to find the DUT according to command line arguments.")
 
-        self.node_content = (await dev_ctrl.Read(node_id, [()])).tlvAttributes
-        for endpoint in self.node_content:
-            print(type(self.node_content[endpoint]))
-            print(dir(self.node_content[endpoint]))
-            print(f"EP{endpoint}: {MatterTlvToJson(self.node_content[endpoint])}")
+        wildcard_read = (await dev_ctrl.Read(node_id, [()]))
+        endpoints_tlv = wildcard_read.tlvAttributes
 
+        node_dump_dict = {endpoint_id: MatterTlvToJson(endpoints_tlv[endpoint_id]) for endpoint_id in endpoints_tlv}
+        logging.info(f"Raw contents of Node: {json.dumps(node_dump_dict, indent=2)}")
+
+        ########### State kept for use by all tests ###########
+
+        # List of accumulated problems across all tests
+        self.problems = []
+
+        # All endpoints in "full object" indexing format
+        self.endpoints = wildcard_read.attributes
+
+        # All endpoints in raw TLV format
+        self.endpoints_tlv = wildcard_read.tlvAttributes
+
+    def teardown_class(self):
+        """Final teardown after all tests: log all problems"""
+        if len(self.problems) == 0:
+            return
+
+        logging.info("Problems found:")
+        for problem in self.problems:
+            logging.info(f"- {json.dumps(asdict(problem))}")
+
+    def get_test_name(self) -> str:
+        """Return the function name of the caller. Used to create logging entries."""
+        return sys._getframe().f_back.f_code.co_name
+
+    def record_error(self, test_name: str, location: Union[AttributePathLocation, EventPathLocation, CommandPathLocation], problem: str, spec_location: str = ""):
+        self.problems.append(ProblemNotice(test_name, location, ProblemSeverity.ERROR, problem, spec_location))
+
+    def record_warning(self, test_name: str, location: Union[AttributePathLocation, EventPathLocation, CommandPathLocation], problem: str, spec_location: str = ""):
+        self.problems.append(ProblemNotice(test_name, location, ProblemSeverity.WARNING, problem, spec_location))
+
+    def record_note(self, test_name: str, location: Union[AttributePathLocation, EventPathLocation, CommandPathLocation], problem: str, spec_location: str = ""):
+        self.problems.append(ProblemNotice(test_name, location, ProblemSeverity.NOTE, problem, spec_location))
+
+    def fail_current_test(self, msg: Optional[str] = None):
+        if not msg:
+            asserts.fail(msg=self.problems[-1].problem)
+        else:
+            asserts.fail(msg)
 
     @async_test_body
-    async def test_some_cool_stuff(self):
-        pass
+    async def test_endpoint_zero_present(self):
+        logging.info("Validating that the Root Node endpoint is present (EP0)")
+        if not 0 in self.endpoints:
+            self.record_error(self.get_test_name(), location=AttributePathLocation(endpoint_id=0),
+                              problem="Did not find Endpoint 0.", spec_location="Endpoint Composition")
+            self.fail_current_test()
+
+    @async_test_body
+    async def test_descriptor_present_on_each_endpoint(self):
+        logging.info("Validating each endpoint has a descriptor cluster")
+
+        success = True
+        for endpoint_id, endpoint in self.endpoints.items():
+            has_descriptor = (Clusters.Descriptor in endpoint)
+            logging.info(f"Checking descriptor on Endpoint {endpoint_id}: {'found' if has_descriptor else 'not_found'}")
+            if not has_descriptor:
+                self.record_error(self.get_test_name(), location=AttributePathLocation(endpoint_id=endpoint_id, cluster_id=Clusters.Descriptor.id),
+                                  problem=f"Did not find a descriptor on endpoint {endpoint_id}", spec_location="Base Cluster Requirements for Matter")
+                success = False
+
+        if not success:
+            self.fail_current_test("At least one endpoint was missing the descriptor cluster.")
+
+    # @async_test_body
+    # async def test_accepted_commands_attribute_present_on_each_cluster(self):
+    #     logging.info("Validating each cluster has the accepted_commands global attribute")
+
+    #     ACCEPTED_COMMAND_LIST_ID = 0x0000FFF9
+
+    #     success = True
+    #     for endpoint_id, endpoint in self.endpoints_tlv.items():
+    #         for cluster_id, cluster in endpoint.items():
+    #             location = AttributePathLocation(endpoint_id, cluster_id, ACCEPTED_COMMAND_LIST_ID)
+
+    #             has_attribute = ()
+    #             logging.info(f"Checking descriptor on Endpoint {endpoint_id}: {'found' if has_descriptor else 'not_found'}")
+    #             if not has_descriptor:
+    #                 self.record_error(self.get_test_name(), location=AttributePathLocation(endpoint_id=endpoint_id, cluster_id=Clusters.Descriptor.id),
+    #                                 problem=f"Did not find a descriptor on endpoint {endpoint_id}", spec_location="Base Cluster Requirements for Matter")
+    #                 success = False
+
+    #     if not success:
+    #         self.fail_current_test("At least one endpoint was missing the descriptor cluster.")
+
 
 if __name__ == "__main__":
     default_matter_test_main()
