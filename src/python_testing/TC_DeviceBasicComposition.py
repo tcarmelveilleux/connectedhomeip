@@ -26,7 +26,7 @@ import queue
 import sys
 import time
 import pickle
-from typing import Any, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from pprint import pprint
 from threading import Event
@@ -46,12 +46,50 @@ from matter_testing_support import MatterBaseTest, async_test_body, default_matt
 from mobly import asserts
 
 
+class ClusterMapper:
+    def __init__(self, legacy_cluster_mapping) -> None:
+        self._mapping = legacy_cluster_mapping
+
+    def get_cluster_string(self, cluster_id: int) -> str:
+        mapping = self._mapping._CLUSTER_ID_DICT.get(cluster_id, None)
+        if not mapping:
+            return f"Cluster Unknown ({cluster_id}, 0x{cluster_id:08X})"
+        else:
+            name = mapping["clusterName"]
+            return f"Cluster {name} ({cluster_id}, 0x{cluster_id:04X})"
+
+    def get_attribute_string(self, cluster_id: int, attribute_id) -> str:
+        mapping = self._mapping._CLUSTER_ID_DICT.get(cluster_id, None)
+        if not mapping:
+            return f"Attribute Unknown ({attribute_id}, 0x{attribute_id:08X})"
+        else:
+            attribute_mapping = mapping["attributes"].get(attribute_id, None)
+            attribute_name = attribute_mapping["attributeName"]
+
+            if not attribute_mapping:
+                return f"Attribute Unknown ({attribute_id}, 0x{attribute_id:08X})"
+            else:
+                return f"Attribute {attribute_name} ({attribute_id}, 0x{attribute_id:04X})"
+
+
 @dataclass
 class AttributePathLocation:
     endpoint_id: int
     cluster_id: Optional[int] = None
     attribute_id: Optional[int] = None
 
+    def as_cluster_string(self, mapper: ClusterMapper):
+        desc = f"Endpoint {self.endpoint_id}"
+        if self.cluster_id is not None:
+            desc += f", {mapper.get_cluster_string(self.cluster_id)}"
+        return desc
+
+    def as_string(self, mapper: ClusterMapper):
+        desc = self.as_cluster_string(mapper)
+        if self.cluster_id is not None and self.attribute_id is not None:
+            desc += f", {mapper.get_attribute_string(self.cluster_id, self.attribute_id)}"
+
+        return desc
 
 @dataclass
 class EventPathLocation:
@@ -82,7 +120,7 @@ class ProblemNotice:
     spec_location: str = ""
 
 
-def MatterTlvToJson(tlv_data: dict[int, Any]) -> dict[str, any]:
+def MatterTlvToJson(tlv_data: dict[int, Any]) -> dict[str, Any]:
     """Given TLV data for a specific cluster instance, convert to the Matter JSON format."""
 
     matter_json_dict = {}
@@ -174,10 +212,65 @@ class AttributeChangeAccumulator:
         return self._name
 
 
+def check_int_in_range(min_value: int, max_value: int, allow_null: bool=False) -> Callable:
+    """Returns a checker for whether `obj` is an int that fits in a range."""
+    def int_in_range_checker(obj: Any):
+        """Inner checker logic for check_int_in_range
+
+        Checker validates that `obj` must have decoded as an integral value in range [min_value, max_value].
+
+        On failure, a ValueError is raised with a diagnostic message.
+        """
+        if obj is None and allow_null:
+            return
+
+        if not isinstance(obj, int) and not isinstance(obj, chip.tlv.uint):
+            raise ValueError(f"Value {str(obj)} is not an integer or uint (decoded type: {type(obj)})")
+        int_val = int(obj)
+        if (int_val < min_value) or (int_val > max_value):
+            raise ValueError(f"Value {int_val} (0x{int_val:X}) not in range [{min_value}, {max_value}] ([0x{min_value:X}, 0x{max_value:X}])")
+
+    return int_in_range_checker
+
+def check_list_of_ints_in_range(min_value: int, max_value: int, min_size: int=0, max_size: int=65535, allow_null: bool=False) -> Callable:
+    """Returns a checker for whether `obj` is a list of ints that fit in a range."""
+    def list_of_ints_in_range_checker(obj: Any):
+        """Inner checker for check_list_of_ints_in_range.
+
+        Checker validates that `obj` must have decoded as a list of integral values in range [min_value, max_value].
+        The length of the list must be between [min_size, max_size].
+
+        On failure, a ValueError is raised with a diagnostic message.
+        """
+        if obj is None and allow_null:
+            return
+
+        if not isinstance(obj, list):
+            raise ValueError(f"Value {str(obj)} is not a list, but a list was expected (decoded type: {type(obj)})")
+
+        if len(obj) < min_size or len(obj) > max_size:
+            raise ValueError(f"Value {str(obj)} is a list of size {len(obj)}, but expected a list with size in range [{min_size}, {max_size}]")
+
+        for val_idx, val in enumerate(obj):
+            if not isinstance(val, int) and not isinstance(val, chip.tlv.uint):
+                raise ValueError(f"At index {val_idx} in {str(obj)}, value {val} is not an int/uint, but an int/uint was expected (decoded type: {type(val)})")
+
+            int_val = int(val)
+            if not ((int_val >= min_value) and (int_val <= max_value)):
+                raise ValueError(f"At index {val_idx} in {str(obj)}, value {int_val} (0x{int_val:X}) not in range [{min_value}, {max_value}] ([0x{min_value:X}, 0x{max_value:X}])")
+
+    return list_of_ints_in_range_checker
+
+def check_non_empty_list_of_ints_in_range(min_value: int, max_value: int, max_size: int=65535, allow_null: bool=False) -> Callable:
+    """Returns a checker for whether `obj` is a non-empty list of ints that fit in a range."""
+    return check_list_of_ints_in_range(min_value, max_value, min_size=1, max_size=max_size, allow_null=allow_null)
+
+
 class TC_DeviceBasicComposition(MatterBaseTest):
     @async_test_body
     async def setup_class(self):
         dev_ctrl = self.default_controller
+        self.problems = []
 
         if self.matter_test_config.qr_code_content is not None:
             qr_code = self.matter_test_config.qr_code_content
@@ -223,9 +316,17 @@ class TC_DeviceBasicComposition(MatterBaseTest):
         endpoints_tlv = wildcard_read.tlvAttributes
 
         node_dump_dict = {endpoint_id: MatterTlvToJson(endpoints_tlv[endpoint_id]) for endpoint_id in endpoints_tlv}
-        logging.info(f"Raw contents of Node: {json.dumps(node_dump_dict, indent=2)}")
+        logging.info(f"Raw TLV contents of Node: {json.dumps(node_dump_dict, indent=2)}")
+        with open("raw_node_contents.json", "wt+") as outfile:
+            json.dump(node_dump_dict, outfile, indent=2)
+        with open("raw_node_contents.txt", "wt+") as outfile:
+            pprint(wildcard_read.attributes, outfile, indent=1, width=200, compact=True)
 
         ########### State kept for use by all tests ###########
+
+        # Mappings of cluster IDs to names and metadata.
+        # TODO: Move to using non-generated code and rather use Lark or such
+        self.cluster_mapper = ClusterMapper(self.default_controller._Cluster)
 
         # List of accumulated problems across all tests
         self.problems = []
@@ -288,27 +389,85 @@ class TC_DeviceBasicComposition(MatterBaseTest):
         if not success:
             self.fail_current_test("At least one endpoint was missing the descriptor cluster.")
 
-    # @async_test_body
-    # async def test_accepted_commands_attribute_present_on_each_cluster(self):
-    #     logging.info("Validating each cluster has the accepted_commands global attribute")
+    @async_test_body
+    async def test_global_attributes_present_on_each_cluster(self):
+        logging.info("Validating each cluster has the mandatory global attributes")
 
-    #     ACCEPTED_COMMAND_LIST_ID = 0x0000FFF9
+        @dataclass
+        class RequiredMandatoryAttribute:
+            id: int
+            name: str
+            validator: Callable
 
-    #     success = True
-    #     for endpoint_id, endpoint in self.endpoints_tlv.items():
-    #         for cluster_id, cluster in endpoint.items():
-    #             location = AttributePathLocation(endpoint_id, cluster_id, ACCEPTED_COMMAND_LIST_ID)
+        ATTRIBUTE_LIST_ID = 0xFFFB
 
-    #             has_attribute = ()
-    #             logging.info(f"Checking descriptor on Endpoint {endpoint_id}: {'found' if has_descriptor else 'not_found'}")
-    #             if not has_descriptor:
-    #                 self.record_error(self.get_test_name(), location=AttributePathLocation(endpoint_id=endpoint_id, cluster_id=Clusters.Descriptor.id),
-    #                                 problem=f"Did not find a descriptor on endpoint {endpoint_id}", spec_location="Base Cluster Requirements for Matter")
-    #                 success = False
+        ATTRIBUTES_TO_CHECK = [
+            RequiredMandatoryAttribute(id=0xFFFD, name="ClusterRevision", validator=check_int_in_range(1, 0xFFFF)),
+            RequiredMandatoryAttribute(id=0xFFFC, name="FeatureMap", validator=check_int_in_range(0, 0xFFFF_FFFF)),
+            RequiredMandatoryAttribute(id=0xFFFB, name="AttributeList", validator=check_non_empty_list_of_ints_in_range(0, 0xFFFF_FFFF)),
+            # TODO: Check for EventList
+            # RequiredMandatoryAttribute(id=0xFFFA, name="EventList", validator=check_list_of_ints_in_range(0, 0xFFFF_FFFF)),
+            RequiredMandatoryAttribute(id=0xFFF9, name="AcceptedCommandList", validator=check_list_of_ints_in_range(0, 0xFFFF_FFFF)),
+            RequiredMandatoryAttribute(id=0xFFF8, name="GeneratedCommandList", validator=check_list_of_ints_in_range(0, 0xFFFF_FFFF)),
+        ]
 
-    #     if not success:
-    #         self.fail_current_test("At least one endpoint was missing the descriptor cluster.")
+        success = True
+        for endpoint_id, endpoint in self.endpoints_tlv.items():
+            for cluster_id, cluster in endpoint.items():
+                for req_attribute in ATTRIBUTES_TO_CHECK:
+                    attribute_string = self.cluster_mapper.get_attribute_string(cluster_id, req_attribute.id)
 
+                    has_attribute = (req_attribute.id in cluster)
+                    location = AttributePathLocation(endpoint_id, cluster_id, req_attribute.id)
+                    logging.info(f"Checking for mandatory global {attribute_string} on {location.as_cluster_string(self.cluster_mapper)}: {'found' if has_attribute else 'not_found'}")
+
+                    # Check attribute is actually present
+                    if not has_attribute:
+                        self.record_error(self.get_test_name(), location=location,
+                                        problem=f"Did not find mandatory global {attribute_string} on {location.as_cluster_string(self.cluster_mapper)}", spec_location="Global Elements")
+                        success = False
+                        continue
+
+                    # Validate attribute value based on the provided validator.
+                    try:
+                        req_attribute.validator(cluster[req_attribute.id])
+                    except ValueError as e:
+                        self.record_error(self.get_test_name(), location=location,
+                                        problem=f"Failed validation of value on {location.as_string(self.cluster_mapper)}: {str(e)}", spec_location="Global Elements")
+                        success = False
+                        continue
+
+        # Validate presence of claimed attributes
+        if success:
+            logging.info("Validating that a wildcard read on each cluster provided all attributes claimed in AttributeList mandatory global attribute")
+
+            for endpoint_id, endpoint in self.endpoints_tlv.items():
+                for cluster_id, cluster in endpoint.items():
+                    attribute_list = cluster[ATTRIBUTE_LIST_ID]
+                    for attribute_id in attribute_list:
+                        location = AttributePathLocation(endpoint_id, cluster_id, attribute_id)
+                        has_attribute = attribute_id in cluster
+
+                        attribute_string = self.cluster_mapper.get_attribute_string(cluster_id, attribute_id)
+                        logging.info(f"Checking presence of claimed supported {attribute_string} on {location.as_cluster_string(self.cluster_mapper)}: {'found' if has_attribute else 'not_found'}")
+
+                        # Check attribute is actually present
+                        if not has_attribute:
+                            self.record_error(self.get_test_name(), location=location,
+                                            problem=f"Did not find {attribute_string} on {location.as_cluster_string(self.cluster_mapper)} when it was claimed in AttributeList ({attribute_list})", spec_location="AttributeList Attribute")
+                            success = False
+                            continue
+
+                        attribute_value = cluster[attribute_id]
+                        if isinstance(attribute_value, ValueDecodeFailure):
+                            self.record_warning(self.get_test_name(), location=location,
+                                            problem=f"Found a failure to read/decode {attribute_string} on {location.as_cluster_string(self.cluster_mapper)} when it was claimed as supported in AttributeList ({attribute_list}): {str(attribute_value)}", spec_location="AttributeList Attribute")
+                            # Warn only for now
+                            # TODO: Fail in the future
+                            continue
+
+        if not success:
+            self.fail_current_test("At least one cluster was missing a mandatory global attribute or had differences between claimed attributes supported and actual.")
 
 if __name__ == "__main__":
     default_matter_test_main()
