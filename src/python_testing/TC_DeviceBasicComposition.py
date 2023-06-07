@@ -64,11 +64,11 @@ class ClusterMapper:
             return f"Attribute Unknown ({attribute_id}, 0x{attribute_id:08X})"
         else:
             attribute_mapping = mapping["attributes"].get(attribute_id, None)
-            attribute_name = attribute_mapping["attributeName"]
 
             if not attribute_mapping:
                 return f"Attribute Unknown ({attribute_id}, 0x{attribute_id:08X})"
             else:
+                attribute_name = attribute_mapping["attributeName"]
                 return f"Attribute {attribute_name} ({attribute_id}, 0x{attribute_id:04X})"
 
 
@@ -90,6 +90,7 @@ class AttributePathLocation:
             desc += f", {mapper.get_attribute_string(self.cluster_id, self.attribute_id)}"
 
         return desc
+
 
 @dataclass
 class EventPathLocation:
@@ -188,31 +189,7 @@ def MatterTlvToJson(tlv_data: dict[int, Any]) -> dict[str, Any]:
     return matter_json_dict
 
 
-class AttributeChangeAccumulator:
-    def __init__(self, name: str, expected_attribute: ClustersObjects.ClusterAttributeDescriptor, output: queue.Queue):
-        self._name = name
-        self._output = output
-        self._expected_attribute = expected_attribute
-
-    def __call__(self, path: TypedAttributePath, transaction: SubscriptionTransaction):
-        if path.AttributeType == self._expected_attribute:
-            data = transaction.GetAttribute(path)
-
-            value = {
-                'name': self._name,
-                'endpoint': path.Path.EndpointId,
-                'attribute': path.AttributeType,
-                'value': data
-            }
-            logging.info("Got subscription report on client %s for %s: %s" % (self.name, path.AttributeType, data))
-            self._output.put(value)
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-
-def check_int_in_range(min_value: int, max_value: int, allow_null: bool=False) -> Callable:
+def check_int_in_range(min_value: int, max_value: int, allow_null: bool = False) -> Callable:
     """Returns a checker for whether `obj` is an int that fits in a range."""
     def int_in_range_checker(obj: Any):
         """Inner checker logic for check_int_in_range
@@ -228,11 +205,13 @@ def check_int_in_range(min_value: int, max_value: int, allow_null: bool=False) -
             raise ValueError(f"Value {str(obj)} is not an integer or uint (decoded type: {type(obj)})")
         int_val = int(obj)
         if (int_val < min_value) or (int_val > max_value):
-            raise ValueError(f"Value {int_val} (0x{int_val:X}) not in range [{min_value}, {max_value}] ([0x{min_value:X}, 0x{max_value:X}])")
+            raise ValueError(
+                f"Value {int_val} (0x{int_val:X}) not in range [{min_value}, {max_value}] ([0x{min_value:X}, 0x{max_value:X}])")
 
     return int_in_range_checker
 
-def check_list_of_ints_in_range(min_value: int, max_value: int, min_size: int=0, max_size: int=65535, allow_null: bool=False) -> Callable:
+
+def check_list_of_ints_in_range(min_value: int, max_value: int, min_size: int = 0, max_size: int = 65535, allow_null: bool = False) -> Callable:
     """Returns a checker for whether `obj` is a list of ints that fit in a range."""
     def list_of_ints_in_range_checker(obj: Any):
         """Inner checker for check_list_of_ints_in_range.
@@ -249,19 +228,23 @@ def check_list_of_ints_in_range(min_value: int, max_value: int, min_size: int=0,
             raise ValueError(f"Value {str(obj)} is not a list, but a list was expected (decoded type: {type(obj)})")
 
         if len(obj) < min_size or len(obj) > max_size:
-            raise ValueError(f"Value {str(obj)} is a list of size {len(obj)}, but expected a list with size in range [{min_size}, {max_size}]")
+            raise ValueError(
+                f"Value {str(obj)} is a list of size {len(obj)}, but expected a list with size in range [{min_size}, {max_size}]")
 
         for val_idx, val in enumerate(obj):
             if not isinstance(val, int) and not isinstance(val, chip.tlv.uint):
-                raise ValueError(f"At index {val_idx} in {str(obj)}, value {val} is not an int/uint, but an int/uint was expected (decoded type: {type(val)})")
+                raise ValueError(
+                    f"At index {val_idx} in {str(obj)}, value {val} is not an int/uint, but an int/uint was expected (decoded type: {type(val)})")
 
             int_val = int(val)
             if not ((int_val >= min_value) and (int_val <= max_value)):
-                raise ValueError(f"At index {val_idx} in {str(obj)}, value {int_val} (0x{int_val:X}) not in range [{min_value}, {max_value}] ([0x{min_value:X}, 0x{max_value:X}])")
+                raise ValueError(
+                    f"At index {val_idx} in {str(obj)}, value {int_val} (0x{int_val:X}) not in range [{min_value}, {max_value}] ([0x{min_value:X}, 0x{max_value:X}])")
 
     return list_of_ints_in_range_checker
 
-def check_non_empty_list_of_ints_in_range(min_value: int, max_value: int, max_size: int=65535, allow_null: bool=False) -> Callable:
+
+def check_non_empty_list_of_ints_in_range(min_value: int, max_value: int, max_size: int = 65535, allow_null: bool = False) -> Callable:
     """Returns a checker for whether `obj` is a non-empty list of ints that fit in a range."""
     return check_list_of_ints_in_range(min_value, max_value, min_size=1, max_size=max_size, allow_null=allow_null)
 
@@ -272,45 +255,52 @@ class TC_DeviceBasicComposition(MatterBaseTest):
         dev_ctrl = self.default_controller
         self.problems = []
 
-        if self.matter_test_config.qr_code_content is not None:
-            qr_code = self.matter_test_config.qr_code_content
-            try:
-                setup_payload = SetupPayload().ParseQrCode(qr_code)
-            except ChipStackError:
-                asserts.fail(f"QR code '{qr_code} failed to parse properly as a Matter setup code.")
+        # TODO: Handle already commissioned devices and add argument to specify "let's do PASE"
+        do_test_over_pase = self.user_params.get("use_pase_only", True)
 
-        elif self.matter_test_config.manual_code is not None:
-            manual_code = self.matter_test_config.manual_code
-            try:
-                setup_payload = SetupPayload().ParseManualPairingCode(manual_code)
-            except ChipStackError:
-                asserts.fail(
-                    f"Manual code code '{manual_code}' failed to parse properly as a Matter setup code. Check that all digits are correct and length is 11 or 21 characters.")
+        if do_test_over_pase:
+            if self.matter_test_config.qr_code_content is not None:
+                qr_code = self.matter_test_config.qr_code_content
+                try:
+                    setup_payload = SetupPayload().ParseQrCode(qr_code)
+                except ChipStackError:
+                    asserts.fail(f"QR code '{qr_code} failed to parse properly as a Matter setup code.")
+
+            elif self.matter_test_config.manual_code is not None:
+                manual_code = self.matter_test_config.manual_code
+                try:
+                    setup_payload = SetupPayload().ParseManualPairingCode(manual_code)
+                except ChipStackError:
+                    asserts.fail(
+                        f"Manual code code '{manual_code}' failed to parse properly as a Matter setup code. Check that all digits are correct and length is 11 or 21 characters.")
+            else:
+                asserts.fail("Require either --qr-code or --manual-code to proceed with PASE needed for test.")
+
+            if setup_payload.short_discriminator != None:
+                filter_type = discovery.FilterType.SHORT_DISCRIMINATOR
+                filter_value = setup_payload.short_discriminator
+            else:
+                filter_type = discovery.FilterType.LONG_DISCRIMINATOR
+                filter_value = setup_payload.long_discriminator
+
+            commissionable_nodes = dev_ctrl.DiscoverCommissionableNodes(
+                filter_type, filter_value, stopOnFirst=True, timeoutSecond=15)
+            logging.info(f"Commissionable nodes: {commissionable_nodes}")
+            # TODO: Support BLE
+            if commissionable_nodes is not None and len(commissionable_nodes) > 0:
+                commissionable_node = commissionable_nodes[0]
+                instance_name = f"{commissionable_node.instanceName}._matterc._udp.local"
+                vid = f"{commissionable_node.vendorId}"
+                pid = f"{commissionable_node.productId}"
+                address = f"{commissionable_node.addresses[0]}"
+                logging.info(f"Found instance {instance_name}, VID={vid}, PID={pid}, Address={address}")
+
+                node_id = 1
+                dev_ctrl.EstablishPASESessionIP(address, setup_payload.setup_passcode, node_id)
+            else:
+                asserts.fail("Failed to find the DUT according to command line arguments.")
         else:
-            asserts.fail("Require either --qr-code or --manual-code to proceed with PASE needed for test.")
-
-        if setup_payload.short_discriminator != None:
-            filter_type = discovery.FilterType.SHORT_DISCRIMINATOR
-            filter_value = setup_payload.short_discriminator
-        else:
-            filter_type = discovery.FilterType.LONG_DISCRIMINATOR
-            filter_value = setup_payload.long_discriminator
-
-        commissionable_nodes = dev_ctrl.DiscoverCommissionableNodes(filter_type, filter_value, stopOnFirst=True, timeoutSecond=15)
-        print(commissionable_nodes)
-        # TODO: Support BLE
-        if commissionable_nodes is not None and len(commissionable_nodes) > 0:
-            commissionable_node = commissionable_nodes[0]
-            instance_name = f"{commissionable_node.instanceName}._matterc._udp.local"
-            vid = f"{commissionable_node.vendorId}"
-            pid = f"{commissionable_node.productId}"
-            address = f"{commissionable_node.addresses[0]}"
-            logging.info(f"Found instance {instance_name}, VID={vid}, PID={pid}, Address={address}")
-
-            node_id = 1
-            dev_ctrl.EstablishPASESessionIP(address, setup_payload.setup_passcode, node_id)
-        else:
-            asserts.fail("Failed to find the DUT according to command line arguments.")
+            asserts.fail("TODO: Support testing on already commissioned devices")
 
         wildcard_read = (await dev_ctrl.Read(node_id, [()]))
         endpoints_tlv = wildcard_read.tlvAttributes
@@ -322,10 +312,14 @@ class TC_DeviceBasicComposition(MatterBaseTest):
         with open("raw_node_contents.txt", "wt+") as outfile:
             pprint(wildcard_read.attributes, outfile, indent=1, width=200, compact=True)
 
+        logging.info("###########################################################")
+        logging.info("Start of actual tests")
+        logging.info("###########################################################")
+
         ########### State kept for use by all tests ###########
 
         # Mappings of cluster IDs to names and metadata.
-        # TODO: Move to using non-generated code and rather use Lark or such
+        # TODO: Move to using non-generated code and rather use data model description (.matter or .xml)
         self.cluster_mapper = ClusterMapper(self.default_controller._Cluster)
 
         # List of accumulated problems across all tests
@@ -342,9 +336,12 @@ class TC_DeviceBasicComposition(MatterBaseTest):
         if len(self.problems) == 0:
             return
 
+        logging.info("###########################################################")
         logging.info("Problems found:")
+        logging.info("===============")
         for problem in self.problems:
             logging.info(f"- {json.dumps(asdict(problem))}")
+        logging.info("###########################################################")
 
     def get_test_name(self) -> str:
         """Return the function name of the caller. Used to create logging entries."""
@@ -365,16 +362,15 @@ class TC_DeviceBasicComposition(MatterBaseTest):
         else:
             asserts.fail(msg)
 
-    @async_test_body
-    async def test_endpoint_zero_present(self):
+    ############## START OF ACTUAL TESTS ##############
+    def test_endpoint_zero_present(self):
         logging.info("Validating that the Root Node endpoint is present (EP0)")
         if not 0 in self.endpoints:
             self.record_error(self.get_test_name(), location=AttributePathLocation(endpoint_id=0),
                               problem="Did not find Endpoint 0.", spec_location="Endpoint Composition")
             self.fail_current_test()
 
-    @async_test_body
-    async def test_descriptor_present_on_each_endpoint(self):
+    def test_descriptor_present_on_each_endpoint(self):
         logging.info("Validating each endpoint has a descriptor cluster")
 
         success = True
@@ -389,8 +385,7 @@ class TC_DeviceBasicComposition(MatterBaseTest):
         if not success:
             self.fail_current_test("At least one endpoint was missing the descriptor cluster.")
 
-    @async_test_body
-    async def test_global_attributes_present_on_each_cluster(self):
+    def test_global_attributes_present_on_each_cluster(self):
         logging.info("Validating each cluster has the mandatory global attributes")
 
         @dataclass
@@ -404,11 +399,14 @@ class TC_DeviceBasicComposition(MatterBaseTest):
         ATTRIBUTES_TO_CHECK = [
             RequiredMandatoryAttribute(id=0xFFFD, name="ClusterRevision", validator=check_int_in_range(1, 0xFFFF)),
             RequiredMandatoryAttribute(id=0xFFFC, name="FeatureMap", validator=check_int_in_range(0, 0xFFFF_FFFF)),
-            RequiredMandatoryAttribute(id=0xFFFB, name="AttributeList", validator=check_non_empty_list_of_ints_in_range(0, 0xFFFF_FFFF)),
+            RequiredMandatoryAttribute(id=0xFFFB, name="AttributeList",
+                                       validator=check_non_empty_list_of_ints_in_range(0, 0xFFFF_FFFF)),
             # TODO: Check for EventList
             # RequiredMandatoryAttribute(id=0xFFFA, name="EventList", validator=check_list_of_ints_in_range(0, 0xFFFF_FFFF)),
-            RequiredMandatoryAttribute(id=0xFFF9, name="AcceptedCommandList", validator=check_list_of_ints_in_range(0, 0xFFFF_FFFF)),
-            RequiredMandatoryAttribute(id=0xFFF8, name="GeneratedCommandList", validator=check_list_of_ints_in_range(0, 0xFFFF_FFFF)),
+            RequiredMandatoryAttribute(id=0xFFF9, name="AcceptedCommandList",
+                                       validator=check_list_of_ints_in_range(0, 0xFFFF_FFFF)),
+            RequiredMandatoryAttribute(id=0xFFF8, name="GeneratedCommandList",
+                                       validator=check_list_of_ints_in_range(0, 0xFFFF_FFFF)),
         ]
 
         success = True
@@ -419,12 +417,13 @@ class TC_DeviceBasicComposition(MatterBaseTest):
 
                     has_attribute = (req_attribute.id in cluster)
                     location = AttributePathLocation(endpoint_id, cluster_id, req_attribute.id)
-                    logging.info(f"Checking for mandatory global {attribute_string} on {location.as_cluster_string(self.cluster_mapper)}: {'found' if has_attribute else 'not_found'}")
+                    logging.info(
+                        f"Checking for mandatory global {attribute_string} on {location.as_cluster_string(self.cluster_mapper)}: {'found' if has_attribute else 'not_found'}")
 
                     # Check attribute is actually present
                     if not has_attribute:
                         self.record_error(self.get_test_name(), location=location,
-                                        problem=f"Did not find mandatory global {attribute_string} on {location.as_cluster_string(self.cluster_mapper)}", spec_location="Global Elements")
+                                          problem=f"Did not find mandatory global {attribute_string} on {location.as_cluster_string(self.cluster_mapper)}", spec_location="Global Elements")
                         success = False
                         continue
 
@@ -433,13 +432,14 @@ class TC_DeviceBasicComposition(MatterBaseTest):
                         req_attribute.validator(cluster[req_attribute.id])
                     except ValueError as e:
                         self.record_error(self.get_test_name(), location=location,
-                                        problem=f"Failed validation of value on {location.as_string(self.cluster_mapper)}: {str(e)}", spec_location="Global Elements")
+                                          problem=f"Failed validation of value on {location.as_string(self.cluster_mapper)}: {str(e)}", spec_location="Global Elements")
                         success = False
                         continue
 
         # Validate presence of claimed attributes
         if success:
-            logging.info("Validating that a wildcard read on each cluster provided all attributes claimed in AttributeList mandatory global attribute")
+            logging.info(
+                "Validating that a wildcard read on each cluster provided all attributes claimed in AttributeList mandatory global attribute")
 
             for endpoint_id, endpoint in self.endpoints_tlv.items():
                 for cluster_id, cluster in endpoint.items():
@@ -449,25 +449,58 @@ class TC_DeviceBasicComposition(MatterBaseTest):
                         has_attribute = attribute_id in cluster
 
                         attribute_string = self.cluster_mapper.get_attribute_string(cluster_id, attribute_id)
-                        logging.info(f"Checking presence of claimed supported {attribute_string} on {location.as_cluster_string(self.cluster_mapper)}: {'found' if has_attribute else 'not_found'}")
+                        logging.info(
+                            f"Checking presence of claimed supported {attribute_string} on {location.as_cluster_string(self.cluster_mapper)}: {'found' if has_attribute else 'not_found'}")
 
-                        # Check attribute is actually present
+                        # Check attribute is actually present.
                         if not has_attribute:
+                            # TODO: Handle detecting write-only attributes from schema.
+                            if "WriteOnly" in attribute_string:
+                                continue
+
                             self.record_error(self.get_test_name(), location=location,
-                                            problem=f"Did not find {attribute_string} on {location.as_cluster_string(self.cluster_mapper)} when it was claimed in AttributeList ({attribute_list})", spec_location="AttributeList Attribute")
+                                              problem=f"Did not find {attribute_string} on {location.as_cluster_string(self.cluster_mapper)} when it was claimed in AttributeList ({attribute_list})", spec_location="AttributeList Attribute")
                             success = False
                             continue
 
                         attribute_value = cluster[attribute_id]
                         if isinstance(attribute_value, ValueDecodeFailure):
                             self.record_warning(self.get_test_name(), location=location,
-                                            problem=f"Found a failure to read/decode {attribute_string} on {location.as_cluster_string(self.cluster_mapper)} when it was claimed as supported in AttributeList ({attribute_list}): {str(attribute_value)}", spec_location="AttributeList Attribute")
+                                                problem=f"Found a failure to read/decode {attribute_string} on {location.as_cluster_string(self.cluster_mapper)} when it was claimed as supported in AttributeList ({attribute_list}): {str(attribute_value)}", spec_location="AttributeList Attribute")
                             # Warn only for now
                             # TODO: Fail in the future
                             continue
 
         if not success:
-            self.fail_current_test("At least one cluster was missing a mandatory global attribute or had differences between claimed attributes supported and actual.")
+            self.fail_current_test(
+                "At least one cluster was missing a mandatory global attribute or had differences between claimed attributes supported and actual.")
+
+    def test_all_attribute_strings_valid(self):
+        asserts.skip("TODO: Validate every string in the attribute tree is valid UTF-8 and has no nulls")
+
+    def test_all_event_strings_valid(self):
+        asserts.skip("TODO: Validate every string in the read events is valid UTF-8 and has no nulls")
+
+    def test_all_schema_scalars(self):
+        asserts.skip("TODO: Validate all int/uint are in range of the schema (or null if nullable) for known attributes")
+
+    def test_all_commands_reported_are_executable(self):
+        asserts.skip("TODO: Validate all commands reported in AcceptedCommandList are actually executable")
+
+    def test_dump_all_pics_for_all_endpoints(self):
+        asserts.skip("TODO: Make a test that generates the basic PICS list for each endpoint based on actually reported contents")
+
+    def test_all_schema_mandatory_elements_present(self):
+        asserts.skip(
+            "TODO: Make a test that ensures every known cluster has the mandatory elements present (commands, attributes) based on features")
+
+    def test_all_endpoints_have_valid_composition(self):
+        asserts.skip(
+            "TODO: Make a test that verifies each endpoint has valid set of device types, and that the device type conformance is respected for each")
+
+    def test_topology_is_valid(self):
+        asserts.skip("TODO: Make a test that verifies each endpoint only lists direct descendants, except Root Node and Aggregator endpoints that list all their descendants")
+
 
 if __name__ == "__main__":
     default_matter_test_main()
