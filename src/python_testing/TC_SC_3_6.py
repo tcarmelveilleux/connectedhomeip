@@ -19,61 +19,11 @@ import asyncio
 import logging
 import queue
 import time
-from threading import Event
 
 import chip.clusters as Clusters
-from chip.clusters import ClusterObjects as ClustersObjects
-from chip.clusters.Attribute import SubscriptionTransaction, TypedAttributePath
 from chip.utils import CommissioningBuildingBlocks
 from matter_testing_support import MatterBaseTest, async_test_body, default_matter_test_main
 from mobly import asserts
-
-# TODO: Overall, we need to add validation that session IDs have not changed throughout to be agnostic
-#       to some internal behavior assumptions of the SDK we are making relative to the write to
-#       the trigger the subscriptions not re-opening a new CASE session
-#
-
-
-class AttributeChangeAccumulator:
-    def __init__(self, name: str, expected_attribute: ClustersObjects.ClusterAttributeDescriptor, output: queue.Queue):
-        self._name = name
-        self._output = output
-        self._expected_attribute = expected_attribute
-
-    def __call__(self, path: TypedAttributePath, transaction: SubscriptionTransaction):
-        if path.AttributeType == self._expected_attribute:
-            data = transaction.GetAttribute(path)
-
-            value = {
-                'name': self._name,
-                'endpoint': path.Path.EndpointId,
-                'attribute': path.AttributeType,
-                'value': data
-            }
-            logging.info("Got subscription report on client %s for %s: %s" % (self.name, path.AttributeType, data))
-            self._output.put(value)
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-
-class ResubscriptionCatcher:
-    def __init__(self, name):
-        self._name = name
-        self._got_resubscription_event = Event()
-
-    def __call__(self, transaction: SubscriptionTransaction, terminationError, nextResubscribeIntervalMsec):
-        self._got_resubscription_event.set()
-        logging.info("Got resubscription on client %s" % self.name)
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def caught_resubscription(self) -> bool:
-        return self._got_resubscription_event.is_set()
 
 
 class TC_SC_3_6(MatterBaseTest):
