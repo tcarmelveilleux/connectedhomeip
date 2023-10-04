@@ -6,7 +6,7 @@ namespace chip {
 namespace app {
 namespace Clusters {
 
-namespace detail {
+namespace {
 
 CHIP_ERROR FlightCheckDecodeAndEnterStruct(TLV::TLVReader & reader, TLV::TLVType & outer)
 {
@@ -41,6 +41,10 @@ void ExitStructAfterDecode(TLV::TLVReader & reader, TLV::TLVType & outer)
     VerifyOrDie(reader.Next() == CHIP_END_OF_TLV);
     VerifyOrDie(reader.ExitContainer(outer) == CHIP_NO_ERROR);
 }
+
+} // namespace
+
+namespace detail {
 
 // Structs shared across multiple clusters.
 namespace Structs {
@@ -81,7 +85,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const{
 
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader &reader) {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR) {
@@ -101,7 +105,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader &reader) {
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace {{asUpperCamelCase name}}.
@@ -144,7 +148,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const{
 
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader &reader) {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR) {
@@ -164,7 +168,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader &reader) {
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace {{asUpperCamelCase name}}.

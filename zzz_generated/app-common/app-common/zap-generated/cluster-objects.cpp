@@ -23,7 +23,7 @@ namespace chip {
 namespace app {
 namespace Clusters {
 
-namespace detail {
+namespace {
 
 CHIP_ERROR FlightCheckDecodeAndEnterStruct(TLV::TLVReader & reader, TLV::TLVType & outer)
 {
@@ -58,6 +58,10 @@ void ExitStructAfterDecode(TLV::TLVReader & reader, TLV::TLVType & outer)
     VerifyOrDie(reader.Next() == CHIP_END_OF_TLV);
     VerifyOrDie(reader.ExitContainer(outer) == CHIP_NO_ERROR);
 }
+
+} // namespace
+
+namespace detail {
 
 // Structs shared across multiple clusters.
 namespace Structs {
@@ -352,7 +356,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -371,7 +375,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Identify.
@@ -389,7 +393,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -411,7 +415,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TriggerEffect.
@@ -474,7 +478,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -496,7 +500,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AddGroup.
@@ -514,7 +518,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -536,7 +540,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AddGroupResponse.
@@ -553,7 +557,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -572,7 +576,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ViewGroup.
@@ -591,7 +595,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -616,7 +620,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ViewGroupResponse.
@@ -633,7 +637,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -652,7 +656,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetGroupMembership.
@@ -670,7 +674,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -692,7 +696,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetGroupMembershipResponse.
@@ -709,7 +713,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -728,7 +732,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RemoveGroup.
@@ -746,7 +750,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -768,7 +772,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RemoveGroupResponse.
@@ -784,7 +788,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -800,7 +804,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RemoveAllGroups.
@@ -818,7 +822,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -840,7 +844,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AddGroupIfIdentifying.
@@ -993,7 +997,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1024,7 +1028,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AddScene.
@@ -1043,7 +1047,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1068,7 +1072,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AddSceneResponse.
@@ -1086,7 +1090,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1108,7 +1112,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ViewScene.
@@ -1130,7 +1134,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1164,7 +1168,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ViewSceneResponse.
@@ -1182,7 +1186,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1204,7 +1208,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RemoveScene.
@@ -1223,7 +1227,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1248,7 +1252,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RemoveSceneResponse.
@@ -1265,7 +1269,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1284,7 +1288,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RemoveAllScenes.
@@ -1302,7 +1306,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1324,7 +1328,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RemoveAllScenesResponse.
@@ -1342,7 +1346,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1364,7 +1368,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StoreScene.
@@ -1383,7 +1387,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1408,7 +1412,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StoreSceneResponse.
@@ -1427,7 +1431,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1452,7 +1456,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RecallScene.
@@ -1469,7 +1473,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1488,7 +1492,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetSceneMembership.
@@ -1508,7 +1512,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1536,7 +1540,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetSceneMembershipResponse.
@@ -1557,7 +1561,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1588,7 +1592,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace EnhancedAddScene.
@@ -1607,7 +1611,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1632,7 +1636,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace EnhancedAddSceneResponse.
@@ -1650,7 +1654,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1672,7 +1676,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace EnhancedViewScene.
@@ -1694,7 +1698,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1728,7 +1732,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace EnhancedViewSceneResponse.
@@ -1749,7 +1753,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1780,7 +1784,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace CopyScene.
@@ -1799,7 +1803,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1824,7 +1828,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace CopySceneResponse.
@@ -1903,7 +1907,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1919,7 +1923,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Off.
@@ -1935,7 +1939,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1951,7 +1955,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace On.
@@ -1967,7 +1971,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -1983,7 +1987,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Toggle.
@@ -2001,7 +2005,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -2023,7 +2027,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace OffWithEffect.
@@ -2039,7 +2043,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -2055,7 +2059,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace OnWithRecallGlobalScene.
@@ -2074,7 +2078,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -2099,7 +2103,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace OnWithTimedOff.
@@ -2217,7 +2221,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -2245,7 +2249,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MoveToLevel.
@@ -2265,7 +2269,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -2293,7 +2297,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Move.
@@ -2314,7 +2318,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -2345,7 +2349,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Step.
@@ -2363,7 +2367,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -2385,7 +2389,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Stop.
@@ -2405,7 +2409,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -2433,7 +2437,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MoveToLevelWithOnOff.
@@ -2453,7 +2457,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -2481,7 +2485,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MoveWithOnOff.
@@ -2502,7 +2506,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -2533,7 +2537,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StepWithOnOff.
@@ -2551,7 +2555,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -2573,7 +2577,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StopWithOnOff.
@@ -2590,7 +2594,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -2609,7 +2613,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MoveToClosestFrequency.
@@ -3318,7 +3322,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -3349,7 +3353,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AccessControlEntryChanged.
@@ -3370,7 +3374,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -3401,7 +3405,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AccessControlExtensionChanged.
@@ -3539,7 +3543,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -3561,7 +3565,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace InstantAction.
@@ -3580,7 +3584,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -3605,7 +3609,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace InstantActionWithTransition.
@@ -3623,7 +3627,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -3645,7 +3649,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StartAction.
@@ -3664,7 +3668,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -3689,7 +3693,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StartActionWithDuration.
@@ -3707,7 +3711,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -3729,7 +3733,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StopAction.
@@ -3747,7 +3751,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -3769,7 +3773,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace PauseAction.
@@ -3788,7 +3792,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -3813,7 +3817,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace PauseActionWithDuration.
@@ -3831,7 +3835,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -3853,7 +3857,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ResumeAction.
@@ -3871,7 +3875,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -3893,7 +3897,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace EnableAction.
@@ -3912,7 +3916,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -3937,7 +3941,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace EnableActionWithDuration.
@@ -3955,7 +3959,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -3977,7 +3981,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace DisableAction.
@@ -3996,7 +4000,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -4021,7 +4025,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace DisableActionWithDuration.
@@ -4083,7 +4087,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -4108,7 +4112,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StateChanged.
@@ -4128,7 +4132,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -4156,7 +4160,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ActionFailed.
@@ -4268,7 +4272,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -4284,7 +4288,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MfgSpecificPing.
@@ -4398,7 +4402,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -4417,7 +4421,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StartUp.
@@ -4433,7 +4437,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -4449,7 +4453,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ShutDown.
@@ -4466,7 +4470,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -4485,7 +4489,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Leave.
@@ -4502,7 +4506,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -4521,7 +4525,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ReachableChanged.
@@ -4551,7 +4555,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -4591,7 +4595,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace QueryImage.
@@ -4615,7 +4619,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -4655,7 +4659,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace QueryImageResponse.
@@ -4673,7 +4677,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -4695,7 +4699,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ApplyUpdateRequest.
@@ -4713,7 +4717,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -4735,7 +4739,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ApplyUpdateResponse.
@@ -4753,7 +4757,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -4775,7 +4779,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace NotifyUpdateApplied.
@@ -4898,7 +4902,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -4929,7 +4933,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AnnounceOTAProvider.
@@ -4995,7 +4999,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -5023,7 +5027,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StateTransition.
@@ -5041,7 +5045,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -5063,7 +5067,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace VersionApplied.
@@ -5083,7 +5087,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -5111,7 +5115,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace DownloadError.
@@ -5571,7 +5575,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -5593,7 +5597,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace WiredFaultChange.
@@ -5611,7 +5615,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -5633,7 +5637,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace BatFaultChange.
@@ -5651,7 +5655,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -5673,7 +5677,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace BatChargeFaultChange.
@@ -5745,7 +5749,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -5767,7 +5771,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ArmFailSafe.
@@ -5785,7 +5789,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -5807,7 +5811,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ArmFailSafeResponse.
@@ -5826,7 +5830,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -5851,7 +5855,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetRegulatoryConfig.
@@ -5869,7 +5873,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -5891,7 +5895,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetRegulatoryConfigResponse.
@@ -5907,7 +5911,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -5923,7 +5927,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace CommissioningComplete.
@@ -5941,7 +5945,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -5963,7 +5967,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace CommissioningCompleteResponse.
@@ -6209,7 +6213,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -6231,7 +6235,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ScanNetworks.
@@ -6251,7 +6255,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -6279,7 +6283,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ScanNetworksResponse.
@@ -6298,7 +6302,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -6323,7 +6327,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AddOrUpdateWiFiNetwork.
@@ -6341,7 +6345,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -6363,7 +6367,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AddOrUpdateThreadNetwork.
@@ -6381,7 +6385,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -6403,7 +6407,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RemoveNetwork.
@@ -6422,7 +6426,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -6447,7 +6451,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace NetworkConfigResponse.
@@ -6465,7 +6469,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -6487,7 +6491,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ConnectNetwork.
@@ -6506,7 +6510,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -6531,7 +6535,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ConnectNetworkResponse.
@@ -6550,7 +6554,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -6575,7 +6579,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ReorderNetwork.
@@ -6657,7 +6661,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -6682,7 +6686,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RetrieveLogsRequest.
@@ -6702,7 +6706,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -6730,7 +6734,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RetrieveLogsResponse.
@@ -6859,7 +6863,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -6881,7 +6885,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestEventTrigger.
@@ -6963,7 +6967,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -6985,7 +6989,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace HardwareFaultChange.
@@ -7003,7 +7007,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -7025,7 +7029,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RadioFaultChange.
@@ -7043,7 +7047,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -7065,7 +7069,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace NetworkFaultChange.
@@ -7082,7 +7086,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -7101,7 +7105,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace BootReason.
@@ -7181,7 +7185,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -7197,7 +7201,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ResetWatermarks.
@@ -7262,7 +7266,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -7287,7 +7291,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SoftwareFault.
@@ -7607,7 +7611,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -7623,7 +7627,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ResetCounts.
@@ -7863,7 +7867,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -7882,7 +7886,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ConnectionStatus.
@@ -7900,7 +7904,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -7922,7 +7926,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace NetworkFaultChange.
@@ -7944,7 +7948,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -7960,7 +7964,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ResetCounts.
@@ -8050,7 +8054,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -8069,7 +8073,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Disconnection.
@@ -8087,7 +8091,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -8109,7 +8113,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AssociationFailure.
@@ -8126,7 +8130,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -8145,7 +8149,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ConnectionStatus.
@@ -8167,7 +8171,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -8183,7 +8187,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ResetCounts.
@@ -8458,7 +8462,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -8483,7 +8487,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetUTCTime.
@@ -8500,7 +8504,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -8519,7 +8523,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetTrustedTimeSource.
@@ -8536,7 +8540,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -8555,7 +8559,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetTimeZone.
@@ -8572,7 +8576,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -8591,7 +8595,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetTimeZoneResponse.
@@ -8608,7 +8612,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -8627,7 +8631,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetDSTOffset.
@@ -8644,7 +8648,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -8663,7 +8667,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetDefaultNTP.
@@ -8752,7 +8756,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -8768,7 +8772,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace DSTTableEmpty.
@@ -8785,7 +8789,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -8804,7 +8808,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace DSTStatus.
@@ -8822,7 +8826,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -8844,7 +8848,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TimeZoneStatus.
@@ -8860,7 +8864,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -8876,7 +8880,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TimeFailure.
@@ -8892,7 +8896,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -8908,7 +8912,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MissingTrustedTimeSource.
@@ -9058,7 +9062,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9077,7 +9081,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StartUp.
@@ -9093,7 +9097,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9109,7 +9113,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ShutDown.
@@ -9125,7 +9129,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9141,7 +9145,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Leave.
@@ -9158,7 +9162,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9177,7 +9181,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ReachableChanged.
@@ -9242,7 +9246,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9261,7 +9265,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SwitchLatched.
@@ -9278,7 +9282,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9297,7 +9301,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace InitialPress.
@@ -9314,7 +9318,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9333,7 +9337,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace LongPress.
@@ -9350,7 +9354,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9369,7 +9373,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ShortRelease.
@@ -9386,7 +9390,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9405,7 +9409,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace LongRelease.
@@ -9424,7 +9428,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9446,7 +9450,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MultiPressOngoing.
@@ -9465,7 +9469,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9487,7 +9491,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MultiPressComplete.
@@ -9514,7 +9518,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9545,7 +9549,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace OpenCommissioningWindow.
@@ -9562,7 +9566,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9581,7 +9585,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace OpenBasicCommissioningWindow.
@@ -9597,7 +9601,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9613,7 +9617,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RevokeCommissioning.
@@ -9821,7 +9825,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9840,7 +9844,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AttestationRequest.
@@ -9858,7 +9862,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9880,7 +9884,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AttestationResponse.
@@ -9897,7 +9901,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9916,7 +9920,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace CertificateChainRequest.
@@ -9933,7 +9937,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9952,7 +9956,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace CertificateChainResponse.
@@ -9970,7 +9974,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -9992,7 +9996,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace CSRRequest.
@@ -10010,7 +10014,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -10032,7 +10036,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace CSRResponse.
@@ -10053,7 +10057,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -10084,7 +10088,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AddNOC.
@@ -10102,7 +10106,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -10124,7 +10128,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace UpdateNOC.
@@ -10143,7 +10147,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -10168,7 +10172,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace NOCResponse.
@@ -10185,7 +10189,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -10204,7 +10208,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace UpdateFabricLabel.
@@ -10221,7 +10225,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -10240,7 +10244,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RemoveFabric.
@@ -10257,7 +10261,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -10276,7 +10280,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AddTrustedRootCertificate.
@@ -10546,7 +10550,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -10565,7 +10569,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace KeySetWrite.
@@ -10582,7 +10586,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -10601,7 +10605,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace KeySetRead.
@@ -10618,7 +10622,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -10637,7 +10641,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace KeySetReadResponse.
@@ -10654,7 +10658,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -10673,7 +10677,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace KeySetRemove.
@@ -10689,7 +10693,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -10705,7 +10709,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace KeySetReadAllIndices.
@@ -10722,7 +10726,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -10741,7 +10745,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace KeySetReadAllIndicesResponse.
@@ -11043,7 +11047,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -11062,7 +11066,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StateChange.
@@ -11165,7 +11169,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -11193,7 +11197,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RegisterClient.
@@ -11210,7 +11214,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -11229,7 +11233,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RegisterClientResponse.
@@ -11247,7 +11251,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -11269,7 +11273,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace UnregisterClient.
@@ -11285,7 +11289,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -11301,7 +11305,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StayActiveRequest.
@@ -11469,7 +11473,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -11488,7 +11492,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ChangeToMode.
@@ -11563,7 +11567,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -11582,7 +11586,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ChangeToMode.
@@ -11600,7 +11604,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -11622,7 +11626,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ChangeToModeResponse.
@@ -11691,7 +11695,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -11710,7 +11714,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ChangeToMode.
@@ -11728,7 +11732,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -11750,7 +11754,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ChangeToModeResponse.
@@ -11869,7 +11873,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -11888,7 +11892,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ChangeToMode.
@@ -11906,7 +11910,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -11928,7 +11932,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ChangeToModeResponse.
@@ -11997,7 +12001,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12016,7 +12020,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ChangeToMode.
@@ -12034,7 +12038,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12056,7 +12060,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ChangeToModeResponse.
@@ -12125,7 +12129,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12147,7 +12151,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetTemperature.
@@ -12266,7 +12270,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12294,7 +12298,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Notify.
@@ -12318,7 +12322,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12337,7 +12341,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ChangeToMode.
@@ -12355,7 +12359,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12377,7 +12381,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ChangeToModeResponse.
@@ -12485,7 +12489,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12501,7 +12505,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SelfTestRequest.
@@ -12591,7 +12595,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12610,7 +12614,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SmokeAlarm.
@@ -12627,7 +12631,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12646,7 +12650,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace COAlarm.
@@ -12663,7 +12667,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12682,7 +12686,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace LowBattery.
@@ -12698,7 +12702,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12714,7 +12718,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace HardwareFault.
@@ -12730,7 +12734,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12746,7 +12750,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace EndOfService.
@@ -12762,7 +12766,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12778,7 +12782,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SelfTestComplete.
@@ -12794,7 +12798,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12810,7 +12814,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AlarmMuted.
@@ -12826,7 +12830,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12842,7 +12846,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MuteEnded.
@@ -12859,7 +12863,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12878,7 +12882,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace InterconnectSmokeAlarm.
@@ -12895,7 +12899,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12914,7 +12918,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace InterconnectCOAlarm.
@@ -12930,7 +12934,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12946,7 +12950,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AllClear.
@@ -12969,7 +12973,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -12988,7 +12992,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Reset.
@@ -13005,7 +13009,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13024,7 +13028,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ModifyEnabledAlarms.
@@ -13090,7 +13094,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13118,7 +13122,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Notify.
@@ -13141,7 +13145,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13157,7 +13161,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Pause.
@@ -13173,7 +13177,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13189,7 +13193,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Stop.
@@ -13205,7 +13209,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13221,7 +13225,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Start.
@@ -13237,7 +13241,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13253,7 +13257,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Resume.
@@ -13270,7 +13274,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13289,7 +13293,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace OperationalCommandResponse.
@@ -13358,7 +13362,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13377,7 +13381,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace OperationalError.
@@ -13396,7 +13400,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13421,7 +13425,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace OperationCompletion.
@@ -13444,7 +13448,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13460,7 +13464,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Pause.
@@ -13476,7 +13480,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13492,7 +13496,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Stop.
@@ -13508,7 +13512,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13524,7 +13528,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Start.
@@ -13540,7 +13544,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13556,7 +13560,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Resume.
@@ -13573,7 +13577,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13592,7 +13596,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace OperationalCommandResponse.
@@ -13661,7 +13665,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13680,7 +13684,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace OperationalError.
@@ -13699,7 +13703,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13724,7 +13728,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace OperationCompletion.
@@ -13792,7 +13796,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13808,7 +13812,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ResetCondition.
@@ -13927,7 +13931,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -13943,7 +13947,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ResetCondition.
@@ -14063,7 +14067,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14082,7 +14086,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace LockDoor.
@@ -14099,7 +14103,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14118,7 +14122,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace UnlockDoor.
@@ -14136,7 +14140,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14158,7 +14162,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace UnlockWithTimeout.
@@ -14181,7 +14185,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14218,7 +14222,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetWeekDaySchedule.
@@ -14236,7 +14240,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14258,7 +14262,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetWeekDaySchedule.
@@ -14282,7 +14286,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14322,7 +14326,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetWeekDayScheduleResponse.
@@ -14340,7 +14344,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14362,7 +14366,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ClearWeekDaySchedule.
@@ -14382,7 +14386,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14410,7 +14414,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetYearDaySchedule.
@@ -14428,7 +14432,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14450,7 +14454,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetYearDaySchedule.
@@ -14471,7 +14475,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14502,7 +14506,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetYearDayScheduleResponse.
@@ -14520,7 +14524,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14542,7 +14546,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ClearYearDaySchedule.
@@ -14562,7 +14566,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14590,7 +14594,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetHolidaySchedule.
@@ -14607,7 +14611,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14626,7 +14630,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetHolidaySchedule.
@@ -14647,7 +14651,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14678,7 +14682,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetHolidayScheduleResponse.
@@ -14695,7 +14699,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14714,7 +14718,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ClearHolidaySchedule.
@@ -14737,7 +14741,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14774,7 +14778,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetUser.
@@ -14791,7 +14795,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14810,7 +14814,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetUser.
@@ -14836,7 +14840,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14882,7 +14886,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetUserResponse.
@@ -14899,7 +14903,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14918,7 +14922,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ClearUser.
@@ -14940,7 +14944,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -14974,7 +14978,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetCredential.
@@ -14993,7 +14997,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15018,7 +15022,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetCredentialResponse.
@@ -15035,7 +15039,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15054,7 +15058,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetCredentialStatus.
@@ -15075,7 +15079,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15106,7 +15110,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetCredentialStatusResponse.
@@ -15123,7 +15127,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15142,7 +15146,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ClearCredential.
@@ -15159,7 +15163,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15178,7 +15182,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace UnboltDoor.
@@ -15337,7 +15341,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15356,7 +15360,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace DoorLockAlarm.
@@ -15373,7 +15377,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15392,7 +15396,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace DoorStateChange.
@@ -15414,7 +15418,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15448,7 +15452,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace LockOperation.
@@ -15471,7 +15475,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15508,7 +15512,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace LockOperationError.
@@ -15531,7 +15535,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15568,7 +15572,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace LockUserChange.
@@ -15590,7 +15594,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15606,7 +15610,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace UpOrOpen.
@@ -15622,7 +15626,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15638,7 +15642,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace DownOrClose.
@@ -15654,7 +15658,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15670,7 +15674,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StopMotion.
@@ -15687,7 +15691,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15706,7 +15710,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GoToLiftValue.
@@ -15723,7 +15727,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15742,7 +15746,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GoToLiftPercentage.
@@ -15759,7 +15763,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15778,7 +15782,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GoToTiltValue.
@@ -15795,7 +15799,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15814,7 +15818,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GoToTiltPercentage.
@@ -15936,7 +15940,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15955,7 +15959,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace BarrierControlGoToPercent.
@@ -15971,7 +15975,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -15987,7 +15991,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace BarrierControlStop.
@@ -16174,7 +16178,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16190,7 +16194,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SupplyVoltageLow.
@@ -16206,7 +16210,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16222,7 +16226,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SupplyVoltageHigh.
@@ -16238,7 +16242,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16254,7 +16258,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace PowerMissingPhase.
@@ -16270,7 +16274,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16286,7 +16290,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SystemPressureLow.
@@ -16302,7 +16306,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16318,7 +16322,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SystemPressureHigh.
@@ -16334,7 +16338,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16350,7 +16354,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace DryRunning.
@@ -16366,7 +16370,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16382,7 +16386,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MotorTemperatureHigh.
@@ -16398,7 +16402,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16414,7 +16418,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace PumpMotorFatalFailure.
@@ -16430,7 +16434,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16446,7 +16450,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ElectronicTemperatureHigh.
@@ -16462,7 +16466,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16478,7 +16482,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace PumpBlocked.
@@ -16494,7 +16498,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16510,7 +16514,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SensorFailure.
@@ -16526,7 +16530,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16542,7 +16546,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ElectronicNonFatalFailure.
@@ -16558,7 +16562,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16574,7 +16578,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ElectronicFatalFailure.
@@ -16590,7 +16594,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16606,7 +16610,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GeneralFault.
@@ -16622,7 +16626,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16638,7 +16642,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Leakage.
@@ -16654,7 +16658,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16670,7 +16674,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AirDetection.
@@ -16686,7 +16690,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16702,7 +16706,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TurbineOperation.
@@ -16776,7 +16780,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16798,7 +16802,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetpointRaiseLower.
@@ -16819,7 +16823,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16847,7 +16851,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetWeeklyScheduleResponse.
@@ -16868,7 +16872,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16896,7 +16900,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SetWeeklySchedule.
@@ -16914,7 +16918,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16936,7 +16940,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetWeeklySchedule.
@@ -16952,7 +16956,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -16968,7 +16972,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ClearWeeklySchedule.
@@ -17173,7 +17177,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -17198,7 +17202,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Step.
@@ -17341,7 +17345,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -17372,7 +17376,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MoveToHue.
@@ -17392,7 +17396,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -17420,7 +17424,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MoveHue.
@@ -17441,7 +17445,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -17472,7 +17476,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StepHue.
@@ -17492,7 +17496,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -17520,7 +17524,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MoveToSaturation.
@@ -17540,7 +17544,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -17568,7 +17572,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MoveSaturation.
@@ -17589,7 +17593,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -17620,7 +17624,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StepSaturation.
@@ -17641,7 +17645,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -17672,7 +17676,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MoveToHueAndSaturation.
@@ -17693,7 +17697,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -17724,7 +17728,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MoveToColor.
@@ -17744,7 +17748,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -17772,7 +17776,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MoveColor.
@@ -17793,7 +17797,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -17824,7 +17828,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StepColor.
@@ -17844,7 +17848,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -17872,7 +17876,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MoveToColorTemperature.
@@ -17893,7 +17897,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -17924,7 +17928,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace EnhancedMoveToHue.
@@ -17944,7 +17948,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -17972,7 +17976,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace EnhancedMoveHue.
@@ -17993,7 +17997,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -18024,7 +18028,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace EnhancedStepHue.
@@ -18045,7 +18049,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -18076,7 +18080,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace EnhancedMoveToHueAndSaturation.
@@ -18099,7 +18103,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -18136,7 +18140,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ColorLoopSet.
@@ -18154,7 +18158,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -18176,7 +18180,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StopMoveStep.
@@ -18200,7 +18204,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -18234,7 +18238,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace MoveColorTemperature.
@@ -18259,7 +18263,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -18296,7 +18300,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StepColorTemperature.
@@ -19791,7 +19795,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -19810,7 +19814,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ChangeChannel.
@@ -19828,7 +19832,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -19850,7 +19854,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ChangeChannelResponse.
@@ -19868,7 +19872,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -19890,7 +19894,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ChangeChannelByNumber.
@@ -19907,7 +19911,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -19926,7 +19930,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SkipChannel.
@@ -20038,7 +20042,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20060,7 +20064,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace NavigateTarget.
@@ -20078,7 +20082,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20100,7 +20104,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace NavigateTargetResponse.
@@ -20207,7 +20211,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20223,7 +20227,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Play.
@@ -20239,7 +20243,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20255,7 +20259,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Pause.
@@ -20271,7 +20275,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20287,7 +20291,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Stop.
@@ -20303,7 +20307,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20319,7 +20323,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StartOver.
@@ -20335,7 +20339,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20351,7 +20355,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Previous.
@@ -20367,7 +20371,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20383,7 +20387,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Next.
@@ -20399,7 +20403,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20415,7 +20419,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Rewind.
@@ -20431,7 +20435,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20447,7 +20451,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace FastForward.
@@ -20465,7 +20469,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20484,7 +20488,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SkipForward.
@@ -20502,7 +20506,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20521,7 +20525,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SkipBackward.
@@ -20539,7 +20543,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20561,7 +20565,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace PlaybackResponse.
@@ -20578,7 +20582,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20597,7 +20601,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Seek.
@@ -20728,7 +20732,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20747,7 +20751,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SelectInput.
@@ -20763,7 +20767,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20779,7 +20783,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace ShowInputStatus.
@@ -20795,7 +20799,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20811,7 +20815,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace HideInputStatus.
@@ -20829,7 +20833,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20851,7 +20855,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RenameInput.
@@ -20912,7 +20916,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -20928,7 +20932,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Sleep.
@@ -20984,7 +20988,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -21003,7 +21007,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SendKey.
@@ -21020,7 +21024,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -21039,7 +21043,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SendKeyResponse.
@@ -21387,7 +21391,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -21412,7 +21416,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace LaunchContent.
@@ -21431,7 +21435,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -21456,7 +21460,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace LaunchURL.
@@ -21474,7 +21478,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -21496,7 +21500,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace LauncherResponse.
@@ -21608,7 +21612,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -21627,7 +21631,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SelectOutput.
@@ -21645,7 +21649,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -21667,7 +21671,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace RenameOutput.
@@ -21776,7 +21780,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -21798,7 +21802,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace LaunchApp.
@@ -21815,7 +21819,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -21834,7 +21838,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace StopApp.
@@ -21851,7 +21855,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -21870,7 +21874,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace HideApp.
@@ -21888,7 +21892,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -21910,7 +21914,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace LauncherResponse.
@@ -22035,7 +22039,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -22054,7 +22058,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetSetupPIN.
@@ -22071,7 +22075,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -22090,7 +22094,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetSetupPINResponse.
@@ -22108,7 +22112,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -22130,7 +22134,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Login.
@@ -22146,7 +22150,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -22162,7 +22166,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Logout.
@@ -22221,7 +22225,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -22249,7 +22253,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetProfileInfoResponseCommand.
@@ -22265,7 +22269,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -22281,7 +22285,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetProfileInfoCommand.
@@ -22304,7 +22308,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -22338,7 +22342,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetMeasurementProfileResponseCommand.
@@ -22357,7 +22361,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -22382,7 +22386,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace GetMeasurementProfileCommand.
@@ -23279,7 +23283,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -23295,7 +23299,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Test.
@@ -23312,7 +23316,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -23331,7 +23335,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestSpecificResponse.
@@ -23347,7 +23351,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -23363,7 +23367,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestNotHandled.
@@ -23380,7 +23384,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -23399,7 +23403,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestAddArgumentsResponse.
@@ -23415,7 +23419,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -23431,7 +23435,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestSpecific.
@@ -23448,7 +23452,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -23467,7 +23471,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestSimpleArgumentResponse.
@@ -23483,7 +23487,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -23499,7 +23503,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestUnknownCommand.
@@ -23521,7 +23525,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -23555,7 +23559,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestStructArrayArgumentResponse.
@@ -23573,7 +23577,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -23595,7 +23599,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestAddArguments.
@@ -23612,7 +23616,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -23631,7 +23635,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestListInt8UReverseResponse.
@@ -23648,7 +23652,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -23667,7 +23671,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestSimpleArgumentRequest.
@@ -23685,7 +23689,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -23707,7 +23711,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestEnumsResponse.
@@ -23729,7 +23733,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -23763,7 +23767,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestStructArrayArgumentRequest.
@@ -23783,7 +23787,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -23811,7 +23815,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestNullableOptionalResponse.
@@ -23828,7 +23832,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -23847,7 +23851,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestStructArgumentRequest.
@@ -23902,7 +23906,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24002,7 +24006,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestComplexNullableOptionalResponse.
@@ -24019,7 +24023,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24038,7 +24042,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestNestedStructArgumentRequest.
@@ -24055,7 +24059,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24074,7 +24078,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace BooleanResponse.
@@ -24091,7 +24095,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24110,7 +24114,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestListStructArgumentRequest.
@@ -24127,7 +24131,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24146,7 +24150,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SimpleStructResponse.
@@ -24163,7 +24167,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24182,7 +24186,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestListInt8UArgumentRequest.
@@ -24199,7 +24203,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24218,7 +24222,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestEmitTestEventResponse.
@@ -24235,7 +24239,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24254,7 +24258,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestNestedStructListArgumentRequest.
@@ -24271,7 +24275,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24290,7 +24294,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestEmitTestFabricScopedEventResponse.
@@ -24307,7 +24311,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24326,7 +24330,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestListNestedStructListArgumentRequest.
@@ -24343,7 +24347,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24362,7 +24366,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestListInt8UReverseRequest.
@@ -24380,7 +24384,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24402,7 +24406,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestEnumsRequest.
@@ -24419,7 +24423,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24438,7 +24442,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestNullableOptionalRequest.
@@ -24466,7 +24470,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24518,7 +24522,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestComplexNullableOptionalRequest.
@@ -24535,7 +24539,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24554,7 +24558,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace SimpleStructEchoRequest.
@@ -24570,7 +24574,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24586,7 +24590,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TimedInvokeRequest.
@@ -24603,7 +24607,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24622,7 +24626,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestSimpleOptionalArgumentRequest.
@@ -24641,7 +24645,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24666,7 +24670,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestEmitTestEventRequest.
@@ -24683,7 +24687,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -24702,7 +24706,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestEmitTestFabricScopedEventRequest.
@@ -25004,7 +25008,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -25038,7 +25042,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestEvent.
@@ -25055,7 +25059,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -25074,7 +25078,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace TestFabricScopedEvent.
@@ -25101,7 +25105,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -25132,7 +25136,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace FailAtFault.
@@ -25151,7 +25155,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -25176,7 +25180,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace FailRandomlyAtFault.
@@ -25231,7 +25235,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -25247,7 +25251,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace Ping.
@@ -25264,7 +25268,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -25283,7 +25287,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AddArgumentsResponse.
@@ -25301,7 +25305,7 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
 {
     TLV::TLVType outer;
-    ReturnErrorOnFailure(chip::app::Clusters::detail::FlightCheckDecodeAndEnterStruct(reader, outer));
+    ReturnErrorOnFailure(chip::app::Clusters::FlightCheckDecodeAndEnterStruct(reader, outer));
 
     CHIP_ERROR err = CHIP_NO_ERROR;
     while ((err = reader.Next()) == CHIP_NO_ERROR)
@@ -25323,7 +25327,7 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         }
     }
 
-    chip::app::Clusters::detail::ExitStructAfterDecode(reader, outer);
+    chip::app::Clusters::ExitStructAfterDecode(reader, outer);
     return CHIP_NO_ERROR;
 }
 } // namespace AddArguments.
