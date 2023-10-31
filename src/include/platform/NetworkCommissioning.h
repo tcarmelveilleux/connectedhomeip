@@ -284,6 +284,27 @@ public:
      */
     virtual void ScanNetworks(ByteSpan ssid, ScanCallback * callback) = 0;
 
+    /**
+     * @brief Get the list of Wi-Fi bands supported by the network interface.
+     *
+     * The returned bit mask has values of WiFiBandEnum packed into the bits. For example:
+     *
+     *  - Bit 0 = (WiFiBandEnum::k2g4 == 0) --> (1 << 0) == (1 << WiFiBandEnum::k2g4)
+     *  - Bit 2 = (WiFiBandEnum::k5g == 2) --> (1 << 2) == (1 << WiFiBandEnum::k5g)
+     *  - If both 2.4G and 5G are supported --> ((1 << k2g4) || (1 << k5g)) == (1 || 4) == 5
+     *
+     * On error, return 0 (no bands supported). This should never happen... Note that
+     * certification tests will REQUIRE at least one bit set in the set.
+     *
+     * @return a bitmask of supported Wi-Fi bands where each bit is associated with a WiFiBandEnum value.
+     */
+    virtual uint32_t GetSupportedWiFiBands()
+    {
+        // Default to 2.4G support (100% example platform coverage as of Matter 1.3) listed.
+        // Platforms must override to get the correct values.
+        return static_cast<uint32_t>(1UL << WiFiBandEnum::k2g4);
+    }
+
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFI_PDC
     virtual bool SupportsPerDeviceCredentials() { return false; };
 
