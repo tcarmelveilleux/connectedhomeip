@@ -31,11 +31,13 @@
 #include <lib/support/ThreadOperationalDataset.h>
 #include <lib/support/Variant.h>
 #include <platform/CHIPDeviceConfig.h>
+#include <lib/support/TypeTraits.h>
 #include <platform/internal/DeviceNetworkInfo.h>
 
 #include <app-common/zap-generated/cluster-enums.h>
 
 #include <limits>
+#include <utility>
 
 namespace chip {
 namespace DeviceLayer {
@@ -129,8 +131,12 @@ using NetworkIterator            = Iterator<Network>;
 using WiFiScanResponseIterator   = Iterator<WiFiScanResponse>;
 using ThreadScanResponseIterator = Iterator<ThreadScanResponse>;
 using Status                     = app::Clusters::NetworkCommissioning::NetworkCommissioningStatusEnum;
-using WiFiBand                   = app::Clusters::NetworkCommissioning::WiFiBandEnum;
-using WiFiSecurity               = app::Clusters::NetworkCommissioning::WiFiSecurityBitmap;
+using WiFiBandEnum               = app::Clusters::NetworkCommissioning::WiFiBandEnum;
+// For backwards compatibility with pre-rename enum values.
+using WiFiBand                   = WiFiBandEnum;
+using WiFiSecurityBitmap         = app::Clusters::NetworkCommissioning::WiFiSecurityBitmap;
+// For backwards compatibility with pre-rename bitmap values.
+using WiFiSecurity               = WiFiSecurityBitmap;
 
 // BaseDriver and WirelessDriver are the common interfaces for a network driver, platform drivers should not implement this
 // directly, instead, users are expected to implement WiFiDriver, ThreadDriver and EthernetDriver.
@@ -302,7 +308,7 @@ public:
     {
         // Default to 2.4G support (100% example platform coverage as of Matter 1.3) listed.
         // Platforms must override to get the correct values.
-        return static_cast<uint32_t>(1UL << WiFiBandEnum::k2g4);
+        return static_cast<uint32_t>(1UL << chip::to_underlying(WiFiBandEnum::k2g4));
     }
 
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFI_PDC

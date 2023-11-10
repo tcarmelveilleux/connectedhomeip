@@ -228,18 +228,24 @@ CHIP_ERROR Instance::Read(const ConcreteReadAttributePath & aPath, AttributeValu
         });
 
     case Attributes::ScanMaxTimeSeconds::Id:
-        if (mpWirelessDriver != nullptr)
+        if (!mFeatureFlags.Has(Feature::kWiFiNetworkInterface) && !mFeatureFlags.Has(Feature::kThreadNetworkInterface))
         {
-            return aEncoder.Encode(mpWirelessDriver->GetScanNetworkTimeoutSeconds());
+            // TODO(#30185): Move to `return CHIP_IM_GLOBAL_STATUS(UnsupportedAttribute)` when supported by infratructure.
+            return CHIP_NO_ERROR;
         }
-        return CHIP_NO_ERROR;
+
+        VerifyOrReturnError(mpWirelessDriver != nullptr, CHIP_NO_ERROR);
+        return aEncoder.Encode(mpWirelessDriver->GetScanNetworkTimeoutSeconds());
 
     case Attributes::ConnectMaxTimeSeconds::Id:
-        if (mpWirelessDriver != nullptr)
+        if (!mFeatureFlags.Has(Feature::kWiFiNetworkInterface) && !mFeatureFlags.Has(Feature::kThreadNetworkInterface))
         {
-            return aEncoder.Encode(mpWirelessDriver->GetConnectNetworkTimeoutSeconds());
+            // TODO(#30185): Move to `return CHIP_IM_GLOBAL_STATUS(UnsupportedAttribute)` when supported by infratructure.
+            return CHIP_NO_ERROR;
         }
-        return CHIP_NO_ERROR;
+
+        VerifyOrReturnError(mpWirelessDriver != nullptr, CHIP_NO_ERROR);
+        return aEncoder.Encode(mpWirelessDriver->GetConnectNetworkTimeoutSeconds());
 
     case Attributes::InterfaceEnabled::Id:
         return aEncoder.Encode(mpBaseDriver->GetEnabled());
@@ -264,19 +270,19 @@ CHIP_ERROR Instance::Read(const ConcreteReadAttributePath & aPath, AttributeValu
 #if (!CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION && !CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
         return CHIP_IM_GLOBAL_STATUS(UnsupportedAttribute);
 #else
-        VerifyOrReturn(mFeatureFlags.Has(Feature::kWiFiNetworkInterface));
+        VerifyOrReturnError(mFeatureFlags.Has(Feature::kWiFiNetworkInterface), CHIP_IM_GLOBAL_STATUS(UnsupportedAttribute));
 
         return aEncoder.EncodeList([this](const auto & encoder) {
             uint32_t bands = mpDriver.Get<WiFiDriver *>()->GetSupportedWiFiBands();
-            static_assert(WiFiBandEnum::kUnknownEnumValue <= std::numeric_limits<uint32_t>::digits, "Expected WiFiBandEnum::kUnknownEnumValue to fit in uint32_t's number of bits");
+            static_assert(chip::to_underlying(WiFiBandEnum::kUnknownEnumValue) <= std::numeric_limits<uint32_t>::digits, "Expected WiFiBandEnum::kUnknownEnumValue to fit in uint32_t's number of bits");
 
             // Extract every band from the bitmap of supported bands, starting positionally on the right.
-            for (uint32_t band_bit_pos = 0; band_bit_pos < WiFiBandEnum::kUnknownEnumValue; ++band_bit_pos)
+            for (uint32_t band_bit_pos = 0; band_bit_pos < chip::to_underlying(WiFiBandEnum::kUnknownEnumValue); ++band_bit_pos)
             {
                 uint32_t band_mask = static_cast<uint32_t>(1UL << band_bit_pos);
                 if ((bands & band_mask) != 0)
                 {
-                    ReturnErrorOnFailure(encoder.encode(static_cast<WiFiBandEnum>(band_bit_pos)));
+                    ReturnErrorOnFailure(encoder.Encode(static_cast<WiFiBandEnum>(band_bit_pos)));
                 }
             }
             return CHIP_NO_ERROR;
