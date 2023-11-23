@@ -16,6 +16,8 @@
  *    limitations under the License.
  */
 
+#include <limits>
+
 #include "network-commissioning.h"
 
 #include <app-common/zap-generated/attributes/Accessors.h>
@@ -53,6 +55,8 @@ namespace {
 
 // For WiFi and Thread scan results, each item will cost ~60 bytes in TLV, thus 15 is a safe upper bound of scan results.
 constexpr size_t kMaxNetworksInScanResponse = 15;
+
+constexpr uint16_t kCurrentClusterRevision = 2;
 
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFI_PDC
 constexpr size_t kPossessionNonceSize = 32;
@@ -231,18 +235,24 @@ CHIP_ERROR Instance::Read(const ConcreteReadAttributePath & aPath, AttributeValu
         });
 
     case Attributes::ScanMaxTimeSeconds::Id:
-        if (mpWirelessDriver != nullptr)
+        if (!mFeatureFlags.Has(Feature::kWiFiNetworkInterface) && !mFeatureFlags.Has(Feature::kThreadNetworkInterface))
         {
-            return aEncoder.Encode(mpWirelessDriver->GetScanNetworkTimeoutSeconds());
+            // TODO(#30185): Move to `return CHIP_IM_GLOBAL_STATUS(UnsupportedAttribute)` when supported by infratructure.
+            return CHIP_NO_ERROR;
         }
-        return CHIP_NO_ERROR;
+
+        VerifyOrReturnError(mpWirelessDriver != nullptr, CHIP_NO_ERROR);
+        return aEncoder.Encode(mpWirelessDriver->GetScanNetworkTimeoutSeconds());
 
     case Attributes::ConnectMaxTimeSeconds::Id:
-        if (mpWirelessDriver != nullptr)
+        if (!mFeatureFlags.Has(Feature::kWiFiNetworkInterface) && !mFeatureFlags.Has(Feature::kThreadNetworkInterface))
         {
-            return aEncoder.Encode(mpWirelessDriver->GetConnectNetworkTimeoutSeconds());
+            // TODO(#30185): Move to `return CHIP_IM_GLOBAL_STATUS(UnsupportedAttribute)` when supported by infratructure.
+            return CHIP_NO_ERROR;
         }
-        return CHIP_NO_ERROR;
+
+        VerifyOrReturnError(mpWirelessDriver != nullptr, CHIP_NO_ERROR);
+        return aEncoder.Encode(mpWirelessDriver->GetConnectNetworkTimeoutSeconds());
 
     case Attributes::InterfaceEnabled::Id:
         return aEncoder.Encode(mpBaseDriver->GetEnabled());
@@ -263,13 +273,35 @@ CHIP_ERROR Instance::Read(const ConcreteReadAttributePath & aPath, AttributeValu
     case Attributes::LastConnectErrorValue::Id:
         return aEncoder.Encode(mLastConnectErrorValue);
 
+    case Attributes::SupportedWiFiBands::Id:
+#if (!CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION && !CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
+        return CHIP_IM_GLOBAL_STATUS(UnsupportedAttribute);
+#else
+        VerifyOrReturnError(mFeatureFlags.Has(Feature::kWiFiNetworkInterface), CHIP_IM_GLOBAL_STATUS(UnsupportedAttribute));
+
+        return aEncoder.EncodeList([this](const auto & encoder) {
+            uint32_t bands = mpDriver.Get<WiFiDriver *>()->GetSupportedWiFiBands();
+            static_assert(chip::to_underlying(WiFiBandEnum::kUnknownEnumValue) <= std::numeric_limits<uint32_t>::digits, "Expected WiFiBandEnum::kUnknownEnumValue to fit in uint32_t's number of bits");
+
+            // Extract every band from the bitmap of supported bands, starting positionally on the right.
+            for (uint32_t band_bit_pos = 0; band_bit_pos < chip::to_underlying(WiFiBandEnum::kUnknownEnumValue); ++band_bit_pos)
+            {
+                uint32_t band_mask = static_cast<uint32_t>(1UL << band_bit_pos);
+                if ((bands & band_mask) != 0)
+                {
+                    ReturnErrorOnFailure(encoder.Encode(static_cast<WiFiBandEnum>(band_bit_pos)));
+                }
+            }
+            return CHIP_NO_ERROR;
+        });
+#endif
+        break;
+
+    case Attributes::ClusterRevision::Id:
+        return aEncoder.Encode(kCurrentClusterRevision);
+
     case Attributes::FeatureMap::Id:
         return aEncoder.Encode(mFeatureFlags);
-
-    case Attributes::SupportedWiFiBands::Id:
-        VerifyOrReturnError(mFeatureFlags.Has(Feature::kWiFiNetworkInterface), CHIP_NO_ERROR);
-        VerifyOrReturnError(mpDriver.Valid(), CHIP_NO_ERROR);
-        return aEncoder.Encode(mpDriver.Get<WiFiDriver *>()->GetSupportedWiFiBands());
 
     case Attributes::SupportedThreadFeatures::Id:
         VerifyOrReturnError(mFeatureFlags.Has(Feature::kThreadNetworkInterface), CHIP_NO_ERROR);
@@ -295,7 +327,7 @@ CHIP_ERROR Instance::Write(const ConcreteDataAttributePath & aPath, AttributeVal
         ReturnErrorOnFailure(aDecoder.Decode(value));
         return mpBaseDriver->SetEnabled(value);
     default:
-        return CHIP_ERROR_UNSUPPORTED_CHIP_FEATURE;
+        return CHIP_IM_GLOBAL_STATUS(InvalidAction);
     }
 }
 
@@ -329,6 +361,7 @@ void Instance::OnNetworkingStatusChange(Status aCommissioningError, Optional<Byt
 void Instance::HandleScanNetworks(HandlerContext & ctx, const Commands::ScanNetworks::DecodableType & req)
 {
     MATTER_TRACE_SCOPE("HandleScanNetwork", "NetworkCommissioning");
+#if (CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION || CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
     if (mFeatureFlags.Has(Feature::kWiFiNetworkInterface))
     {
         ByteSpan ssid;
@@ -355,18 +388,23 @@ void Instance::HandleScanNetworks(HandlerContext & ctx, const Commands::ScanNetw
         mAsyncCommandHandle         = CommandHandler::Handle(&ctx.mCommandHandler);
         ctx.mCommandHandler.FlushAcksRightAwayOnSlowCommand();
         mpDriver.Get<WiFiDriver *>()->ScanNetworks(ssid, this);
+        return;
     }
-    else if (mFeatureFlags.Has(Feature::kThreadNetworkInterface))
+#endif // #if (CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION || CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
+
+#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
+    if (mFeatureFlags.Has(Feature::kThreadNetworkInterface))
     {
         mCurrentOperationBreadcrumb = req.breadcrumb;
         mAsyncCommandHandle         = CommandHandler::Handle(&ctx.mCommandHandler);
         ctx.mCommandHandler.FlushAcksRightAwayOnSlowCommand();
         mpDriver.Get<ThreadDriver *>()->ScanNetworks(this);
+        return;
     }
-    else
-    {
-        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::UnsupportedCommand);
-    }
+#endif // #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
+
+    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::UnsupportedCommand);
+    return;
 }
 
 namespace {
@@ -401,6 +439,7 @@ void Instance::HandleAddOrUpdateWiFiNetwork(HandlerContext & ctx, const Commands
 {
     MATTER_TRACE_SCOPE("HandleAddOrUpdateWiFiNetwork", "NetworkCommissioning");
 
+#if (CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION || CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
     VerifyOrReturn(CheckFailSafeArmed(ctx));
 
     if (req.ssid.empty() || req.ssid.size() > DeviceLayer::Internal::kMaxWiFiSSIDLength)
@@ -470,6 +509,9 @@ void Instance::HandleAddOrUpdateWiFiNetwork(HandlerContext & ctx, const Commands
     {
         UpdateBreadcrumb(req.breadcrumb);
     }
+#else
+    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::UnsupportedCommand);
+#endif // #if (CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION || CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
 }
 
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFI_PDC
@@ -580,7 +622,7 @@ exit:
 void Instance::HandleAddOrUpdateThreadNetwork(HandlerContext & ctx, const Commands::AddOrUpdateThreadNetwork::DecodableType & req)
 {
     MATTER_TRACE_SCOPE("HandleAddOrUpdateThreadNetwork", "NetworkCommissioning");
-
+#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
     VerifyOrReturn(CheckFailSafeArmed(ctx));
 
     Commands::NetworkConfigResponse::Type response;
@@ -595,6 +637,9 @@ void Instance::HandleAddOrUpdateThreadNetwork(HandlerContext & ctx, const Comman
     {
         UpdateBreadcrumb(req.breadcrumb);
     }
+#else
+    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::UnsupportedCommand);
+#endif // #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
 }
 
 void Instance::UpdateBreadcrumb(const Optional<uint64_t> & breadcrumb)
@@ -807,6 +852,7 @@ void Instance::OnResult(Status commissioningError, CharSpan debugText, int32_t i
     }
 }
 
+#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
 void Instance::OnFinished(Status status, CharSpan debugText, ThreadScanResponseIterator * networks)
 {
     CHIP_ERROR err        = CHIP_NO_ERROR;
@@ -920,7 +966,9 @@ exit:
     }
     networks->Release();
 }
+#endif // #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
 
+#if (CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION || CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
 void Instance::OnFinished(Status status, CharSpan debugText, WiFiScanResponseIterator * networks)
 {
     CHIP_ERROR err        = CHIP_NO_ERROR;
@@ -984,6 +1032,7 @@ exit:
         networks->Release();
     }
 }
+#endif // #if (CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION || CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
 
 void Instance::OnPlatformEventHandler(const DeviceLayer::ChipDeviceEvent * event, intptr_t arg)
 {
