@@ -42,6 +42,7 @@ typedef uint64_t FabricId;
 typedef uint8_t FabricIndex;
 typedef uint32_t FieldId;
 typedef uint16_t ListIndex;
+typedef uint16_t PathFlags;
 typedef uint16_t LocalizedStringIdentifier;
 typedef uint32_t TransactionId;
 typedef uint16_t KeysetId;

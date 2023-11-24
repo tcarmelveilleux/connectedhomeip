@@ -43,6 +43,20 @@ enum class Tag : uint8_t
     kCluster              = 3,
     kAttribute            = 4,
     kListIndex            = 5,
+    kPathFlags            = 6,
+};
+
+enum class PathFlagsEnum : uint16_t
+{
+    kWildcardSkipRootNode                 = 1 << 0, // Skip the Root Node endpoint (endpoint 0) during wildcard expansion.
+    kWildcardSkipGlobalAttributes         = 1 << 1, // Skip several large global attributes during wildcard expansion.
+    kWildcardSkipAttributeList            = 1 << 2, // Skip the AttributeList global attribute during wildcard expansion.
+    kWildcardSkipEventList                = 1 << 3, // Skip the EventList global attribute during wildcard expansion.
+    kWildcardSkipCommandLists             = 1 << 4, // Skip the AcceptedCommandList and GeneratedCommandList global attributes during wildcard expansion.
+    kWildcardSkipCustomElements           = 1 << 5, // Skip any manufacturer-specific clusters or attributes during wildcard expansion.
+    kWildcardSkipFixedAttributes          = 1 << 6, // Skip any Fixed (F) quality attributes during wildcard expansion.
+    kWildcardSkipChangesOmittedAttributes = 1 << 7, // Skip any Changes Omitted (C) quality attributes during wildcard expansion.
+    kWildcardSkipDiagnosticsClusters      = 1 << 8, // Skip all clusters within the well-known list of diagnostics clusters during wildcard expansion.
 };
 
 enum class ValidateIdRanges : uint8_t
@@ -135,6 +149,21 @@ public:
      *          #CHIP_END_OF_TLV if there is no such element
      */
     CHIP_ERROR GetListIndex(DataModel::Nullable<ListIndex> * const apListIndex) const;
+
+    /**
+     *  @brief Get the PathFlags part of the AttributePathIB.
+     *
+     *  Note that the underlying implementation of AttributePathIB may only support 16 out of 32
+     *  bits. This method will extract up to 32 bits (as per spec), but `PathFlags` type internally
+     *  may be smaller.
+     *
+     *  @param [in] apPathFlags    A pointer to receive the read apPathFlags .
+     *
+     *  @return #CHIP_NO_ERROR on success
+     *          #CHIP_ERROR_WRONG_TLV_TYPE if there is such element but it's not any of the defined unsigned integer types
+     *          #CHIP_END_OF_TLV if there is no such element
+     */
+    CHIP_ERROR GetPathFlags(uint32_t * apPathFlags) const;
 
     /**
      * @brief Get the concrete attribute path.  This will set the ListOp to
@@ -237,6 +266,16 @@ public:
     AttributePathIB::Builder & ListIndex(const DataModel::Nullable<chip::ListIndex> & aListIndex);
 
     /**
+     *  @brief Inject the PathFlags into the TLV stream (if non-zero).
+     *
+     *  @param [in] aPathFlags Path flags for this attribute path
+     *
+     *  @return A reference to *this
+     */
+    AttributePathIB::Builder & PathFlags(const chip::PathFlags aPathFlags);
+
+    /**
+     *
      *  @brief Mark the end of this AttributePathIB
      *
      *  @return The builder's final status.
@@ -246,6 +285,42 @@ public:
     CHIP_ERROR Encode(const AttributePathParams & aAttributePathParams);
     CHIP_ERROR Encode(const ConcreteDataAttributePath & aAttributePathParams);
 };
+
+/**
+ * @brief Determines if an endpoint ID is skipped from wildcard expansion based on PathFlags.
+ *
+ * @param endpointId - candidate endpoint ID
+ * @param attributePathParams - attribute path against which to check
+ * @return true - if the attributePathParams has an endpoint wildcard and endpointId is among the endpoints to skip
+ * @return false - otherwise (i.e. not an endpoint wildcard, or it's an endpoint wildcard but we don't skip)
+ */
+bool HasOmittedEndpointInWildcardDueToPathFlags(EndpointId endpointId, const AttributePathParams & attributePathParams);
+
+/**
+ * @brief Determines if a cluster ID is skipped from wildcard expansion based on PathFlags.
+ *
+ * @param clusterId - candidate cluster ID
+ * @param attributePathParams - attribute path against which to check
+ * @return true - if the attributePathParams has a cluster wildcard and clusterId is among the clusters to skip
+ * @return false - otherwise (i.e. not a cluster wildcard, or it's a cluster wildcard but we don't skip)
+ */
+bool HasOmittedClusterInWildcardDueToPathFlags(ClusterId clusterId, const AttributePathParams & attributePathParams);
+
+/**
+ * @brief Determines if an attribute is skipped from wildcard expansion based on PathFlags.
+ *
+ * Note that the PathFlags rules have some particular rules whereby only some combinations of
+ * <Cluster, Attribute> are skipped (e.g. "C" or "F" quality) where the attribute ID alone
+ * is insufficient.
+ *
+ * @param clusterId - candidate cluster ID
+ * @param attributeId - candidate attribute ID
+ * @param attributePathParams - attribute path against which to check
+ * @return true - if the attributePathParams has an attribute wildcard and <clusterId,attributeId> is among the attributes to skip
+ * @return false - otherwise (i.e. not an attribute wildcard, or it's an attribute wildcard but we don't skip)
+ */
+bool HasOmittedAttributeInWildcardDueToPathFlags(ClusterId clusterId, AttributeId attributeId, const AttributePathParams & attributePathParams);
+
 } // namespace AttributePathIB
 } // namespace app
 } // namespace chip

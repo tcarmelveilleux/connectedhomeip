@@ -23,12 +23,55 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include <app-common/zap-generated/ids/Attributes.h>
+
 #include <app/AppConfig.h>
 #include <app/data-model/Encode.h>
 #include <app/data-model/Nullable.h>
 
 namespace chip {
 namespace app {
+
+namespace {
+
+constexpr bool IsDiagnosticsCluster(ClusterId clusterId)
+{
+    // The only Diagnostics clusters (K quality) at time of writing are WiFi/Thread/Ethernet/Software diagnostics
+    // which are IDs in [0x0034, 0x0035, 0x0036, 0x0037]. For efficiency/ease's sake, we use this knowledge
+    // to simplify the implementation.
+    // TODO: Need to use a generated list of well-known diagnostics clusters managed elsewhere.
+    return (clusterId >= 0x0034) && (clusterId <= 0x0037);
+}
+
+constexpr bool IsFixedAttribute(ClusterId clusterId, AttributeId attributeId)
+{
+    // TODO: Implement.
+    return false;
+}
+
+constexpr bool IsChangesOmittedAttribute(ClusterId clusterId, AttributeId attributeId)
+{
+    // TODO: Implement.
+    return false;
+}
+
+constexpr bool IsSkippedGlobalAttribute(AttributeId attributeId)
+{
+
+    // The only skipped global attributes at time of writing are:
+    //
+    // 0xFFFB: AttributeList
+    // 0xFFFA: EventList
+    // 0xFFF9: AcceptedCommandList
+    // 0xFFF8: GeneratedCommandList
+    //
+    // Because of this, we can optimize the check to be the range.
+
+    return (attributeId >= 0xFFF8) && (attributeId <= 0xFFFB);
+}
+
+} // namespace
+
 #if CHIP_CONFIG_IM_PRETTY_PRINT
 CHIP_ERROR AttributePathIB::Parser::PrettyPrint() const
 {
@@ -171,6 +214,12 @@ CHIP_ERROR AttributePathIB::Parser::GetListIndex(DataModel::Nullable<ListIndex> 
     return GetNullableUnsignedInteger(to_underlying(Tag::kListIndex), apListIndex);
 }
 
+CHIP_ERROR AttributePathIB::Parser::GetPathFlags(uint32_t * apPathFlags) const
+{
+    static_assert(sizeof(apPathFlags) >= sizeof(PathFlags), "We must be able to read at least enough bits from wire to cover PathFlags type");
+    return GetUnsignedInteger(to_underlying(Tag::kPathFlags), apPathFlags);
+}
+
 CHIP_ERROR AttributePathIB::Parser::GetGroupAttributePath(ConcreteDataAttributePath & aAttributePath,
                                                           ValidateIdRanges aValidateRanges) const
 {
@@ -271,6 +320,24 @@ CHIP_ERROR AttributePathIB::Parser::ParsePath(AttributePathParams & aAttribute) 
         err = CHIP_NO_ERROR;
     }
     VerifyOrReturnError(err == CHIP_NO_ERROR, CHIP_IM_GLOBAL_STATUS(InvalidAction));
+
+    uint32_t incomingPathFlags = 0;
+    aAttribute.mPathFlags = 0;
+
+    err = GetPathFlags(&incomingPathFlags);
+    if (err == CHIP_NO_ERROR)
+    {
+        // Current implementation only knows up to 16 bits even though the wire may have up to 32 bits.
+        // We just truncate all the unknown flags since would always come from a newer client and by
+        // design the client has to be resilient to our ignoring them.
+        aAttribute.mPathFlags = static_cast<PathFlags>(incomingPathFlags & 0xFFFFu);
+    }
+    else if (err == CHIP_END_OF_TLV)
+    {
+        err = CHIP_NO_ERROR;
+    }
+
+    VerifyOrReturnError(err == CHIP_NO_ERROR, CHIP_IM_GLOBAL_STATUS(InvalidAction));
     return CHIP_NO_ERROR;
 }
 
@@ -344,6 +411,16 @@ AttributePathIB::Builder & AttributePathIB::Builder::ListIndex(const chip::ListI
     return *this;
 }
 
+AttributePathIB::Builder & AttributePathIB::Builder::PathFlags(const chip::PathFlags aPathFlags)
+{
+    // skip if error has already been set
+    if (mError == CHIP_NO_ERROR)
+    {
+        mError = mpWriter->Put(TLV::ContextTag(Tag::kPathFlags), aPathFlags);
+    }
+    return *this;
+}
+
 CHIP_ERROR AttributePathIB::Builder::EndOfAttributePathIB()
 {
     EndOfContainer();
@@ -372,6 +449,11 @@ CHIP_ERROR AttributePathIB::Builder::Encode(const AttributePathParams & aAttribu
         ListIndex(aAttributePathParams.mListIndex);
     }
 
+    if (aAttributePathParams.mPathFlags != 0)
+    {
+        PathFlags(aAttributePathParams.mPathFlags);
+    }
+
     return EndOfAttributePathIB();
 }
 
@@ -396,6 +478,121 @@ CHIP_ERROR AttributePathIB::Builder::Encode(const ConcreteDataAttributePath & aA
     }
 
     return EndOfAttributePathIB();
+}
+
+using PathFlagsBitmap = BitFlags<AttributePathIB::PathFlagsEnum, PathFlags>;
+
+bool AttributePathIB::HasOmittedEndpointInWildcardDueToPathFlags(EndpointId endpointId, const AttributePathParams & attributePathParams)
+{
+    if (attributePathParams.mPathFlags == 0)
+    {
+        return false;
+    }
+
+    if (!attributePathParams.HasWildcardEndpointId())
+    {
+        return false;
+    }
+
+    PathFlagsBitmap flags{attributePathParams.mPathFlags};
+
+    return flags.Has(PathFlagsEnum::kWildcardSkipRootNode) && (endpointId == 0);
+}
+
+bool AttributePathIB::HasOmittedClusterInWildcardDueToPathFlags(ClusterId clusterId, const AttributePathParams & attributePathParams)
+{
+    if (attributePathParams.mPathFlags == 0)
+    {
+        return false;
+    }
+
+    if (!attributePathParams.HasWildcardClusterId())
+    {
+        return false;
+    }
+
+    PathFlagsBitmap flags{attributePathParams.mPathFlags};
+    // Skipping of diagnostics clusters.
+    if (flags.Has(PathFlagsEnum::kWildcardSkipDiagnosticsClusters) && IsDiagnosticsCluster(clusterId))
+    {
+        return true;
+    }
+
+    // Skipping of MS clusters (MEI Vendor ID != 0).
+    if (flags.Has(PathFlagsEnum::kWildcardSkipCustomElements) && (ExtractVendorFromMEI(clusterId) != 0))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool AttributePathIB::HasOmittedAttributeInWildcardDueToPathFlags(ClusterId clusterId, AttributeId attributeId, const AttributePathParams & attributePathParams)
+{
+    if (attributePathParams.mPathFlags == 0)
+    {
+        return false;
+    }
+
+    if (!attributePathParams.HasWildcardClusterId() && !attributePathParams.HasWildcardClusterId())
+    {
+        return false;
+    }
+
+    PathFlagsBitmap flags{attributePathParams.mPathFlags};
+
+    // Handle global list attributes filter.
+    if (flags.Has(PathFlagsEnum::kWildcardSkipGlobalAttributes) && (IsSkippedGlobalAttribute(attributeId)))
+    {
+        return true;
+    }
+
+    // Handle AttributeList filter.
+    if (flags.Has(PathFlagsEnum::kWildcardSkipAttributeList) && (clusterId == Clusters::Globals::Attributes::AttributeList::Id))
+    {
+        return true;
+    }
+
+    // Handle Accepted/Generated command list filter.
+    if (flags.Has(PathFlagsEnum::kWildcardSkipCommandLists))
+    {
+        if ((clusterId == Clusters::Globals::Attributes::GeneratedCommandList::Id) || (clusterId == Clusters::Globals::Attributes::AcceptedCommandList::Id))
+        {
+          return true;
+        }
+    }
+
+    // Handle EventList filter.
+#if CHIP_CONFIG_ENABLE_EVENTLIST_ATTRIBUTE
+    if (flags.Has(PathFlagsEnum::kWildcardSkipEventList) && (clusterId == Clusters::Globals::Attributes::EventList::Id))
+    {
+        return true;
+    }
+#endif // CHIP_CONFIG_ENABLE_EVENTLIST_ATTRIBUTE
+
+    // Handle skipping MS-specific clusters/attributes.
+    if (flags.Has(PathFlagsEnum::kWildcardSkipCustomElements))
+    {
+        if ((ExtractVendorFromMEI(clusterId) != 0) || (ExtractVendorFromMEI(attributeId) != 0))
+        {
+            return true;
+        }
+    }
+
+    // Handle Changed Omitted ('C') quality attribute filter.
+    if (flags.Has(PathFlagsEnum::kWildcardSkipChangesOmittedAttributes) && IsChangesOmittedAttribute(clusterId, attributeId))
+    {
+        return true;
+    }
+
+    // Handle fixed ('F') quality attribute filter.
+    if (flags.Has(PathFlagsEnum::kWildcardSkipFixedAttributes) && IsFixedAttribute(clusterId, attributeId))
+    {
+        return true;
+    }
+
+    // Got here: none of the filters applied, so we don't skip.
+    return false;
 }
 
 } // namespace app

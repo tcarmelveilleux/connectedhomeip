@@ -56,6 +56,8 @@ struct AttributePathParams
 
     bool operator==(const AttributePathParams & aOther) const
     {
+        // NOTE: We do not check path flags equivalence, since the path flags are meta-data for wildcard expansion usage,
+        //       and it is not necessary to every check for equality of those flags.
         return mEndpointId == aOther.mEndpointId && mClusterId == aOther.mClusterId && mAttributeId == aOther.mAttributeId &&
             mListIndex == aOther.mListIndex;
     }
@@ -128,6 +130,7 @@ struct AttributePathParams
     AttributeId mAttributeId = kInvalidAttributeId; // uint32
     EndpointId mEndpointId   = kInvalidEndpointId;  // uint16
     ListIndex mListIndex     = kInvalidListIndex;   // uint16
+    PathFlags mPathFlags     = 0;
 };
 
 } // namespace app

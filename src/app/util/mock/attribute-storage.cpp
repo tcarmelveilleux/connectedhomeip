@@ -62,8 +62,10 @@ DataVersion dataVersion   = 0;
 EndpointId endpoints[]    = { kMockEndpoint1, kMockEndpoint2, kMockEndpoint3 };
 uint16_t clusterIndex[]   = { 0, 2, 5 };
 uint8_t clusterCount[]    = { 2, 3, 4 };
-ClusterId clusters[]      = { MockClusterId(1), MockClusterId(2), MockClusterId(1), MockClusterId(2), MockClusterId(3),
-                              MockClusterId(1), MockClusterId(2), MockClusterId(3), MockClusterId(4) };
+ClusterId clusters[]      = {
+                          /* 0 */    MockClusterId(1), MockClusterId(2),
+                          /* 2 */    MockClusterId(1), MockClusterId(2), MockClusterId(3),
+                          /* 5 */    MockClusterId(1), MockClusterId(2), MockClusterId(3), MockClusterId(4) };
 uint16_t attributeIndex[] = { 0, 2, 5, 7, 11, 16, 19, 25, 27 };
 uint16_t attributeCount[] = { 2, 3, 2, 4, 5, 3, 6, 2, 2 };
 uint16_t eventIndex[]     = { 0, 2, 2, 2, 2, 2, 2, 2, 2 };
@@ -79,6 +81,7 @@ AttributeId attributes[]  = {
     Clusters::Globals::Attributes::ClusterRevision::Id, Clusters::Globals::Attributes::FeatureMap::Id, MockAttributeId(1), MockAttributeId(2), MockAttributeId(3), MockAttributeId(4),
     Clusters::Globals::Attributes::ClusterRevision::Id, Clusters::Globals::Attributes::FeatureMap::Id,
     Clusters::Globals::Attributes::ClusterRevision::Id, Clusters::Globals::Attributes::FeatureMap::Id
+
     // clang-format on
 };
 EventId events[] = {
