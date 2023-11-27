@@ -22,6 +22,7 @@
 #include <app/ConcreteAttributePath.h>
 #include <app/EventManagement.h>
 #include <app/GlobalAttributes.h>
+#include <app/MessageDef/AttributePathIB.h>
 #include <app/att-storage.h>
 #include <lib/core/CHIPCore.h>
 #include <lib/core/TLVDebug.h>
@@ -30,6 +31,7 @@
 #include <lib/support/logging/CHIPLogging.h>
 
 using namespace chip;
+using namespace chip::app::AttributePathIB;
 
 // TODO: Need to make it so that declarations of things that don't depend on generated files are not intermixed in af.h with
 // dependencies on generated files, so we don't have to re-declare things here.
@@ -174,23 +176,24 @@ bool AttributePathExpandIterator::Next()
 {
     for (; mpAttributePath != nullptr; (mpAttributePath = mpAttributePath->mpNext, mEndpointIndex = UINT16_MAX))
     {
-        mOutputPath.mExpanded = mpAttributePath->mValue.IsWildcardPath();
+        const AttributePathParams & currentAttributePath = mpAttributePath->mValue;
+        mOutputPath.mExpanded = currentAttributePath.IsWildcardPath();
 
         if (mEndpointIndex == UINT16_MAX)
         {
             // Special case: If this is a concrete path, we just return its value as-is.
-            if (!mpAttributePath->mValue.IsWildcardPath())
+            if (!currentAttributePath.IsWildcardPath())
             {
-                mOutputPath.mEndpointId  = mpAttributePath->mValue.mEndpointId;
-                mOutputPath.mClusterId   = mpAttributePath->mValue.mClusterId;
-                mOutputPath.mAttributeId = mpAttributePath->mValue.mAttributeId;
+                mOutputPath.mEndpointId  = currentAttributePath.mEndpointId;
+                mOutputPath.mClusterId   = currentAttributePath.mClusterId;
+                mOutputPath.mAttributeId = currentAttributePath.mAttributeId;
 
                 // Prepare for next iteration
                 mEndpointIndex = mEndEndpointIndex = 0;
                 return true;
             }
 
-            PrepareEndpointIndexRange(mpAttributePath->mValue);
+            PrepareEndpointIndexRange(currentAttributePath);
             mClusterIndex = UINT8_MAX;
         }
 
@@ -205,9 +208,15 @@ bool AttributePathExpandIterator::Next()
 
             EndpointId endpointId = emberAfEndpointFromIndex(mEndpointIndex);
 
+            if (currentAttributePath.HasWildcardEndpointId() && HasOmittedEndpointInWildcardDueToPathFlags(currentAttributePath, endpointId))
+            {
+                // Skipped by endpoint wildcard filter.
+                continue;
+            }
+
             if (mClusterIndex == UINT8_MAX)
             {
-                PrepareClusterIndexRange(mpAttributePath->mValue, endpointId);
+                PrepareClusterIndexRange(currentAttributePath, endpointId);
                 mAttributeIndex       = UINT16_MAX;
                 mGlobalAttributeIndex = UINT8_MAX;
             }
@@ -218,16 +227,32 @@ bool AttributePathExpandIterator::Next()
                 // emberAfGetNthClusterId must return a valid cluster id here since we have verified the mClusterIndex does
                 // not exceed the mEndClusterIndex.
                 ClusterId clusterId = emberAfGetNthClusterId(endpointId, mClusterIndex, true /* server */).Value();
+
+                if (currentAttributePath.HasWildcardClusterId() && HasOmittedClusterInWildcardDueToPathFlags(currentAttributePath, clusterId))
+                {
+                    // Skipped by cluster wildcard filter.
+                    continue;
+                }
+
                 if (mAttributeIndex == UINT16_MAX && mGlobalAttributeIndex == UINT8_MAX)
                 {
-                    PrepareAttributeIndexRange(mpAttributePath->mValue, endpointId, clusterId);
+                    PrepareAttributeIndexRange(currentAttributePath, endpointId, clusterId);
                 }
 
                 if (mAttributeIndex < mEndAttributeIndex)
                 {
                     // GetServerAttributeIdByIdex must return a valid attribute here since we have verified the mAttributeIndex does
                     // not exceed the mEndAttributeIndex.
-                    mOutputPath.mAttributeId = emberAfGetServerAttributeIdByIndex(endpointId, clusterId, mAttributeIndex).Value();
+                    AttributeId attributeId = emberAfGetServerAttributeIdByIndex(endpointId, clusterId, mAttributeIndex).Value();
+
+                    if (currentAttributePath.HasWildcardAttributeId() && HasOmittedAttributeInWildcardDueToPathFlags(currentAttributePath, clusterId, attributeId))
+                    {
+                        // Skipped by attribute wildcard filter.
+                        mAttributeIndex++;
+                        continue;
+                    }
+
+                    mOutputPath.mAttributeId = attributeId;
                     mOutputPath.mClusterId   = clusterId;
                     mOutputPath.mEndpointId  = endpointId;
                     mAttributeIndex++;
@@ -237,8 +262,18 @@ bool AttributePathExpandIterator::Next()
                 }
                 if (mGlobalAttributeIndex < mGlobalAttributeEndIndex)
                 {
+
                     // Return a path pointing to the next global attribute.
-                    mOutputPath.mAttributeId = GlobalAttributesNotInMetadata[mGlobalAttributeIndex];
+                    AttributeId attributeId = GlobalAttributesNotInMetadata[mGlobalAttributeIndex];
+
+                    if (currentAttributePath.HasWildcardAttributeId() && HasOmittedAttributeInWildcardDueToPathFlags(currentAttributePath, clusterId, attributeId))
+                    {
+                        // Skipped by attribute wildcard filter.
+                        mGlobalAttributeIndex++;
+                        continue;
+                    }
+
+                    mOutputPath.mAttributeId = attributeId;
                     mOutputPath.mClusterId   = clusterId;
                     mOutputPath.mEndpointId  = endpointId;
                     mGlobalAttributeIndex++;

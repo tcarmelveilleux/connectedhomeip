@@ -289,22 +289,22 @@ public:
 /**
  * @brief Determines if an endpoint ID is skipped from wildcard expansion based on PathFlags.
  *
- * @param endpointId - candidate endpoint ID
  * @param attributePathParams - attribute path against which to check
+ * @param endpointId - candidate endpoint ID
  * @return true - if the attributePathParams has an endpoint wildcard and endpointId is among the endpoints to skip
  * @return false - otherwise (i.e. not an endpoint wildcard, or it's an endpoint wildcard but we don't skip)
  */
-bool HasOmittedEndpointInWildcardDueToPathFlags(EndpointId endpointId, const AttributePathParams & attributePathParams);
+bool HasOmittedEndpointInWildcardDueToPathFlags(const AttributePathParams & attributePathParams, EndpointId endpointId);
 
 /**
  * @brief Determines if a cluster ID is skipped from wildcard expansion based on PathFlags.
  *
- * @param clusterId - candidate cluster ID
  * @param attributePathParams - attribute path against which to check
+ * @param clusterId - candidate cluster ID
  * @return true - if the attributePathParams has a cluster wildcard and clusterId is among the clusters to skip
  * @return false - otherwise (i.e. not a cluster wildcard, or it's a cluster wildcard but we don't skip)
  */
-bool HasOmittedClusterInWildcardDueToPathFlags(ClusterId clusterId, const AttributePathParams & attributePathParams);
+bool HasOmittedClusterInWildcardDueToPathFlags(const AttributePathParams & attributePathParams, ClusterId clusterId);
 
 /**
  * @brief Determines if an attribute is skipped from wildcard expansion based on PathFlags.
@@ -313,13 +313,13 @@ bool HasOmittedClusterInWildcardDueToPathFlags(ClusterId clusterId, const Attrib
  * <Cluster, Attribute> are skipped (e.g. "C" or "F" quality) where the attribute ID alone
  * is insufficient.
  *
+ * @param attributePathParams - attribute path against which to check
  * @param clusterId - candidate cluster ID
  * @param attributeId - candidate attribute ID
- * @param attributePathParams - attribute path against which to check
  * @return true - if the attributePathParams has an attribute wildcard and <clusterId,attributeId> is among the attributes to skip
  * @return false - otherwise (i.e. not an attribute wildcard, or it's an attribute wildcard but we don't skip)
  */
-bool HasOmittedAttributeInWildcardDueToPathFlags(ClusterId clusterId, AttributeId attributeId, const AttributePathParams & attributePathParams);
+bool HasOmittedAttributeInWildcardDueToPathFlags(const AttributePathParams & attributePathParams, ClusterId clusterId, AttributeId attributeId);
 
 } // namespace AttributePathIB
 } // namespace app

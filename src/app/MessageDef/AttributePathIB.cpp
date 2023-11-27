@@ -482,7 +482,7 @@ CHIP_ERROR AttributePathIB::Builder::Encode(const ConcreteDataAttributePath & aA
 
 using PathFlagsBitmap = BitFlags<AttributePathIB::PathFlagsEnum, PathFlags>;
 
-bool AttributePathIB::HasOmittedEndpointInWildcardDueToPathFlags(EndpointId endpointId, const AttributePathParams & attributePathParams)
+bool AttributePathIB::HasOmittedEndpointInWildcardDueToPathFlags(const AttributePathParams & attributePathParams, EndpointId endpointId)
 {
     if (attributePathParams.mPathFlags == 0)
     {
@@ -499,7 +499,7 @@ bool AttributePathIB::HasOmittedEndpointInWildcardDueToPathFlags(EndpointId endp
     return flags.Has(PathFlagsEnum::kWildcardSkipRootNode) && (endpointId == 0);
 }
 
-bool AttributePathIB::HasOmittedClusterInWildcardDueToPathFlags(ClusterId clusterId, const AttributePathParams & attributePathParams)
+bool AttributePathIB::HasOmittedClusterInWildcardDueToPathFlags(const AttributePathParams & attributePathParams, ClusterId clusterId)
 {
     if (attributePathParams.mPathFlags == 0)
     {
@@ -527,14 +527,14 @@ bool AttributePathIB::HasOmittedClusterInWildcardDueToPathFlags(ClusterId cluste
     return false;
 }
 
-bool AttributePathIB::HasOmittedAttributeInWildcardDueToPathFlags(ClusterId clusterId, AttributeId attributeId, const AttributePathParams & attributePathParams)
+bool AttributePathIB::HasOmittedAttributeInWildcardDueToPathFlags(const AttributePathParams & attributePathParams, ClusterId clusterId, AttributeId attributeId)
 {
     if (attributePathParams.mPathFlags == 0)
     {
         return false;
     }
 
-    if (!attributePathParams.HasWildcardClusterId() && !attributePathParams.HasWildcardClusterId())
+    if (!attributePathParams.HasWildcardAttributeId())
     {
         return false;
     }

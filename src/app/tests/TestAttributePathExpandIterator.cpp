@@ -20,6 +20,7 @@
 #include <app/AttributePathExpandIterator.h>
 #include <app/ConcreteAttributePath.h>
 #include <app/EventManagement.h>
+#include <app/MessageDef/AttributePathIB.h>
 #include <app/ObjectList.h>
 #include <app/util/mock/Constants.h>
 #include <lib/core/CHIPCore.h>
@@ -212,6 +213,51 @@ void TestWildcardClusterGlobalAttributeNotInMetadata(nlTestSuite * apSuite, void
         ChipLogDetail(AppServer, "Visited Attribute: 0x%04X / " ChipLogFormatMEI " / " ChipLogFormatMEI, path.mEndpointId,
                       ChipLogValueMEI(path.mClusterId), ChipLogValueMEI(path.mAttributeId));
         NL_TEST_ASSERT(apSuite, index < ArraySize(paths) && paths[index] == path);
+        index++;
+    }
+    NL_TEST_ASSERT(apSuite, index == ArraySize(paths));
+}
+
+void TestWildcardFilterAttributeList(nlTestSuite * apSuite, void * apContext)
+{
+    app::ObjectList<app::AttributePathParams> clusInfo;
+    clusInfo.mValue.mEndpointId  = Test::kMockEndpoint3;
+    clusInfo.mValue.mAttributeId = app::Clusters::Globals::Attributes::AttributeList::Id;
+
+
+    P paths[] = {
+        { kMockEndpoint3, MockClusterId(1), Clusters::Globals::Attributes::AttributeList::Id },
+        { kMockEndpoint3, MockClusterId(1), Clusters::Globals::Attributes::GeneratedCommandList::Id },
+        { kMockEndpoint3, MockClusterId(1), Clusters::Globals::Attributes::AcceptedCommandList::Id },
+
+        { kMockEndpoint3, MockClusterId(2), Clusters::Globals::Attributes::AttributeList::Id },
+        { kMockEndpoint3, MockClusterId(2), Clusters::Globals::Attributes::GeneratedCommandList::Id },
+        { kMockEndpoint3, MockClusterId(2), Clusters::Globals::Attributes::AcceptedCommandList::Id },
+
+        { kMockEndpoint3, MockClusterId(3), Clusters::Globals::Attributes::AttributeList::Id },
+        { kMockEndpoint3, MockClusterId(3), Clusters::Globals::Attributes::GeneratedCommandList::Id },
+        { kMockEndpoint3, MockClusterId(3), Clusters::Globals::Attributes::AcceptedCommandList::Id },
+
+        { kMockEndpoint3, MockClusterId(4), Clusters::Globals::Attributes::AttributeList::Id },
+        { kMockEndpoint3, MockClusterId(4), Clusters::Globals::Attributes::GeneratedCommandList::Id },
+        { kMockEndpoint3, MockClusterId(4), Clusters::Globals::Attributes::AcceptedCommandList::Id },
+    };
+
+    size_t index = 0;
+
+
+    app::ConcreteAttributePath path;
+    pathWithoutAttributeList.mPathFlags = 1 << std::to_underlying(chip::app::AttributePathIB::PathFlagsEnum::kWildcardSkipAttributeList);
+
+    for (app::AttributePathExpandIterator iter(&clusInfo); iter.Get(path); iter.Next())
+    {
+        ChipLogDetail(AppServer, "Visited Attribute: 0x%04X / " ChipLogFormatMEI " / " ChipLogFormatMEI, path.mEndpointId,
+                      ChipLogValueMEI(path.mClusterId), ChipLogValueMEI(path.mAttributeId));
+        NL_TEST_ASSERT(apSuite, path.mAttributeId != Clusters::Globals::Attributes::AttributeList::Id);
+        if (path.mAttributeId != Clusters::Globals::Attributes::AttributeList::Id)
+        {
+            NL_TEST_ASSERT(apSuite, index < ArraySize(paths) && paths[index] == path);
+        }
         index++;
     }
     NL_TEST_ASSERT(apSuite, index == ArraySize(paths));
@@ -445,6 +491,7 @@ const nlTest sTests[] =
         NL_TEST_DEF("TestWildcardAttribute", TestWildcardAttribute),
         NL_TEST_DEF("TestNoWildcard", TestNoWildcard),
         NL_TEST_DEF("TestMultipleClusInfo", TestMultipleClusInfo),
+        NL_TEST_DEF("TestWildcardFilterAttributeList", TestWildcardFilterAttributeList),
         NL_TEST_SENTINEL()
 };
 // clang-format on
