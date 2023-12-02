@@ -7434,6 +7434,127 @@ public static class ApplicationBasicClusterApplicationStruct {
     return output.toString();
   }
 }
+public static class DiscoBallClusterPatternStruct {
+  public Integer duration;
+  public @Nullable Integer rotate;
+  public @Nullable Integer speed;
+  public @Nullable Integer axis;
+  public @Nullable Integer wobbleSpeed;
+  public @Nullable String passcode;
+  private static final long DURATION_ID = 0L;
+  private static final long ROTATE_ID = 1L;
+  private static final long SPEED_ID = 2L;
+  private static final long AXIS_ID = 3L;
+  private static final long WOBBLE_SPEED_ID = 4L;
+  private static final long PASSCODE_ID = 5L;
+
+  public DiscoBallClusterPatternStruct(
+    Integer duration,
+    @Nullable Integer rotate,
+    @Nullable Integer speed,
+    @Nullable Integer axis,
+    @Nullable Integer wobbleSpeed,
+    @Nullable String passcode
+  ) {
+    this.duration = duration;
+    this.rotate = rotate;
+    this.speed = speed;
+    this.axis = axis;
+    this.wobbleSpeed = wobbleSpeed;
+    this.passcode = passcode;
+  }
+
+  public StructType encodeTlv() {
+    ArrayList<StructElement> values = new ArrayList<>();
+    values.add(new StructElement(DURATION_ID, new UIntType(duration)));
+    values.add(new StructElement(ROTATE_ID, rotate != null ? new UIntType(rotate) : new NullType()));
+    values.add(new StructElement(SPEED_ID, speed != null ? new UIntType(speed) : new NullType()));
+    values.add(new StructElement(AXIS_ID, axis != null ? new UIntType(axis) : new NullType()));
+    values.add(new StructElement(WOBBLE_SPEED_ID, wobbleSpeed != null ? new UIntType(wobbleSpeed) : new NullType()));
+    values.add(new StructElement(PASSCODE_ID, passcode != null ? new StringType(passcode) : new NullType()));
+
+    return new StructType(values);
+  }
+
+  public static DiscoBallClusterPatternStruct decodeTlv(BaseTLVType tlvValue) {
+    if (tlvValue == null || tlvValue.type() != TLVType.Struct) {
+      return null;
+    }
+    Integer duration = null;
+    @Nullable Integer rotate = null;
+    @Nullable Integer speed = null;
+    @Nullable Integer axis = null;
+    @Nullable Integer wobbleSpeed = null;
+    @Nullable String passcode = null;
+    for (StructElement element: ((StructType)tlvValue).value()) {
+      if (element.contextTagNum() == DURATION_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+          UIntType castingValue = element.value(UIntType.class);
+          duration = castingValue.value(Integer.class);
+        }
+      } else if (element.contextTagNum() == ROTATE_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+          UIntType castingValue = element.value(UIntType.class);
+          rotate = castingValue.value(Integer.class);
+        }
+      } else if (element.contextTagNum() == SPEED_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+          UIntType castingValue = element.value(UIntType.class);
+          speed = castingValue.value(Integer.class);
+        }
+      } else if (element.contextTagNum() == AXIS_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+          UIntType castingValue = element.value(UIntType.class);
+          axis = castingValue.value(Integer.class);
+        }
+      } else if (element.contextTagNum() == WOBBLE_SPEED_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+          UIntType castingValue = element.value(UIntType.class);
+          wobbleSpeed = castingValue.value(Integer.class);
+        }
+      } else if (element.contextTagNum() == PASSCODE_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.String) {
+          StringType castingValue = element.value(StringType.class);
+          passcode = castingValue.value(String.class);
+        }
+      }
+    }
+    return new DiscoBallClusterPatternStruct(
+      duration,
+      rotate,
+      speed,
+      axis,
+      wobbleSpeed,
+      passcode
+    );
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("DiscoBallClusterPatternStruct {\n");
+    output.append("\tduration: ");
+    output.append(duration);
+    output.append("\n");
+    output.append("\trotate: ");
+    output.append(rotate);
+    output.append("\n");
+    output.append("\tspeed: ");
+    output.append(speed);
+    output.append("\n");
+    output.append("\taxis: ");
+    output.append(axis);
+    output.append("\n");
+    output.append("\twobbleSpeed: ");
+    output.append(wobbleSpeed);
+    output.append("\n");
+    output.append("\tpasscode: ");
+    output.append(passcode);
+    output.append("\n");
+    output.append("}\n");
+    return output.toString();
+  }
+}
 public static class UnitTestingClusterSimpleStruct {
   public Integer a;
   public Boolean b;

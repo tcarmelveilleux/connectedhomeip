@@ -5659,6 +5659,83 @@ void CHIPElectricalMeasurementClusterGetMeasurementProfileResponseCommandCallbac
     env->CallVoidMethod(javaCallbackRef, javaMethod, startTime, status, profileIntervalPeriod, numberOfIntervalsDelivered,
                         attributeId, intervals);
 }
+CHIPDiscoBallClusterStatsResponseCallback::CHIPDiscoBallClusterStatsResponseCallback(jobject javaCallback) :
+    Callback::Callback<CHIPDiscoBallClusterStatsResponseCallbackType>(CallbackFn, this)
+{
+    JNIEnv * env = JniReferences::GetInstance().GetEnvForCurrentThread();
+    if (env == nullptr)
+    {
+        ChipLogError(Zcl, "Could not create global reference for Java callback");
+        return;
+    }
+
+    javaCallbackRef = env->NewGlobalRef(javaCallback);
+    if (javaCallbackRef == nullptr)
+    {
+        ChipLogError(Zcl, "Could not create global reference for Java callback");
+    }
+}
+
+CHIPDiscoBallClusterStatsResponseCallback::~CHIPDiscoBallClusterStatsResponseCallback()
+{
+    JNIEnv * env = JniReferences::GetInstance().GetEnvForCurrentThread();
+    if (env == nullptr)
+    {
+        ChipLogError(Zcl, "Could not delete global reference for Java callback");
+        return;
+    }
+    env->DeleteGlobalRef(javaCallbackRef);
+};
+
+void CHIPDiscoBallClusterStatsResponseCallback::CallbackFn(
+    void * context, const chip::app::Clusters::DiscoBall::Commands::StatsResponse::DecodableType & dataResponse)
+{
+    chip::DeviceLayer::StackUnlock unlock;
+    CHIP_ERROR err = CHIP_NO_ERROR;
+    JNIEnv * env   = JniReferences::GetInstance().GetEnvForCurrentThread();
+    jobject javaCallbackRef;
+    jmethodID javaMethod;
+
+    VerifyOrReturn(env != nullptr, ChipLogError(Zcl, "Error invoking Java callback: no JNIEnv"));
+
+    std::unique_ptr<CHIPDiscoBallClusterStatsResponseCallback, void (*)(CHIPDiscoBallClusterStatsResponseCallback *)> cppCallback(
+        reinterpret_cast<CHIPDiscoBallClusterStatsResponseCallback *>(context),
+        chip::Platform::Delete<CHIPDiscoBallClusterStatsResponseCallback>);
+    VerifyOrReturn(cppCallback != nullptr, ChipLogError(Zcl, "Error invoking Java callback: failed to cast native callback"));
+
+    javaCallbackRef = cppCallback->javaCallbackRef;
+    // Java callback is allowed to be null, exit early if this is the case.
+    VerifyOrReturn(javaCallbackRef != nullptr);
+
+    err = JniReferences::GetInstance().FindMethod(env, javaCallbackRef, "onSuccess", "(Ljava/lang/Long;Ljava/util/Optional;)V",
+                                                  &javaMethod);
+    VerifyOrReturn(err == CHIP_NO_ERROR, ChipLogError(Zcl, "Error invoking Java callback: %s", ErrorStr(err)));
+
+    jobject LastRun;
+    std::string LastRunClassName     = "java/lang/Long";
+    std::string LastRunCtorSignature = "(J)V";
+    jlong jniLastRun                 = static_cast<jlong>(dataResponse.lastRun);
+    chip::JniReferences::GetInstance().CreateBoxedObject<jlong>(LastRunClassName.c_str(), LastRunCtorSignature.c_str(), jniLastRun,
+                                                                LastRun);
+    jobject Patterns;
+    if (!dataResponse.patterns.HasValue())
+    {
+        chip::JniReferences::GetInstance().CreateOptional(nullptr, Patterns);
+    }
+    else
+    {
+        jobject PatternsInsideOptional;
+        std::string PatternsInsideOptionalClassName     = "java/lang/Long";
+        std::string PatternsInsideOptionalCtorSignature = "(J)V";
+        jlong jniPatternsInsideOptional                 = static_cast<jlong>(dataResponse.patterns.Value());
+        chip::JniReferences::GetInstance().CreateBoxedObject<jlong>(PatternsInsideOptionalClassName.c_str(),
+                                                                    PatternsInsideOptionalCtorSignature.c_str(),
+                                                                    jniPatternsInsideOptional, PatternsInsideOptional);
+        chip::JniReferences::GetInstance().CreateOptional(PatternsInsideOptional, Patterns);
+    }
+
+    env->CallVoidMethod(javaCallbackRef, javaMethod, LastRun, Patterns);
+}
 CHIPUnitTestingClusterTestSpecificResponseCallback::CHIPUnitTestingClusterTestSpecificResponseCallback(jobject javaCallback) :
     Callback::Callback<CHIPUnitTestingClusterTestSpecificResponseCallbackType>(CallbackFn, this)
 {

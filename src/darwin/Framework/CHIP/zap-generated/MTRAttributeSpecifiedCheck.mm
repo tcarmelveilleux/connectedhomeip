@@ -5675,6 +5675,60 @@ static BOOL AttributeIsSpecifiedInElectricalMeasurementCluster(AttributeId aAttr
     }
     }
 }
+static BOOL AttributeIsSpecifiedInDiscoBallCluster(AttributeId aAttributeId)
+{
+    using namespace Clusters::DiscoBall;
+    switch (aAttributeId) {
+    case Attributes::Run::Id: {
+        return YES;
+    }
+    case Attributes::Rotate::Id: {
+        return YES;
+    }
+    case Attributes::Speed::Id: {
+        return YES;
+    }
+    case Attributes::Axis::Id: {
+        return YES;
+    }
+    case Attributes::WobbleSpeed::Id: {
+        return YES;
+    }
+    case Attributes::PatternPatternPattern::Id: {
+        return YES;
+    }
+    case Attributes::NameNameName::Id: {
+        return YES;
+    }
+    case Attributes::WobbleSupport::Id: {
+        return YES;
+    }
+    case Attributes::WobbleSettingWobbleSettingWobbleSetting::Id: {
+        return YES;
+    }
+    case Attributes::GeneratedCommandList::Id: {
+        return YES;
+    }
+    case Attributes::AcceptedCommandList::Id: {
+        return YES;
+    }
+    case Attributes::EventList::Id: {
+        return YES;
+    }
+    case Attributes::AttributeList::Id: {
+        return YES;
+    }
+    case Attributes::FeatureMap::Id: {
+        return YES;
+    }
+    case Attributes::ClusterRevision::Id: {
+        return YES;
+    }
+    default: {
+        return NO;
+    }
+    }
+}
 static BOOL AttributeIsSpecifiedInUnitTestingCluster(AttributeId aAttributeId)
 {
     using namespace Clusters::UnitTesting;
@@ -6287,6 +6341,9 @@ BOOL MTRAttributeIsSpecified(ClusterId aClusterId, AttributeId aAttributeId)
     }
     case Clusters::ElectricalMeasurement::Id: {
         return AttributeIsSpecifiedInElectricalMeasurementCluster(aAttributeId);
+    }
+    case Clusters::DiscoBall::Id: {
+        return AttributeIsSpecifiedInDiscoBallCluster(aAttributeId);
     }
     case Clusters::UnitTesting::Id: {
         return AttributeIsSpecifiedInUnitTestingCluster(aAttributeId);

@@ -547,6 +547,24 @@ static constexpr EventId Id = 0x00000010;
 } // namespace Events
 } // namespace PumpConfigurationAndControl
 
+namespace DiscoBall {
+namespace Events {
+
+namespace Started {
+static constexpr EventId Id = 0x00000000;
+} // namespace Started
+
+namespace Stopped {
+static constexpr EventId Id = 0x00000001;
+} // namespace Stopped
+
+namespace PatternChange {
+static constexpr EventId Id = 0x00000002;
+} // namespace PatternChange
+
+} // namespace Events
+} // namespace DiscoBall
+
 namespace UnitTesting {
 namespace Events {
 

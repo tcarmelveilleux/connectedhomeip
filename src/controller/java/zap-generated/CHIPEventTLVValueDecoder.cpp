@@ -5976,6 +5976,424 @@ jobject DecodeEventValue(const app::ConcreteEventPath & aPath, TLV::TLVReader & 
         }
         break;
     }
+    case app::Clusters::DiscoBall::Id: {
+        using namespace app::Clusters::DiscoBall;
+        switch (aPath.mEventId)
+        {
+        case Events::Started::Id: {
+            Events::Started::DecodableType cppValue;
+            *aError = app::DataModel::Decode(aReader, cppValue);
+            if (*aError != CHIP_NO_ERROR)
+            {
+                return nullptr;
+            }
+            jclass startedStructClass;
+            err = chip::JniReferences::GetInstance().GetClassRef(
+                env, "chip/devicecontroller/ChipEventStructs$DiscoBallClusterStartedEvent", startedStructClass);
+            if (err != CHIP_NO_ERROR)
+            {
+                ChipLogError(Zcl, "Could not find class ChipEventStructs$DiscoBallClusterStartedEvent");
+                return nullptr;
+            }
+            jmethodID startedStructCtor = env->GetMethodID(startedStructClass, "<init>", "()V");
+            if (startedStructCtor == nullptr)
+            {
+                ChipLogError(Zcl, "Could not find ChipEventStructs$DiscoBallClusterStartedEvent constructor");
+                return nullptr;
+            }
+
+            jobject value = env->NewObject(startedStructClass, startedStructCtor);
+
+            return value;
+        }
+        case Events::Stopped::Id: {
+            Events::Stopped::DecodableType cppValue;
+            *aError = app::DataModel::Decode(aReader, cppValue);
+            if (*aError != CHIP_NO_ERROR)
+            {
+                return nullptr;
+            }
+            jclass stoppedStructClass;
+            err = chip::JniReferences::GetInstance().GetClassRef(
+                env, "chip/devicecontroller/ChipEventStructs$DiscoBallClusterStoppedEvent", stoppedStructClass);
+            if (err != CHIP_NO_ERROR)
+            {
+                ChipLogError(Zcl, "Could not find class ChipEventStructs$DiscoBallClusterStoppedEvent");
+                return nullptr;
+            }
+            jmethodID stoppedStructCtor = env->GetMethodID(stoppedStructClass, "<init>", "()V");
+            if (stoppedStructCtor == nullptr)
+            {
+                ChipLogError(Zcl, "Could not find ChipEventStructs$DiscoBallClusterStoppedEvent constructor");
+                return nullptr;
+            }
+
+            jobject value = env->NewObject(stoppedStructClass, stoppedStructCtor);
+
+            return value;
+        }
+        case Events::PatternChange::Id: {
+            Events::PatternChange::DecodableType cppValue;
+            *aError = app::DataModel::Decode(aReader, cppValue);
+            if (*aError != CHIP_NO_ERROR)
+            {
+                return nullptr;
+            }
+            jobject value_prevPattern;
+            if (cppValue.prevPattern.IsNull())
+            {
+                value_prevPattern = nullptr;
+            }
+            else
+            {
+                jobject value_prevPattern_duration;
+                std::string value_prevPattern_durationClassName     = "java/lang/Integer";
+                std::string value_prevPattern_durationCtorSignature = "(I)V";
+                jint jnivalue_prevPattern_duration                  = static_cast<jint>(cppValue.prevPattern.Value().duration);
+                chip::JniReferences::GetInstance().CreateBoxedObject<jint>(
+                    value_prevPattern_durationClassName.c_str(), value_prevPattern_durationCtorSignature.c_str(),
+                    jnivalue_prevPattern_duration, value_prevPattern_duration);
+                jobject value_prevPattern_rotate;
+                if (cppValue.prevPattern.Value().rotate.IsNull())
+                {
+                    value_prevPattern_rotate = nullptr;
+                }
+                else
+                {
+                    std::string value_prevPattern_rotateClassName     = "java/lang/Integer";
+                    std::string value_prevPattern_rotateCtorSignature = "(I)V";
+                    jint jnivalue_prevPattern_rotate = static_cast<jint>(cppValue.prevPattern.Value().rotate.Value());
+                    chip::JniReferences::GetInstance().CreateBoxedObject<jint>(
+                        value_prevPattern_rotateClassName.c_str(), value_prevPattern_rotateCtorSignature.c_str(),
+                        jnivalue_prevPattern_rotate, value_prevPattern_rotate);
+                }
+                jobject value_prevPattern_speed;
+                if (cppValue.prevPattern.Value().speed.IsNull())
+                {
+                    value_prevPattern_speed = nullptr;
+                }
+                else
+                {
+                    std::string value_prevPattern_speedClassName     = "java/lang/Integer";
+                    std::string value_prevPattern_speedCtorSignature = "(I)V";
+                    jint jnivalue_prevPattern_speed = static_cast<jint>(cppValue.prevPattern.Value().speed.Value());
+                    chip::JniReferences::GetInstance().CreateBoxedObject<jint>(value_prevPattern_speedClassName.c_str(),
+                                                                               value_prevPattern_speedCtorSignature.c_str(),
+                                                                               jnivalue_prevPattern_speed, value_prevPattern_speed);
+                }
+                jobject value_prevPattern_axis;
+                if (cppValue.prevPattern.Value().axis.IsNull())
+                {
+                    value_prevPattern_axis = nullptr;
+                }
+                else
+                {
+                    std::string value_prevPattern_axisClassName     = "java/lang/Integer";
+                    std::string value_prevPattern_axisCtorSignature = "(I)V";
+                    jint jnivalue_prevPattern_axis                  = static_cast<jint>(cppValue.prevPattern.Value().axis.Value());
+                    chip::JniReferences::GetInstance().CreateBoxedObject<jint>(value_prevPattern_axisClassName.c_str(),
+                                                                               value_prevPattern_axisCtorSignature.c_str(),
+                                                                               jnivalue_prevPattern_axis, value_prevPattern_axis);
+                }
+                jobject value_prevPattern_wobbleSpeed;
+                if (cppValue.prevPattern.Value().wobbleSpeed.IsNull())
+                {
+                    value_prevPattern_wobbleSpeed = nullptr;
+                }
+                else
+                {
+                    std::string value_prevPattern_wobbleSpeedClassName     = "java/lang/Integer";
+                    std::string value_prevPattern_wobbleSpeedCtorSignature = "(I)V";
+                    jint jnivalue_prevPattern_wobbleSpeed = static_cast<jint>(cppValue.prevPattern.Value().wobbleSpeed.Value());
+                    chip::JniReferences::GetInstance().CreateBoxedObject<jint>(
+                        value_prevPattern_wobbleSpeedClassName.c_str(), value_prevPattern_wobbleSpeedCtorSignature.c_str(),
+                        jnivalue_prevPattern_wobbleSpeed, value_prevPattern_wobbleSpeed);
+                }
+                jobject value_prevPattern_passcode;
+                if (cppValue.prevPattern.Value().passcode.IsNull())
+                {
+                    value_prevPattern_passcode = nullptr;
+                }
+                else
+                {
+                    LogErrorOnFailure(chip::JniReferences::GetInstance().CharToStringUTF(
+                        cppValue.prevPattern.Value().passcode.Value(), value_prevPattern_passcode));
+                }
+
+                jclass patternStructStructClass_1;
+                err = chip::JniReferences::GetInstance().GetClassRef(
+                    env, "chip/devicecontroller/ChipStructs$DiscoBallClusterPatternStruct", patternStructStructClass_1);
+                if (err != CHIP_NO_ERROR)
+                {
+                    ChipLogError(Zcl, "Could not find class ChipStructs$DiscoBallClusterPatternStruct");
+                    return nullptr;
+                }
+                jmethodID patternStructStructCtor_1 =
+                    env->GetMethodID(patternStructStructClass_1, "<init>",
+                                     "(Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/"
+                                     "Integer;Ljava/lang/String;)V");
+                if (patternStructStructCtor_1 == nullptr)
+                {
+                    ChipLogError(Zcl, "Could not find ChipStructs$DiscoBallClusterPatternStruct constructor");
+                    return nullptr;
+                }
+
+                value_prevPattern = env->NewObject(
+                    patternStructStructClass_1, patternStructStructCtor_1, value_prevPattern_duration, value_prevPattern_rotate,
+                    value_prevPattern_speed, value_prevPattern_axis, value_prevPattern_wobbleSpeed, value_prevPattern_passcode);
+            }
+
+            jobject value_curPattern;
+            jobject value_curPattern_duration;
+            std::string value_curPattern_durationClassName     = "java/lang/Integer";
+            std::string value_curPattern_durationCtorSignature = "(I)V";
+            jint jnivalue_curPattern_duration                  = static_cast<jint>(cppValue.curPattern.duration);
+            chip::JniReferences::GetInstance().CreateBoxedObject<jint>(value_curPattern_durationClassName.c_str(),
+                                                                       value_curPattern_durationCtorSignature.c_str(),
+                                                                       jnivalue_curPattern_duration, value_curPattern_duration);
+            jobject value_curPattern_rotate;
+            if (cppValue.curPattern.rotate.IsNull())
+            {
+                value_curPattern_rotate = nullptr;
+            }
+            else
+            {
+                std::string value_curPattern_rotateClassName     = "java/lang/Integer";
+                std::string value_curPattern_rotateCtorSignature = "(I)V";
+                jint jnivalue_curPattern_rotate                  = static_cast<jint>(cppValue.curPattern.rotate.Value());
+                chip::JniReferences::GetInstance().CreateBoxedObject<jint>(value_curPattern_rotateClassName.c_str(),
+                                                                           value_curPattern_rotateCtorSignature.c_str(),
+                                                                           jnivalue_curPattern_rotate, value_curPattern_rotate);
+            }
+            jobject value_curPattern_speed;
+            if (cppValue.curPattern.speed.IsNull())
+            {
+                value_curPattern_speed = nullptr;
+            }
+            else
+            {
+                std::string value_curPattern_speedClassName     = "java/lang/Integer";
+                std::string value_curPattern_speedCtorSignature = "(I)V";
+                jint jnivalue_curPattern_speed                  = static_cast<jint>(cppValue.curPattern.speed.Value());
+                chip::JniReferences::GetInstance().CreateBoxedObject<jint>(value_curPattern_speedClassName.c_str(),
+                                                                           value_curPattern_speedCtorSignature.c_str(),
+                                                                           jnivalue_curPattern_speed, value_curPattern_speed);
+            }
+            jobject value_curPattern_axis;
+            if (cppValue.curPattern.axis.IsNull())
+            {
+                value_curPattern_axis = nullptr;
+            }
+            else
+            {
+                std::string value_curPattern_axisClassName     = "java/lang/Integer";
+                std::string value_curPattern_axisCtorSignature = "(I)V";
+                jint jnivalue_curPattern_axis                  = static_cast<jint>(cppValue.curPattern.axis.Value());
+                chip::JniReferences::GetInstance().CreateBoxedObject<jint>(value_curPattern_axisClassName.c_str(),
+                                                                           value_curPattern_axisCtorSignature.c_str(),
+                                                                           jnivalue_curPattern_axis, value_curPattern_axis);
+            }
+            jobject value_curPattern_wobbleSpeed;
+            if (cppValue.curPattern.wobbleSpeed.IsNull())
+            {
+                value_curPattern_wobbleSpeed = nullptr;
+            }
+            else
+            {
+                std::string value_curPattern_wobbleSpeedClassName     = "java/lang/Integer";
+                std::string value_curPattern_wobbleSpeedCtorSignature = "(I)V";
+                jint jnivalue_curPattern_wobbleSpeed                  = static_cast<jint>(cppValue.curPattern.wobbleSpeed.Value());
+                chip::JniReferences::GetInstance().CreateBoxedObject<jint>(
+                    value_curPattern_wobbleSpeedClassName.c_str(), value_curPattern_wobbleSpeedCtorSignature.c_str(),
+                    jnivalue_curPattern_wobbleSpeed, value_curPattern_wobbleSpeed);
+            }
+            jobject value_curPattern_passcode;
+            if (cppValue.curPattern.passcode.IsNull())
+            {
+                value_curPattern_passcode = nullptr;
+            }
+            else
+            {
+                LogErrorOnFailure(chip::JniReferences::GetInstance().CharToStringUTF(cppValue.curPattern.passcode.Value(),
+                                                                                     value_curPattern_passcode));
+            }
+
+            jclass patternStructStructClass_0;
+            err = chip::JniReferences::GetInstance().GetClassRef(
+                env, "chip/devicecontroller/ChipStructs$DiscoBallClusterPatternStruct", patternStructStructClass_0);
+            if (err != CHIP_NO_ERROR)
+            {
+                ChipLogError(Zcl, "Could not find class ChipStructs$DiscoBallClusterPatternStruct");
+                return nullptr;
+            }
+            jmethodID patternStructStructCtor_0 =
+                env->GetMethodID(patternStructStructClass_0, "<init>",
+                                 "(Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/"
+                                 "Integer;Ljava/lang/String;)V");
+            if (patternStructStructCtor_0 == nullptr)
+            {
+                ChipLogError(Zcl, "Could not find ChipStructs$DiscoBallClusterPatternStruct constructor");
+                return nullptr;
+            }
+
+            value_curPattern = env->NewObject(patternStructStructClass_0, patternStructStructCtor_0, value_curPattern_duration,
+                                              value_curPattern_rotate, value_curPattern_speed, value_curPattern_axis,
+                                              value_curPattern_wobbleSpeed, value_curPattern_passcode);
+
+            jobject value_nextPattern;
+            if (cppValue.nextPattern.IsNull())
+            {
+                value_nextPattern = nullptr;
+            }
+            else
+            {
+                jobject value_nextPattern_duration;
+                std::string value_nextPattern_durationClassName     = "java/lang/Integer";
+                std::string value_nextPattern_durationCtorSignature = "(I)V";
+                jint jnivalue_nextPattern_duration                  = static_cast<jint>(cppValue.nextPattern.Value().duration);
+                chip::JniReferences::GetInstance().CreateBoxedObject<jint>(
+                    value_nextPattern_durationClassName.c_str(), value_nextPattern_durationCtorSignature.c_str(),
+                    jnivalue_nextPattern_duration, value_nextPattern_duration);
+                jobject value_nextPattern_rotate;
+                if (cppValue.nextPattern.Value().rotate.IsNull())
+                {
+                    value_nextPattern_rotate = nullptr;
+                }
+                else
+                {
+                    std::string value_nextPattern_rotateClassName     = "java/lang/Integer";
+                    std::string value_nextPattern_rotateCtorSignature = "(I)V";
+                    jint jnivalue_nextPattern_rotate = static_cast<jint>(cppValue.nextPattern.Value().rotate.Value());
+                    chip::JniReferences::GetInstance().CreateBoxedObject<jint>(
+                        value_nextPattern_rotateClassName.c_str(), value_nextPattern_rotateCtorSignature.c_str(),
+                        jnivalue_nextPattern_rotate, value_nextPattern_rotate);
+                }
+                jobject value_nextPattern_speed;
+                if (cppValue.nextPattern.Value().speed.IsNull())
+                {
+                    value_nextPattern_speed = nullptr;
+                }
+                else
+                {
+                    std::string value_nextPattern_speedClassName     = "java/lang/Integer";
+                    std::string value_nextPattern_speedCtorSignature = "(I)V";
+                    jint jnivalue_nextPattern_speed = static_cast<jint>(cppValue.nextPattern.Value().speed.Value());
+                    chip::JniReferences::GetInstance().CreateBoxedObject<jint>(value_nextPattern_speedClassName.c_str(),
+                                                                               value_nextPattern_speedCtorSignature.c_str(),
+                                                                               jnivalue_nextPattern_speed, value_nextPattern_speed);
+                }
+                jobject value_nextPattern_axis;
+                if (cppValue.nextPattern.Value().axis.IsNull())
+                {
+                    value_nextPattern_axis = nullptr;
+                }
+                else
+                {
+                    std::string value_nextPattern_axisClassName     = "java/lang/Integer";
+                    std::string value_nextPattern_axisCtorSignature = "(I)V";
+                    jint jnivalue_nextPattern_axis                  = static_cast<jint>(cppValue.nextPattern.Value().axis.Value());
+                    chip::JniReferences::GetInstance().CreateBoxedObject<jint>(value_nextPattern_axisClassName.c_str(),
+                                                                               value_nextPattern_axisCtorSignature.c_str(),
+                                                                               jnivalue_nextPattern_axis, value_nextPattern_axis);
+                }
+                jobject value_nextPattern_wobbleSpeed;
+                if (cppValue.nextPattern.Value().wobbleSpeed.IsNull())
+                {
+                    value_nextPattern_wobbleSpeed = nullptr;
+                }
+                else
+                {
+                    std::string value_nextPattern_wobbleSpeedClassName     = "java/lang/Integer";
+                    std::string value_nextPattern_wobbleSpeedCtorSignature = "(I)V";
+                    jint jnivalue_nextPattern_wobbleSpeed = static_cast<jint>(cppValue.nextPattern.Value().wobbleSpeed.Value());
+                    chip::JniReferences::GetInstance().CreateBoxedObject<jint>(
+                        value_nextPattern_wobbleSpeedClassName.c_str(), value_nextPattern_wobbleSpeedCtorSignature.c_str(),
+                        jnivalue_nextPattern_wobbleSpeed, value_nextPattern_wobbleSpeed);
+                }
+                jobject value_nextPattern_passcode;
+                if (cppValue.nextPattern.Value().passcode.IsNull())
+                {
+                    value_nextPattern_passcode = nullptr;
+                }
+                else
+                {
+                    LogErrorOnFailure(chip::JniReferences::GetInstance().CharToStringUTF(
+                        cppValue.nextPattern.Value().passcode.Value(), value_nextPattern_passcode));
+                }
+
+                jclass patternStructStructClass_1;
+                err = chip::JniReferences::GetInstance().GetClassRef(
+                    env, "chip/devicecontroller/ChipStructs$DiscoBallClusterPatternStruct", patternStructStructClass_1);
+                if (err != CHIP_NO_ERROR)
+                {
+                    ChipLogError(Zcl, "Could not find class ChipStructs$DiscoBallClusterPatternStruct");
+                    return nullptr;
+                }
+                jmethodID patternStructStructCtor_1 =
+                    env->GetMethodID(patternStructStructClass_1, "<init>",
+                                     "(Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/"
+                                     "Integer;Ljava/lang/String;)V");
+                if (patternStructStructCtor_1 == nullptr)
+                {
+                    ChipLogError(Zcl, "Could not find ChipStructs$DiscoBallClusterPatternStruct constructor");
+                    return nullptr;
+                }
+
+                value_nextPattern = env->NewObject(
+                    patternStructStructClass_1, patternStructStructCtor_1, value_nextPattern_duration, value_nextPattern_rotate,
+                    value_nextPattern_speed, value_nextPattern_axis, value_nextPattern_wobbleSpeed, value_nextPattern_passcode);
+            }
+
+            jobject value_label;
+            if (!cppValue.label.HasValue())
+            {
+                chip::JniReferences::GetInstance().CreateOptional(nullptr, value_label);
+            }
+            else
+            {
+                jobject value_labelInsideOptional;
+                if (cppValue.label.Value().IsNull())
+                {
+                    value_labelInsideOptional = nullptr;
+                }
+                else
+                {
+                    LogErrorOnFailure(chip::JniReferences::GetInstance().CharToStringUTF(cppValue.label.Value().Value(),
+                                                                                         value_labelInsideOptional));
+                }
+                chip::JniReferences::GetInstance().CreateOptional(value_labelInsideOptional, value_label);
+            }
+
+            jclass patternChangeStructClass;
+            err = chip::JniReferences::GetInstance().GetClassRef(
+                env, "chip/devicecontroller/ChipEventStructs$DiscoBallClusterPatternChangeEvent", patternChangeStructClass);
+            if (err != CHIP_NO_ERROR)
+            {
+                ChipLogError(Zcl, "Could not find class ChipEventStructs$DiscoBallClusterPatternChangeEvent");
+                return nullptr;
+            }
+            jmethodID patternChangeStructCtor =
+                env->GetMethodID(patternChangeStructClass, "<init>",
+                                 "(Lchip/devicecontroller/ChipStructs$DiscoBallClusterPatternStruct;Lchip/devicecontroller/"
+                                 "ChipStructs$DiscoBallClusterPatternStruct;Lchip/devicecontroller/"
+                                 "ChipStructs$DiscoBallClusterPatternStruct;Ljava/util/Optional;)V");
+            if (patternChangeStructCtor == nullptr)
+            {
+                ChipLogError(Zcl, "Could not find ChipEventStructs$DiscoBallClusterPatternChangeEvent constructor");
+                return nullptr;
+            }
+
+            jobject value = env->NewObject(patternChangeStructClass, patternChangeStructCtor, value_prevPattern, value_curPattern,
+                                           value_nextPattern, value_label);
+
+            return value;
+        }
+        default:
+            *aError = CHIP_ERROR_IM_MALFORMED_EVENT_PATH_IB;
+            break;
+        }
+        break;
+    }
     case app::Clusters::UnitTesting::Id: {
         using namespace app::Clusters::UnitTesting;
         switch (aPath.mEventId)

@@ -6142,6 +6142,130 @@ NS_ASSUME_NONNULL_BEGIN
 @implementation MTRApplicationBasicClusterApplicationBasicApplication : MTRApplicationBasicClusterApplicationStruct
 @end
 
+@implementation MTRDiscoBallClusterPatternStruct
+- (instancetype)init
+{
+    if (self = [super init]) {
+
+        _duration = @(0);
+
+        _rotate = nil;
+
+        _speed = nil;
+
+        _axis = nil;
+
+        _wobbleSpeed = nil;
+
+        _passcode = nil;
+    }
+    return self;
+}
+
+- (id)copyWithZone:(NSZone * _Nullable)zone
+{
+    auto other = [[MTRDiscoBallClusterPatternStruct alloc] init];
+
+    other.duration = self.duration;
+    other.rotate = self.rotate;
+    other.speed = self.speed;
+    other.axis = self.axis;
+    other.wobbleSpeed = self.wobbleSpeed;
+    other.passcode = self.passcode;
+
+    return other;
+}
+
+- (NSString *)description
+{
+    NSString * descriptionString = [NSString stringWithFormat:@"<%@: duration:%@; rotate:%@; speed:%@; axis:%@; wobbleSpeed:%@; passcode:%@; >", NSStringFromClass([self class]), _duration, _rotate, _speed, _axis, _wobbleSpeed, _passcode];
+    return descriptionString;
+}
+
+@end
+
+@implementation MTRDiscoBallClusterStartedEvent
+- (instancetype)init
+{
+    if (self = [super init]) {
+    }
+    return self;
+}
+
+- (id)copyWithZone:(NSZone * _Nullable)zone
+{
+    auto other = [[MTRDiscoBallClusterStartedEvent alloc] init];
+
+    return other;
+}
+
+- (NSString *)description
+{
+    NSString * descriptionString = [NSString stringWithFormat:@"<%@: >", NSStringFromClass([self class])];
+    return descriptionString;
+}
+
+@end
+
+@implementation MTRDiscoBallClusterStoppedEvent
+- (instancetype)init
+{
+    if (self = [super init]) {
+    }
+    return self;
+}
+
+- (id)copyWithZone:(NSZone * _Nullable)zone
+{
+    auto other = [[MTRDiscoBallClusterStoppedEvent alloc] init];
+
+    return other;
+}
+
+- (NSString *)description
+{
+    NSString * descriptionString = [NSString stringWithFormat:@"<%@: >", NSStringFromClass([self class])];
+    return descriptionString;
+}
+
+@end
+
+@implementation MTRDiscoBallClusterPatternChangeEvent
+- (instancetype)init
+{
+    if (self = [super init]) {
+
+        _prevPattern = nil;
+
+        _curPattern = [MTRDiscoBallClusterPatternStruct new];
+
+        _nextPattern = nil;
+
+        _label = nil;
+    }
+    return self;
+}
+
+- (id)copyWithZone:(NSZone * _Nullable)zone
+{
+    auto other = [[MTRDiscoBallClusterPatternChangeEvent alloc] init];
+
+    other.prevPattern = self.prevPattern;
+    other.curPattern = self.curPattern;
+    other.nextPattern = self.nextPattern;
+    other.label = self.label;
+
+    return other;
+}
+
+- (NSString *)description
+{
+    NSString * descriptionString = [NSString stringWithFormat:@"<%@: prevPattern:%@; curPattern:%@; nextPattern:%@; label:%@; >", NSStringFromClass([self class]), _prevPattern, _curPattern, _nextPattern, _label];
+    return descriptionString;
+}
+
+@end
+
 @implementation MTRUnitTestingClusterSimpleStruct
 - (instancetype)init
 {

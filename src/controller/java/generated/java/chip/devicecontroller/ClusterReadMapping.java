@@ -17836,6 +17836,175 @@ public class ClusterReadMapping {
      
        return result;
     }
+    private static Map<String, InteractionInfo> readDiscoBallInteractionInfo() {
+       Map<String, InteractionInfo> result = new LinkedHashMap<>();Map<String, CommandParameterInfo> readDiscoBallRunCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallRunAttributeInteractionInfo = new InteractionInfo(
+          (cluster, callback, commandArguments) -> {
+            ((ChipClusters.DiscoBallCluster) cluster).readRunAttribute(
+              (ChipClusters.BooleanAttributeCallback) callback
+            );
+          },
+          () -> new ClusterInfoMapping.DelegatedBooleanAttributeCallback(),
+          readDiscoBallRunCommandParams
+        );
+        result.put("readRunAttribute", readDiscoBallRunAttributeInteractionInfo);
+     Map<String, CommandParameterInfo> readDiscoBallRotateCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallRotateAttributeInteractionInfo = new InteractionInfo(
+          (cluster, callback, commandArguments) -> {
+            ((ChipClusters.DiscoBallCluster) cluster).readRotateAttribute(
+              (ChipClusters.IntegerAttributeCallback) callback
+            );
+          },
+          () -> new ClusterInfoMapping.DelegatedIntegerAttributeCallback(),
+          readDiscoBallRotateCommandParams
+        );
+        result.put("readRotateAttribute", readDiscoBallRotateAttributeInteractionInfo);
+     Map<String, CommandParameterInfo> readDiscoBallSpeedCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallSpeedAttributeInteractionInfo = new InteractionInfo(
+          (cluster, callback, commandArguments) -> {
+            ((ChipClusters.DiscoBallCluster) cluster).readSpeedAttribute(
+              (ChipClusters.IntegerAttributeCallback) callback
+            );
+          },
+          () -> new ClusterInfoMapping.DelegatedIntegerAttributeCallback(),
+          readDiscoBallSpeedCommandParams
+        );
+        result.put("readSpeedAttribute", readDiscoBallSpeedAttributeInteractionInfo);
+     Map<String, CommandParameterInfo> readDiscoBallAxisCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallAxisAttributeInteractionInfo = new InteractionInfo(
+          (cluster, callback, commandArguments) -> {
+            ((ChipClusters.DiscoBallCluster) cluster).readAxisAttribute(
+              (ChipClusters.IntegerAttributeCallback) callback
+            );
+          },
+          () -> new ClusterInfoMapping.DelegatedIntegerAttributeCallback(),
+          readDiscoBallAxisCommandParams
+        );
+        result.put("readAxisAttribute", readDiscoBallAxisAttributeInteractionInfo);
+     Map<String, CommandParameterInfo> readDiscoBallWobbleSpeedCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallWobbleSpeedAttributeInteractionInfo = new InteractionInfo(
+          (cluster, callback, commandArguments) -> {
+            ((ChipClusters.DiscoBallCluster) cluster).readWobbleSpeedAttribute(
+              (ChipClusters.IntegerAttributeCallback) callback
+            );
+          },
+          () -> new ClusterInfoMapping.DelegatedIntegerAttributeCallback(),
+          readDiscoBallWobbleSpeedCommandParams
+        );
+        result.put("readWobbleSpeedAttribute", readDiscoBallWobbleSpeedAttributeInteractionInfo);
+     Map<String, CommandParameterInfo> readDiscoBallPatternPatternPatternCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallPatternPatternPatternAttributeInteractionInfo = new InteractionInfo(
+          (cluster, callback, commandArguments) -> {
+            ((ChipClusters.DiscoBallCluster) cluster).readPatternPatternPatternAttribute(
+              (ChipClusters.DiscoBallCluster.PatternPatternPatternAttributeCallback) callback
+            );
+          },
+          () -> new ClusterInfoMapping.DelegatedDiscoBallClusterPatternPatternPatternAttributeCallback(),
+          readDiscoBallPatternPatternPatternCommandParams
+        );
+        result.put("readPatternPatternPatternAttribute", readDiscoBallPatternPatternPatternAttributeInteractionInfo);
+     Map<String, CommandParameterInfo> readDiscoBallNameNameNameCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallNameNameNameAttributeInteractionInfo = new InteractionInfo(
+          (cluster, callback, commandArguments) -> {
+            ((ChipClusters.DiscoBallCluster) cluster).readNameNameNameAttribute(
+              (ChipClusters.CharStringAttributeCallback) callback
+            );
+          },
+          () -> new ClusterInfoMapping.DelegatedCharStringAttributeCallback(),
+          readDiscoBallNameNameNameCommandParams
+        );
+        result.put("readNameNameNameAttribute", readDiscoBallNameNameNameAttributeInteractionInfo);
+     Map<String, CommandParameterInfo> readDiscoBallWobbleSupportCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallWobbleSupportAttributeInteractionInfo = new InteractionInfo(
+          (cluster, callback, commandArguments) -> {
+            ((ChipClusters.DiscoBallCluster) cluster).readWobbleSupportAttribute(
+              (ChipClusters.IntegerAttributeCallback) callback
+            );
+          },
+          () -> new ClusterInfoMapping.DelegatedIntegerAttributeCallback(),
+          readDiscoBallWobbleSupportCommandParams
+        );
+        result.put("readWobbleSupportAttribute", readDiscoBallWobbleSupportAttributeInteractionInfo);
+     Map<String, CommandParameterInfo> readDiscoBallWobbleSettingWobbleSettingWobbleSettingCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallWobbleSettingWobbleSettingWobbleSettingAttributeInteractionInfo = new InteractionInfo(
+          (cluster, callback, commandArguments) -> {
+            ((ChipClusters.DiscoBallCluster) cluster).readWobbleSettingWobbleSettingWobbleSettingAttribute(
+              (ChipClusters.IntegerAttributeCallback) callback
+            );
+          },
+          () -> new ClusterInfoMapping.DelegatedIntegerAttributeCallback(),
+          readDiscoBallWobbleSettingWobbleSettingWobbleSettingCommandParams
+        );
+        result.put("readWobbleSettingWobbleSettingWobbleSettingAttribute", readDiscoBallWobbleSettingWobbleSettingWobbleSettingAttributeInteractionInfo);
+     Map<String, CommandParameterInfo> readDiscoBallGeneratedCommandListCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallGeneratedCommandListAttributeInteractionInfo = new InteractionInfo(
+          (cluster, callback, commandArguments) -> {
+            ((ChipClusters.DiscoBallCluster) cluster).readGeneratedCommandListAttribute(
+              (ChipClusters.DiscoBallCluster.GeneratedCommandListAttributeCallback) callback
+            );
+          },
+          () -> new ClusterInfoMapping.DelegatedDiscoBallClusterGeneratedCommandListAttributeCallback(),
+          readDiscoBallGeneratedCommandListCommandParams
+        );
+        result.put("readGeneratedCommandListAttribute", readDiscoBallGeneratedCommandListAttributeInteractionInfo);
+     Map<String, CommandParameterInfo> readDiscoBallAcceptedCommandListCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallAcceptedCommandListAttributeInteractionInfo = new InteractionInfo(
+          (cluster, callback, commandArguments) -> {
+            ((ChipClusters.DiscoBallCluster) cluster).readAcceptedCommandListAttribute(
+              (ChipClusters.DiscoBallCluster.AcceptedCommandListAttributeCallback) callback
+            );
+          },
+          () -> new ClusterInfoMapping.DelegatedDiscoBallClusterAcceptedCommandListAttributeCallback(),
+          readDiscoBallAcceptedCommandListCommandParams
+        );
+        result.put("readAcceptedCommandListAttribute", readDiscoBallAcceptedCommandListAttributeInteractionInfo);
+     Map<String, CommandParameterInfo> readDiscoBallEventListCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallEventListAttributeInteractionInfo = new InteractionInfo(
+          (cluster, callback, commandArguments) -> {
+            ((ChipClusters.DiscoBallCluster) cluster).readEventListAttribute(
+              (ChipClusters.DiscoBallCluster.EventListAttributeCallback) callback
+            );
+          },
+          () -> new ClusterInfoMapping.DelegatedDiscoBallClusterEventListAttributeCallback(),
+          readDiscoBallEventListCommandParams
+        );
+        result.put("readEventListAttribute", readDiscoBallEventListAttributeInteractionInfo);
+     Map<String, CommandParameterInfo> readDiscoBallAttributeListCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallAttributeListAttributeInteractionInfo = new InteractionInfo(
+          (cluster, callback, commandArguments) -> {
+            ((ChipClusters.DiscoBallCluster) cluster).readAttributeListAttribute(
+              (ChipClusters.DiscoBallCluster.AttributeListAttributeCallback) callback
+            );
+          },
+          () -> new ClusterInfoMapping.DelegatedDiscoBallClusterAttributeListAttributeCallback(),
+          readDiscoBallAttributeListCommandParams
+        );
+        result.put("readAttributeListAttribute", readDiscoBallAttributeListAttributeInteractionInfo);
+     Map<String, CommandParameterInfo> readDiscoBallFeatureMapCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallFeatureMapAttributeInteractionInfo = new InteractionInfo(
+          (cluster, callback, commandArguments) -> {
+            ((ChipClusters.DiscoBallCluster) cluster).readFeatureMapAttribute(
+              (ChipClusters.LongAttributeCallback) callback
+            );
+          },
+          () -> new ClusterInfoMapping.DelegatedLongAttributeCallback(),
+          readDiscoBallFeatureMapCommandParams
+        );
+        result.put("readFeatureMapAttribute", readDiscoBallFeatureMapAttributeInteractionInfo);
+     Map<String, CommandParameterInfo> readDiscoBallClusterRevisionCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallClusterRevisionAttributeInteractionInfo = new InteractionInfo(
+          (cluster, callback, commandArguments) -> {
+            ((ChipClusters.DiscoBallCluster) cluster).readClusterRevisionAttribute(
+              (ChipClusters.IntegerAttributeCallback) callback
+            );
+          },
+          () -> new ClusterInfoMapping.DelegatedIntegerAttributeCallback(),
+          readDiscoBallClusterRevisionCommandParams
+        );
+        result.put("readClusterRevisionAttribute", readDiscoBallClusterRevisionAttributeInteractionInfo);
+     
+       return result;
+    }
     private static Map<String, InteractionInfo> readUnitTestingInteractionInfo() {
        Map<String, InteractionInfo> result = new LinkedHashMap<>();Map<String, CommandParameterInfo> readUnitTestingBooleanCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
         InteractionInfo readUnitTestingBooleanAttributeInteractionInfo = new InteractionInfo(
@@ -19046,6 +19215,7 @@ public class ClusterReadMapping {
             put("applicationBasic", readApplicationBasicInteractionInfo());
             put("accountLogin", readAccountLoginInteractionInfo());
             put("electricalMeasurement", readElectricalMeasurementInteractionInfo());
+            put("discoBall", readDiscoBallInteractionInfo());
             put("unitTesting", readUnitTestingInteractionInfo());
             put("faultInjection", readFaultInjectionInteractionInfo());
             put("sampleMei", readSampleMeiInteractionInfo());}};

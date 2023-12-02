@@ -4182,6 +4182,97 @@ public static class DoorLockClusterLockUserChangeEvent {
     return output.toString();
   }
 }
+public static class DiscoBallClusterPatternChangeEvent {
+  public @Nullable ChipStructs.DiscoBallClusterPatternStruct prevPattern;
+  public ChipStructs.DiscoBallClusterPatternStruct curPattern;
+  public @Nullable ChipStructs.DiscoBallClusterPatternStruct nextPattern;
+  public @Nullable Optional<String> label;
+  private static final long PREV_PATTERN_ID = 0L;
+  private static final long CUR_PATTERN_ID = 1L;
+  private static final long NEXT_PATTERN_ID = 2L;
+  private static final long LABEL_ID = 3L;
+
+  public DiscoBallClusterPatternChangeEvent(
+    @Nullable ChipStructs.DiscoBallClusterPatternStruct prevPattern,
+    ChipStructs.DiscoBallClusterPatternStruct curPattern,
+    @Nullable ChipStructs.DiscoBallClusterPatternStruct nextPattern,
+    @Nullable Optional<String> label
+  ) {
+    this.prevPattern = prevPattern;
+    this.curPattern = curPattern;
+    this.nextPattern = nextPattern;
+    this.label = label;
+  }
+
+  public StructType encodeTlv() {
+    ArrayList<StructElement> values = new ArrayList<>();
+    values.add(new StructElement(PREV_PATTERN_ID, prevPattern != null ? prevPattern.encodeTlv() : new NullType()));
+    values.add(new StructElement(CUR_PATTERN_ID, curPattern.encodeTlv()));
+    values.add(new StructElement(NEXT_PATTERN_ID, nextPattern != null ? nextPattern.encodeTlv() : new NullType()));
+    values.add(new StructElement(LABEL_ID, label != null ? label.<BaseTLVType>map((nonOptionallabel) -> new StringType(nonOptionallabel)).orElse(new EmptyType()) : new NullType()));
+
+    return new StructType(values);
+  }
+
+  public static DiscoBallClusterPatternChangeEvent decodeTlv(BaseTLVType tlvValue) {
+    if (tlvValue == null || tlvValue.type() != TLVType.Struct) {
+      return null;
+    }
+    @Nullable ChipStructs.DiscoBallClusterPatternStruct prevPattern = null;
+    ChipStructs.DiscoBallClusterPatternStruct curPattern = null;
+    @Nullable ChipStructs.DiscoBallClusterPatternStruct nextPattern = null;
+    @Nullable Optional<String> label = null;
+    for (StructElement element: ((StructType)tlvValue).value()) {
+      if (element.contextTagNum() == PREV_PATTERN_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.Struct) {
+          StructType castingValue = element.value(StructType.class);
+          prevPattern = ChipStructs.DiscoBallClusterPatternStruct.decodeTlv(castingValue);
+        }
+      } else if (element.contextTagNum() == CUR_PATTERN_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.Struct) {
+          StructType castingValue = element.value(StructType.class);
+          curPattern = ChipStructs.DiscoBallClusterPatternStruct.decodeTlv(castingValue);
+        }
+      } else if (element.contextTagNum() == NEXT_PATTERN_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.Struct) {
+          StructType castingValue = element.value(StructType.class);
+          nextPattern = ChipStructs.DiscoBallClusterPatternStruct.decodeTlv(castingValue);
+        }
+      } else if (element.contextTagNum() == LABEL_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.String) {
+          StringType castingValue = element.value(StringType.class);
+          label = Optional.of(castingValue.value(String.class));
+        }
+      }
+    }
+    return new DiscoBallClusterPatternChangeEvent(
+      prevPattern,
+      curPattern,
+      nextPattern,
+      label
+    );
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("DiscoBallClusterPatternChangeEvent {\n");
+    output.append("\tprevPattern: ");
+    output.append(prevPattern);
+    output.append("\n");
+    output.append("\tcurPattern: ");
+    output.append(curPattern);
+    output.append("\n");
+    output.append("\tnextPattern: ");
+    output.append(nextPattern);
+    output.append("\n");
+    output.append("\tlabel: ");
+    output.append(label);
+    output.append("\n");
+    output.append("}\n");
+    return output.toString();
+  }
+}
 public static class UnitTestingClusterTestEventEvent {
   public Integer arg1;
   public Integer arg2;

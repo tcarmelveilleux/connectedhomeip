@@ -405,6 +405,11 @@ static CHIP_ERROR Setup(const char * label, chip::app::Clusters::ApplicationLaun
 
 static void Finalize(chip::app::Clusters::ApplicationLauncher::Structs::ApplicationEPStruct::Type & request);
 
+static CHIP_ERROR Setup(const char * label, chip::app::Clusters::DiscoBall::Structs::PatternStruct::Type & request,
+                        Json::Value & value);
+
+static void Finalize(chip::app::Clusters::DiscoBall::Structs::PatternStruct::Type & request);
+
 static CHIP_ERROR Setup(const char * label, chip::app::Clusters::UnitTesting::Structs::SimpleStruct::Type & request,
                         Json::Value & value);
 

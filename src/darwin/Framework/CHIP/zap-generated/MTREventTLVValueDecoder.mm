@@ -3700,6 +3700,186 @@ static id _Nullable DecodeEventPayloadForElectricalMeasurementCluster(EventId aE
     *aError = CHIP_ERROR_IM_MALFORMED_EVENT_PATH_IB;
     return nil;
 }
+static id _Nullable DecodeEventPayloadForDiscoBallCluster(EventId aEventId, TLV::TLVReader & aReader, CHIP_ERROR * aError)
+{
+    using namespace Clusters::DiscoBall;
+    switch (aEventId) {
+    case Events::Started::Id: {
+        Events::Started::DecodableType cppValue;
+        *aError = DataModel::Decode(aReader, cppValue);
+        if (*aError != CHIP_NO_ERROR) {
+            return nil;
+        }
+
+        __auto_type * value = [MTRDiscoBallClusterStartedEvent new];
+
+        return value;
+    }
+    case Events::Stopped::Id: {
+        Events::Stopped::DecodableType cppValue;
+        *aError = DataModel::Decode(aReader, cppValue);
+        if (*aError != CHIP_NO_ERROR) {
+            return nil;
+        }
+
+        __auto_type * value = [MTRDiscoBallClusterStoppedEvent new];
+
+        return value;
+    }
+    case Events::PatternChange::Id: {
+        Events::PatternChange::DecodableType cppValue;
+        *aError = DataModel::Decode(aReader, cppValue);
+        if (*aError != CHIP_NO_ERROR) {
+            return nil;
+        }
+
+        __auto_type * value = [MTRDiscoBallClusterPatternChangeEvent new];
+
+        do {
+            MTRDiscoBallClusterPatternStruct * _Nullable memberValue;
+            if (cppValue.prevPattern.IsNull()) {
+                memberValue = nil;
+            } else {
+                memberValue = [MTRDiscoBallClusterPatternStruct new];
+                memberValue.duration = [NSNumber numberWithUnsignedShort:cppValue.prevPattern.Value().duration];
+                if (cppValue.prevPattern.Value().rotate.IsNull()) {
+                    memberValue.rotate = nil;
+                } else {
+                    memberValue.rotate = [NSNumber numberWithUnsignedChar:chip::to_underlying(cppValue.prevPattern.Value().rotate.Value())];
+                }
+                if (cppValue.prevPattern.Value().speed.IsNull()) {
+                    memberValue.speed = nil;
+                } else {
+                    memberValue.speed = [NSNumber numberWithUnsignedChar:cppValue.prevPattern.Value().speed.Value()];
+                }
+                if (cppValue.prevPattern.Value().axis.IsNull()) {
+                    memberValue.axis = nil;
+                } else {
+                    memberValue.axis = [NSNumber numberWithUnsignedChar:cppValue.prevPattern.Value().axis.Value()];
+                }
+                if (cppValue.prevPattern.Value().wobbleSpeed.IsNull()) {
+                    memberValue.wobbleSpeed = nil;
+                } else {
+                    memberValue.wobbleSpeed = [NSNumber numberWithUnsignedChar:cppValue.prevPattern.Value().wobbleSpeed.Value()];
+                }
+                if (cppValue.prevPattern.Value().passcode.IsNull()) {
+                    memberValue.passcode = nil;
+                } else {
+                    memberValue.passcode = AsString(cppValue.prevPattern.Value().passcode.Value());
+                    if (memberValue.passcode == nil) {
+                        CHIP_ERROR err = CHIP_ERROR_INVALID_ARGUMENT;
+                        *aError = err;
+                        return nil;
+                    }
+                }
+            }
+            value.prevPattern = memberValue;
+        } while (0);
+        do {
+            MTRDiscoBallClusterPatternStruct * _Nonnull memberValue;
+            memberValue = [MTRDiscoBallClusterPatternStruct new];
+            memberValue.duration = [NSNumber numberWithUnsignedShort:cppValue.curPattern.duration];
+            if (cppValue.curPattern.rotate.IsNull()) {
+                memberValue.rotate = nil;
+            } else {
+                memberValue.rotate = [NSNumber numberWithUnsignedChar:chip::to_underlying(cppValue.curPattern.rotate.Value())];
+            }
+            if (cppValue.curPattern.speed.IsNull()) {
+                memberValue.speed = nil;
+            } else {
+                memberValue.speed = [NSNumber numberWithUnsignedChar:cppValue.curPattern.speed.Value()];
+            }
+            if (cppValue.curPattern.axis.IsNull()) {
+                memberValue.axis = nil;
+            } else {
+                memberValue.axis = [NSNumber numberWithUnsignedChar:cppValue.curPattern.axis.Value()];
+            }
+            if (cppValue.curPattern.wobbleSpeed.IsNull()) {
+                memberValue.wobbleSpeed = nil;
+            } else {
+                memberValue.wobbleSpeed = [NSNumber numberWithUnsignedChar:cppValue.curPattern.wobbleSpeed.Value()];
+            }
+            if (cppValue.curPattern.passcode.IsNull()) {
+                memberValue.passcode = nil;
+            } else {
+                memberValue.passcode = AsString(cppValue.curPattern.passcode.Value());
+                if (memberValue.passcode == nil) {
+                    CHIP_ERROR err = CHIP_ERROR_INVALID_ARGUMENT;
+                    *aError = err;
+                    return nil;
+                }
+            }
+            value.curPattern = memberValue;
+        } while (0);
+        do {
+            MTRDiscoBallClusterPatternStruct * _Nullable memberValue;
+            if (cppValue.nextPattern.IsNull()) {
+                memberValue = nil;
+            } else {
+                memberValue = [MTRDiscoBallClusterPatternStruct new];
+                memberValue.duration = [NSNumber numberWithUnsignedShort:cppValue.nextPattern.Value().duration];
+                if (cppValue.nextPattern.Value().rotate.IsNull()) {
+                    memberValue.rotate = nil;
+                } else {
+                    memberValue.rotate = [NSNumber numberWithUnsignedChar:chip::to_underlying(cppValue.nextPattern.Value().rotate.Value())];
+                }
+                if (cppValue.nextPattern.Value().speed.IsNull()) {
+                    memberValue.speed = nil;
+                } else {
+                    memberValue.speed = [NSNumber numberWithUnsignedChar:cppValue.nextPattern.Value().speed.Value()];
+                }
+                if (cppValue.nextPattern.Value().axis.IsNull()) {
+                    memberValue.axis = nil;
+                } else {
+                    memberValue.axis = [NSNumber numberWithUnsignedChar:cppValue.nextPattern.Value().axis.Value()];
+                }
+                if (cppValue.nextPattern.Value().wobbleSpeed.IsNull()) {
+                    memberValue.wobbleSpeed = nil;
+                } else {
+                    memberValue.wobbleSpeed = [NSNumber numberWithUnsignedChar:cppValue.nextPattern.Value().wobbleSpeed.Value()];
+                }
+                if (cppValue.nextPattern.Value().passcode.IsNull()) {
+                    memberValue.passcode = nil;
+                } else {
+                    memberValue.passcode = AsString(cppValue.nextPattern.Value().passcode.Value());
+                    if (memberValue.passcode == nil) {
+                        CHIP_ERROR err = CHIP_ERROR_INVALID_ARGUMENT;
+                        *aError = err;
+                        return nil;
+                    }
+                }
+            }
+            value.nextPattern = memberValue;
+        } while (0);
+        do {
+            NSString * _Nullable memberValue;
+            if (cppValue.label.HasValue()) {
+                if (cppValue.label.Value().IsNull()) {
+                    memberValue = nil;
+                } else {
+                    memberValue = AsString(cppValue.label.Value().Value());
+                    if (memberValue == nil) {
+                        CHIP_ERROR err = CHIP_ERROR_INVALID_ARGUMENT;
+                        *aError = err;
+                        return nil;
+                    }
+                }
+            } else {
+                memberValue = nil;
+            }
+            value.label = memberValue;
+        } while (0);
+
+        return value;
+    }
+    default: {
+        break;
+    }
+    }
+
+    *aError = CHIP_ERROR_IM_MALFORMED_EVENT_PATH_IB;
+    return nil;
+}
 static id _Nullable DecodeEventPayloadForUnitTestingCluster(EventId aEventId, TLV::TLVReader & aReader, CHIP_ERROR * aError)
 {
     using namespace Clusters::UnitTesting;
@@ -4148,6 +4328,9 @@ id _Nullable MTRDecodeEventPayload(const ConcreteEventPath & aPath, TLV::TLVRead
     }
     case Clusters::ElectricalMeasurement::Id: {
         return DecodeEventPayloadForElectricalMeasurementCluster(aPath.mEventId, aReader, aError);
+    }
+    case Clusters::DiscoBall::Id: {
+        return DecodeEventPayloadForDiscoBallCluster(aPath.mEventId, aReader, aError);
     }
     case Clusters::UnitTesting::Id: {
         return DecodeEventPayloadForUnitTestingCluster(aPath.mEventId, aReader, aError);

@@ -1511,6 +1511,40 @@ static constexpr CommandId Id = 0x00000001;
 } // namespace Commands
 } // namespace ElectricalMeasurement
 
+namespace DiscoBall {
+namespace Commands {
+
+namespace StartRequest {
+static constexpr CommandId Id = 0x00000000;
+} // namespace StartRequest
+
+namespace StopRequest {
+static constexpr CommandId Id = 0x00000001;
+} // namespace StopRequest
+
+namespace ReverseRequest {
+static constexpr CommandId Id = 0x00000002;
+} // namespace ReverseRequest
+
+namespace WobbleRequest {
+static constexpr CommandId Id = 0x00000003;
+} // namespace WobbleRequest
+
+namespace PatternRequest {
+static constexpr CommandId Id = 0x00000004;
+} // namespace PatternRequest
+
+namespace StatsRequest {
+static constexpr CommandId Id = 0x00000005;
+} // namespace StatsRequest
+
+namespace StatsResponse {
+static constexpr CommandId Id = 0x00000006;
+} // namespace StatsResponse
+
+} // namespace Commands
+} // namespace DiscoBall
+
 namespace UnitTesting {
 namespace Commands {
 

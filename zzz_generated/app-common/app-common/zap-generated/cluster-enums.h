@@ -4521,6 +4521,51 @@ namespace AccountLogin {} // namespace AccountLogin
 
 namespace ElectricalMeasurement {} // namespace ElectricalMeasurement
 
+namespace DiscoBall {
+
+// Enum for RotateEnum
+enum class RotateEnum : uint8_t
+{
+    kClockwise        = 0x01,
+    kCounterClockwise = 0x02,
+    // All received enum values that are not listed above will be mapped
+    // to kUnknownEnumValue. This is a helper enum value that should only
+    // be used by code to process how it handles receiving and unknown
+    // enum value. This specific should never be transmitted.
+    kUnknownEnumValue = 0,
+};
+
+// Enum for StatusCode
+enum class StatusCode : uint8_t
+{
+    kUnsupportedPattern = 0x02,
+    // All received enum values that are not listed above will be mapped
+    // to kUnknownEnumValue. This is a helper enum value that should only
+    // be used by code to process how it handles receiving and unknown
+    // enum value. This specific should never be transmitted.
+    kUnknownEnumValue = 0,
+};
+
+// Bitmap for Feature
+enum class Feature : uint32_t
+{
+    kParty      = 0x1,
+    kAxis       = 0x2,
+    kWobble     = 0x4,
+    kPattern    = 0x8,
+    kStatistics = 0x10,
+    kReverse    = 0x20,
+};
+
+// Bitmap for WobbleBitmap
+enum class WobbleBitmap : uint8_t
+{
+    kWobbleLeftRight = 0x1,
+    kWobbleUpDown    = 0x2,
+    kWobbleRound     = 0x4,
+};
+} // namespace DiscoBall
+
 namespace UnitTesting {
 
 // Enum for SimpleEnum

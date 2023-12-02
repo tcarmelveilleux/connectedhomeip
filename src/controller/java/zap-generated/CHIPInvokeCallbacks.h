@@ -901,6 +901,19 @@ private:
     jobject javaCallbackRef;
 };
 
+class CHIPDiscoBallClusterStatsResponseCallback : public Callback::Callback<CHIPDiscoBallClusterStatsResponseCallbackType>
+{
+public:
+    CHIPDiscoBallClusterStatsResponseCallback(jobject javaCallback);
+
+    ~CHIPDiscoBallClusterStatsResponseCallback();
+
+    static void CallbackFn(void * context, const chip::app::Clusters::DiscoBall::Commands::StatsResponse::DecodableType & data);
+
+private:
+    jobject javaCallbackRef;
+};
+
 class CHIPUnitTestingClusterTestSpecificResponseCallback
     : public Callback::Callback<CHIPUnitTestingClusterTestSpecificResponseCallbackType>
 {

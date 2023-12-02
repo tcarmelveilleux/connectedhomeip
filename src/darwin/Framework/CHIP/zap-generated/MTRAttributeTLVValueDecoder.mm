@@ -15387,6 +15387,168 @@ static id _Nullable DecodeAttributeValueForElectricalMeasurementCluster(Attribut
     *aError = CHIP_ERROR_IM_MALFORMED_ATTRIBUTE_PATH_IB;
     return nil;
 }
+static id _Nullable DecodeAttributeValueForDiscoBallCluster(AttributeId aAttributeId, TLV::TLVReader & aReader, CHIP_ERROR * aError)
+{
+    using namespace Clusters::DiscoBall;
+    switch (aAttributeId) {
+    case Attributes::Run::Id: {
+        using TypeInfo = Attributes::Run::TypeInfo;
+        TypeInfo::DecodableType cppValue;
+        *aError = DataModel::Decode(aReader, cppValue);
+        if (*aError != CHIP_NO_ERROR) {
+            return nil;
+        }
+        NSNumber * _Nonnull value;
+        value = [NSNumber numberWithBool:cppValue];
+        return value;
+    }
+    case Attributes::Rotate::Id: {
+        using TypeInfo = Attributes::Rotate::TypeInfo;
+        TypeInfo::DecodableType cppValue;
+        *aError = DataModel::Decode(aReader, cppValue);
+        if (*aError != CHIP_NO_ERROR) {
+            return nil;
+        }
+        NSNumber * _Nonnull value;
+        value = [NSNumber numberWithUnsignedChar:chip::to_underlying(cppValue)];
+        return value;
+    }
+    case Attributes::Speed::Id: {
+        using TypeInfo = Attributes::Speed::TypeInfo;
+        TypeInfo::DecodableType cppValue;
+        *aError = DataModel::Decode(aReader, cppValue);
+        if (*aError != CHIP_NO_ERROR) {
+            return nil;
+        }
+        NSNumber * _Nonnull value;
+        value = [NSNumber numberWithUnsignedChar:cppValue];
+        return value;
+    }
+    case Attributes::Axis::Id: {
+        using TypeInfo = Attributes::Axis::TypeInfo;
+        TypeInfo::DecodableType cppValue;
+        *aError = DataModel::Decode(aReader, cppValue);
+        if (*aError != CHIP_NO_ERROR) {
+            return nil;
+        }
+        NSNumber * _Nonnull value;
+        value = [NSNumber numberWithUnsignedChar:cppValue];
+        return value;
+    }
+    case Attributes::WobbleSpeed::Id: {
+        using TypeInfo = Attributes::WobbleSpeed::TypeInfo;
+        TypeInfo::DecodableType cppValue;
+        *aError = DataModel::Decode(aReader, cppValue);
+        if (*aError != CHIP_NO_ERROR) {
+            return nil;
+        }
+        NSNumber * _Nonnull value;
+        value = [NSNumber numberWithUnsignedChar:cppValue];
+        return value;
+    }
+    case Attributes::PatternPatternPattern::Id: {
+        using TypeInfo = Attributes::PatternPatternPattern::TypeInfo;
+        TypeInfo::DecodableType cppValue;
+        *aError = DataModel::Decode(aReader, cppValue);
+        if (*aError != CHIP_NO_ERROR) {
+            return nil;
+        }
+        NSArray * _Nonnull value;
+        { // Scope for our temporary variables
+            auto * array_0 = [NSMutableArray new];
+            auto iter_0 = cppValue.begin();
+            while (iter_0.Next()) {
+                auto & entry_0 = iter_0.GetValue();
+                MTRDiscoBallClusterPatternStruct * newElement_0;
+                newElement_0 = [MTRDiscoBallClusterPatternStruct new];
+                newElement_0.duration = [NSNumber numberWithUnsignedShort:entry_0.duration];
+                if (entry_0.rotate.IsNull()) {
+                    newElement_0.rotate = nil;
+                } else {
+                    newElement_0.rotate = [NSNumber numberWithUnsignedChar:chip::to_underlying(entry_0.rotate.Value())];
+                }
+                if (entry_0.speed.IsNull()) {
+                    newElement_0.speed = nil;
+                } else {
+                    newElement_0.speed = [NSNumber numberWithUnsignedChar:entry_0.speed.Value()];
+                }
+                if (entry_0.axis.IsNull()) {
+                    newElement_0.axis = nil;
+                } else {
+                    newElement_0.axis = [NSNumber numberWithUnsignedChar:entry_0.axis.Value()];
+                }
+                if (entry_0.wobbleSpeed.IsNull()) {
+                    newElement_0.wobbleSpeed = nil;
+                } else {
+                    newElement_0.wobbleSpeed = [NSNumber numberWithUnsignedChar:entry_0.wobbleSpeed.Value()];
+                }
+                if (entry_0.passcode.IsNull()) {
+                    newElement_0.passcode = nil;
+                } else {
+                    newElement_0.passcode = AsString(entry_0.passcode.Value());
+                    if (newElement_0.passcode == nil) {
+                        CHIP_ERROR err = CHIP_ERROR_INVALID_ARGUMENT;
+                        *aError = err;
+                        return nil;
+                    }
+                }
+                [array_0 addObject:newElement_0];
+            }
+            CHIP_ERROR err = iter_0.GetStatus();
+            if (err != CHIP_NO_ERROR) {
+                *aError = err;
+                return nil;
+            }
+            value = array_0;
+        }
+        return value;
+    }
+    case Attributes::NameNameName::Id: {
+        using TypeInfo = Attributes::NameNameName::TypeInfo;
+        TypeInfo::DecodableType cppValue;
+        *aError = DataModel::Decode(aReader, cppValue);
+        if (*aError != CHIP_NO_ERROR) {
+            return nil;
+        }
+        NSString * _Nonnull value;
+        value = AsString(cppValue);
+        if (value == nil) {
+            CHIP_ERROR err = CHIP_ERROR_INVALID_ARGUMENT;
+            *aError = err;
+            return nil;
+        }
+        return value;
+    }
+    case Attributes::WobbleSupport::Id: {
+        using TypeInfo = Attributes::WobbleSupport::TypeInfo;
+        TypeInfo::DecodableType cppValue;
+        *aError = DataModel::Decode(aReader, cppValue);
+        if (*aError != CHIP_NO_ERROR) {
+            return nil;
+        }
+        NSNumber * _Nonnull value;
+        value = [NSNumber numberWithUnsignedChar:cppValue.Raw()];
+        return value;
+    }
+    case Attributes::WobbleSettingWobbleSettingWobbleSetting::Id: {
+        using TypeInfo = Attributes::WobbleSettingWobbleSettingWobbleSetting::TypeInfo;
+        TypeInfo::DecodableType cppValue;
+        *aError = DataModel::Decode(aReader, cppValue);
+        if (*aError != CHIP_NO_ERROR) {
+            return nil;
+        }
+        NSNumber * _Nonnull value;
+        value = [NSNumber numberWithUnsignedChar:cppValue.Raw()];
+        return value;
+    }
+    default: {
+        break;
+    }
+    }
+
+    *aError = CHIP_ERROR_IM_MALFORMED_ATTRIBUTE_PATH_IB;
+    return nil;
+}
 static id _Nullable DecodeAttributeValueForUnitTestingCluster(AttributeId aAttributeId, TLV::TLVReader & aReader, CHIP_ERROR * aError)
 {
     using namespace Clusters::UnitTesting;
@@ -17134,6 +17296,9 @@ id _Nullable MTRDecodeAttributeValue(const ConcreteAttributePath & aPath, TLV::T
     }
     case Clusters::ElectricalMeasurement::Id: {
         return DecodeAttributeValueForElectricalMeasurementCluster(aPath.mAttributeId, aReader, aError);
+    }
+    case Clusters::DiscoBall::Id: {
+        return DecodeAttributeValueForDiscoBallCluster(aPath.mAttributeId, aReader, aError);
     }
     case Clusters::UnitTesting::Id: {
         return DecodeAttributeValueForUnitTestingCluster(aPath.mAttributeId, aReader, aError);

@@ -139,6 +139,7 @@
 | ApplicationBasic                                                    | 0x050D |
 | AccountLogin                                                        | 0x050E |
 | ElectricalMeasurement                                               | 0x0B04 |
+| DiscoBall                                                           | 0x3456 |
 | UnitTesting                                                         | 0xFFF1FC05|
 | FaultInjection                                                      | 0xFFF1FC06|
 | SampleMei                                                           | 0xFFF1FC20|
@@ -11668,6 +11669,259 @@ public:
 
 private:
     chip::app::Clusters::ElectricalMeasurement::Commands::GetMeasurementProfileCommand::Type mRequest;
+};
+
+/*----------------------------------------------------------------------------*\
+| Cluster DiscoBall                                                   | 0x3456 |
+|------------------------------------------------------------------------------|
+| Commands:                                                           |        |
+| * StartRequest                                                      |   0x00 |
+| * StopRequest                                                       |   0x01 |
+| * ReverseRequest                                                    |   0x02 |
+| * WobbleRequest                                                     |   0x03 |
+| * PatternRequest                                                    |   0x04 |
+| * StatsRequest                                                      |   0x05 |
+|------------------------------------------------------------------------------|
+| Attributes:                                                         |        |
+| * Run                                                               | 0x0000 |
+| * Rotate                                                            | 0x0001 |
+| * Speed                                                             | 0x0002 |
+| * Axis                                                              | 0x0003 |
+| * WobbleSpeed                                                       | 0x0004 |
+| * PatternPatternPattern                                             | 0x0005 |
+| * NameNameName                                                      | 0x0006 |
+| * WobbleSupport                                                     | 0x0007 |
+| * WobbleSettingWobbleSettingWobbleSetting                           | 0x0008 |
+| * GeneratedCommandList                                              | 0xFFF8 |
+| * AcceptedCommandList                                               | 0xFFF9 |
+| * EventList                                                         | 0xFFFA |
+| * AttributeList                                                     | 0xFFFB |
+| * FeatureMap                                                        | 0xFFFC |
+| * ClusterRevision                                                   | 0xFFFD |
+|------------------------------------------------------------------------------|
+| Events:                                                             |        |
+| * Started                                                           | 0x0000 |
+| * Stopped                                                           | 0x0001 |
+| * PatternChange                                                     | 0x0002 |
+\*----------------------------------------------------------------------------*/
+
+/*
+ * Command StartRequest
+ */
+class DiscoBallStartRequest : public ClusterCommand
+{
+public:
+    DiscoBallStartRequest(CredentialIssuerCommands * credsIssuerConfig) : ClusterCommand("start-request", credsIssuerConfig)
+    {
+        AddArgument("Speed", 0, UINT8_MAX, &mRequest.speed);
+        AddArgument("Rotate", 0, UINT8_MAX, &mRequest.rotate);
+        ClusterCommand::AddArguments();
+    }
+
+    CHIP_ERROR SendCommand(chip::DeviceProxy * device, std::vector<chip::EndpointId> endpointIds) override
+    {
+        constexpr chip::ClusterId clusterId = chip::app::Clusters::DiscoBall::Id;
+        constexpr chip::CommandId commandId = chip::app::Clusters::DiscoBall::Commands::StartRequest::Id;
+
+        ChipLogProgress(chipTool, "Sending cluster (0x%08" PRIX32 ") command (0x%08" PRIX32 ") on endpoint %u", clusterId,
+                        commandId, endpointIds.at(0));
+        return ClusterCommand::SendCommand(device, endpointIds.at(0), clusterId, commandId, mRequest);
+    }
+
+    CHIP_ERROR SendGroupCommand(chip::GroupId groupId, chip::FabricIndex fabricIndex) override
+    {
+        constexpr chip::ClusterId clusterId = chip::app::Clusters::DiscoBall::Id;
+        constexpr chip::CommandId commandId = chip::app::Clusters::DiscoBall::Commands::StartRequest::Id;
+
+        ChipLogProgress(chipTool, "Sending cluster (0x%08" PRIX32 ") command (0x%08" PRIX32 ") on Group %u", clusterId, commandId,
+                        groupId);
+
+        return ClusterCommand::SendGroupCommand(groupId, fabricIndex, clusterId, commandId, mRequest);
+    }
+
+private:
+    chip::app::Clusters::DiscoBall::Commands::StartRequest::Type mRequest;
+};
+
+/*
+ * Command StopRequest
+ */
+class DiscoBallStopRequest : public ClusterCommand
+{
+public:
+    DiscoBallStopRequest(CredentialIssuerCommands * credsIssuerConfig) : ClusterCommand("stop-request", credsIssuerConfig)
+    {
+        ClusterCommand::AddArguments();
+    }
+
+    CHIP_ERROR SendCommand(chip::DeviceProxy * device, std::vector<chip::EndpointId> endpointIds) override
+    {
+        constexpr chip::ClusterId clusterId = chip::app::Clusters::DiscoBall::Id;
+        constexpr chip::CommandId commandId = chip::app::Clusters::DiscoBall::Commands::StopRequest::Id;
+
+        ChipLogProgress(chipTool, "Sending cluster (0x%08" PRIX32 ") command (0x%08" PRIX32 ") on endpoint %u", clusterId,
+                        commandId, endpointIds.at(0));
+        return ClusterCommand::SendCommand(device, endpointIds.at(0), clusterId, commandId, mRequest);
+    }
+
+    CHIP_ERROR SendGroupCommand(chip::GroupId groupId, chip::FabricIndex fabricIndex) override
+    {
+        constexpr chip::ClusterId clusterId = chip::app::Clusters::DiscoBall::Id;
+        constexpr chip::CommandId commandId = chip::app::Clusters::DiscoBall::Commands::StopRequest::Id;
+
+        ChipLogProgress(chipTool, "Sending cluster (0x%08" PRIX32 ") command (0x%08" PRIX32 ") on Group %u", clusterId, commandId,
+                        groupId);
+
+        return ClusterCommand::SendGroupCommand(groupId, fabricIndex, clusterId, commandId, mRequest);
+    }
+
+private:
+    chip::app::Clusters::DiscoBall::Commands::StopRequest::Type mRequest;
+};
+
+/*
+ * Command ReverseRequest
+ */
+class DiscoBallReverseRequest : public ClusterCommand
+{
+public:
+    DiscoBallReverseRequest(CredentialIssuerCommands * credsIssuerConfig) : ClusterCommand("reverse-request", credsIssuerConfig)
+    {
+        ClusterCommand::AddArguments();
+    }
+
+    CHIP_ERROR SendCommand(chip::DeviceProxy * device, std::vector<chip::EndpointId> endpointIds) override
+    {
+        constexpr chip::ClusterId clusterId = chip::app::Clusters::DiscoBall::Id;
+        constexpr chip::CommandId commandId = chip::app::Clusters::DiscoBall::Commands::ReverseRequest::Id;
+
+        ChipLogProgress(chipTool, "Sending cluster (0x%08" PRIX32 ") command (0x%08" PRIX32 ") on endpoint %u", clusterId,
+                        commandId, endpointIds.at(0));
+        return ClusterCommand::SendCommand(device, endpointIds.at(0), clusterId, commandId, mRequest);
+    }
+
+    CHIP_ERROR SendGroupCommand(chip::GroupId groupId, chip::FabricIndex fabricIndex) override
+    {
+        constexpr chip::ClusterId clusterId = chip::app::Clusters::DiscoBall::Id;
+        constexpr chip::CommandId commandId = chip::app::Clusters::DiscoBall::Commands::ReverseRequest::Id;
+
+        ChipLogProgress(chipTool, "Sending cluster (0x%08" PRIX32 ") command (0x%08" PRIX32 ") on Group %u", clusterId, commandId,
+                        groupId);
+
+        return ClusterCommand::SendGroupCommand(groupId, fabricIndex, clusterId, commandId, mRequest);
+    }
+
+private:
+    chip::app::Clusters::DiscoBall::Commands::ReverseRequest::Type mRequest;
+};
+
+/*
+ * Command WobbleRequest
+ */
+class DiscoBallWobbleRequest : public ClusterCommand
+{
+public:
+    DiscoBallWobbleRequest(CredentialIssuerCommands * credsIssuerConfig) : ClusterCommand("wobble-request", credsIssuerConfig)
+    {
+        ClusterCommand::AddArguments();
+    }
+
+    CHIP_ERROR SendCommand(chip::DeviceProxy * device, std::vector<chip::EndpointId> endpointIds) override
+    {
+        constexpr chip::ClusterId clusterId = chip::app::Clusters::DiscoBall::Id;
+        constexpr chip::CommandId commandId = chip::app::Clusters::DiscoBall::Commands::WobbleRequest::Id;
+
+        ChipLogProgress(chipTool, "Sending cluster (0x%08" PRIX32 ") command (0x%08" PRIX32 ") on endpoint %u", clusterId,
+                        commandId, endpointIds.at(0));
+        return ClusterCommand::SendCommand(device, endpointIds.at(0), clusterId, commandId, mRequest);
+    }
+
+    CHIP_ERROR SendGroupCommand(chip::GroupId groupId, chip::FabricIndex fabricIndex) override
+    {
+        constexpr chip::ClusterId clusterId = chip::app::Clusters::DiscoBall::Id;
+        constexpr chip::CommandId commandId = chip::app::Clusters::DiscoBall::Commands::WobbleRequest::Id;
+
+        ChipLogProgress(chipTool, "Sending cluster (0x%08" PRIX32 ") command (0x%08" PRIX32 ") on Group %u", clusterId, commandId,
+                        groupId);
+
+        return ClusterCommand::SendGroupCommand(groupId, fabricIndex, clusterId, commandId, mRequest);
+    }
+
+private:
+    chip::app::Clusters::DiscoBall::Commands::WobbleRequest::Type mRequest;
+};
+
+/*
+ * Command PatternRequest
+ */
+class DiscoBallPatternRequest : public ClusterCommand
+{
+public:
+    DiscoBallPatternRequest(CredentialIssuerCommands * credsIssuerConfig) : ClusterCommand("pattern-request", credsIssuerConfig)
+    {
+        AddArgument("Passcode", &mRequest.passcode);
+        ClusterCommand::AddArguments();
+    }
+
+    CHIP_ERROR SendCommand(chip::DeviceProxy * device, std::vector<chip::EndpointId> endpointIds) override
+    {
+        constexpr chip::ClusterId clusterId = chip::app::Clusters::DiscoBall::Id;
+        constexpr chip::CommandId commandId = chip::app::Clusters::DiscoBall::Commands::PatternRequest::Id;
+
+        ChipLogProgress(chipTool, "Sending cluster (0x%08" PRIX32 ") command (0x%08" PRIX32 ") on endpoint %u", clusterId,
+                        commandId, endpointIds.at(0));
+        return ClusterCommand::SendCommand(device, endpointIds.at(0), clusterId, commandId, mRequest);
+    }
+
+    CHIP_ERROR SendGroupCommand(chip::GroupId groupId, chip::FabricIndex fabricIndex) override
+    {
+        constexpr chip::ClusterId clusterId = chip::app::Clusters::DiscoBall::Id;
+        constexpr chip::CommandId commandId = chip::app::Clusters::DiscoBall::Commands::PatternRequest::Id;
+
+        ChipLogProgress(chipTool, "Sending cluster (0x%08" PRIX32 ") command (0x%08" PRIX32 ") on Group %u", clusterId, commandId,
+                        groupId);
+
+        return ClusterCommand::SendGroupCommand(groupId, fabricIndex, clusterId, commandId, mRequest);
+    }
+
+private:
+    chip::app::Clusters::DiscoBall::Commands::PatternRequest::Type mRequest;
+};
+
+/*
+ * Command StatsRequest
+ */
+class DiscoBallStatsRequest : public ClusterCommand
+{
+public:
+    DiscoBallStatsRequest(CredentialIssuerCommands * credsIssuerConfig) : ClusterCommand("stats-request", credsIssuerConfig)
+    {
+        ClusterCommand::AddArguments();
+    }
+
+    CHIP_ERROR SendCommand(chip::DeviceProxy * device, std::vector<chip::EndpointId> endpointIds) override
+    {
+        constexpr chip::ClusterId clusterId = chip::app::Clusters::DiscoBall::Id;
+        constexpr chip::CommandId commandId = chip::app::Clusters::DiscoBall::Commands::StatsRequest::Id;
+
+        ChipLogProgress(chipTool, "Sending cluster (0x%08" PRIX32 ") command (0x%08" PRIX32 ") on endpoint %u", clusterId,
+                        commandId, endpointIds.at(0));
+        return ClusterCommand::SendCommand(device, endpointIds.at(0), clusterId, commandId, mRequest);
+    }
+
+    CHIP_ERROR SendGroupCommand(chip::GroupId groupId, chip::FabricIndex fabricIndex) override
+    {
+        constexpr chip::ClusterId clusterId = chip::app::Clusters::DiscoBall::Id;
+        constexpr chip::CommandId commandId = chip::app::Clusters::DiscoBall::Commands::StatsRequest::Id;
+
+        ChipLogProgress(chipTool, "Sending cluster (0x%08" PRIX32 ") command (0x%08" PRIX32 ") on Group %u", clusterId, commandId,
+                        groupId);
+
+        return ClusterCommand::SendGroupCommand(groupId, fabricIndex, clusterId, commandId, mRequest);
+    }
+
+private:
+    chip::app::Clusters::DiscoBall::Commands::StatsRequest::Type mRequest;
 };
 
 /*----------------------------------------------------------------------------*\
@@ -23278,6 +23532,109 @@ void registerClusterElectricalMeasurement(Commands & commands, CredentialIssuerC
 
     commands.RegisterCluster(clusterName, clusterCommands);
 }
+void registerClusterDiscoBall(Commands & commands, CredentialIssuerCommands * credsIssuerConfig)
+{
+    using namespace chip::app::Clusters::DiscoBall;
+
+    const char * clusterName = "DiscoBall";
+
+    commands_list clusterCommands = {
+        //
+        // Commands
+        //
+        make_unique<ClusterCommand>(Id, credsIssuerConfig),      //
+        make_unique<DiscoBallStartRequest>(credsIssuerConfig),   //
+        make_unique<DiscoBallStopRequest>(credsIssuerConfig),    //
+        make_unique<DiscoBallReverseRequest>(credsIssuerConfig), //
+        make_unique<DiscoBallWobbleRequest>(credsIssuerConfig),  //
+        make_unique<DiscoBallPatternRequest>(credsIssuerConfig), //
+        make_unique<DiscoBallStatsRequest>(credsIssuerConfig),   //
+        //
+        // Attributes
+        //
+        make_unique<ReadAttribute>(Id, credsIssuerConfig),                                                                   //
+        make_unique<ReadAttribute>(Id, "run", Attributes::Run::Id, credsIssuerConfig),                                       //
+        make_unique<ReadAttribute>(Id, "rotate", Attributes::Rotate::Id, credsIssuerConfig),                                 //
+        make_unique<ReadAttribute>(Id, "speed", Attributes::Speed::Id, credsIssuerConfig),                                   //
+        make_unique<ReadAttribute>(Id, "axis", Attributes::Axis::Id, credsIssuerConfig),                                     //
+        make_unique<ReadAttribute>(Id, "wobble-speed", Attributes::WobbleSpeed::Id, credsIssuerConfig),                      //
+        make_unique<ReadAttribute>(Id, "pattern-pattern-pattern", Attributes::PatternPatternPattern::Id, credsIssuerConfig), //
+        make_unique<ReadAttribute>(Id, "name-name-name", Attributes::NameNameName::Id, credsIssuerConfig),                   //
+        make_unique<ReadAttribute>(Id, "wobble-support", Attributes::WobbleSupport::Id, credsIssuerConfig),                  //
+        make_unique<ReadAttribute>(Id, "wobble-setting-wobble-setting-wobble-setting",
+                                   Attributes::WobbleSettingWobbleSettingWobbleSetting::Id, credsIssuerConfig),            //
+        make_unique<ReadAttribute>(Id, "generated-command-list", Attributes::GeneratedCommandList::Id, credsIssuerConfig), //
+        make_unique<ReadAttribute>(Id, "accepted-command-list", Attributes::AcceptedCommandList::Id, credsIssuerConfig),   //
+        make_unique<ReadAttribute>(Id, "event-list", Attributes::EventList::Id, credsIssuerConfig),                        //
+        make_unique<ReadAttribute>(Id, "attribute-list", Attributes::AttributeList::Id, credsIssuerConfig),                //
+        make_unique<ReadAttribute>(Id, "feature-map", Attributes::FeatureMap::Id, credsIssuerConfig),                      //
+        make_unique<ReadAttribute>(Id, "cluster-revision", Attributes::ClusterRevision::Id, credsIssuerConfig),            //
+        make_unique<WriteAttribute<>>(Id, credsIssuerConfig),                                                              //
+        make_unique<WriteAttribute<bool>>(Id, "run", 0, 1, Attributes::Run::Id, WriteCommandType::kForceWrite,
+                                          credsIssuerConfig), //
+        make_unique<WriteAttribute<chip::app::Clusters::DiscoBall::RotateEnum>>(
+            Id, "rotate", 0, UINT8_MAX, Attributes::Rotate::Id, WriteCommandType::kForceWrite, credsIssuerConfig), //
+        make_unique<WriteAttribute<uint8_t>>(Id, "speed", 0, UINT8_MAX, Attributes::Speed::Id, WriteCommandType::kForceWrite,
+                                             credsIssuerConfig), //
+        make_unique<WriteAttribute<uint8_t>>(Id, "axis", 0, UINT8_MAX, Attributes::Axis::Id, WriteCommandType::kWrite,
+                                             credsIssuerConfig), //
+        make_unique<WriteAttribute<uint8_t>>(Id, "wobble-speed", 0, UINT8_MAX, Attributes::WobbleSpeed::Id,
+                                             WriteCommandType::kWrite, credsIssuerConfig), //
+        make_unique<WriteAttributeAsComplex<
+            chip::app::DataModel::List<const chip::app::Clusters::DiscoBall::Structs::PatternStruct::Type>>>(
+            Id, "pattern-pattern-pattern", Attributes::PatternPatternPattern::Id, WriteCommandType::kWrite, credsIssuerConfig), //
+        make_unique<WriteAttribute<chip::CharSpan>>(Id, "name-name-name", Attributes::NameNameName::Id, WriteCommandType::kWrite,
+                                                    credsIssuerConfig), //
+        make_unique<WriteAttribute<chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap>>>(
+            Id, "wobble-support", 0, UINT8_MAX, Attributes::WobbleSupport::Id, WriteCommandType::kForceWrite, credsIssuerConfig), //
+        make_unique<WriteAttribute<chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap>>>(
+            Id, "wobble-setting-wobble-setting-wobble-setting", 0, UINT8_MAX,
+            Attributes::WobbleSettingWobbleSettingWobbleSetting::Id, WriteCommandType::kWrite, credsIssuerConfig), //
+        make_unique<WriteAttributeAsComplex<chip::app::DataModel::List<const chip::CommandId>>>(
+            Id, "generated-command-list", Attributes::GeneratedCommandList::Id, WriteCommandType::kForceWrite,
+            credsIssuerConfig), //
+        make_unique<WriteAttributeAsComplex<chip::app::DataModel::List<const chip::CommandId>>>(
+            Id, "accepted-command-list", Attributes::AcceptedCommandList::Id, WriteCommandType::kForceWrite, credsIssuerConfig), //
+        make_unique<WriteAttributeAsComplex<chip::app::DataModel::List<const chip::EventId>>>(
+            Id, "event-list", Attributes::EventList::Id, WriteCommandType::kForceWrite, credsIssuerConfig), //
+        make_unique<WriteAttributeAsComplex<chip::app::DataModel::List<const chip::AttributeId>>>(
+            Id, "attribute-list", Attributes::AttributeList::Id, WriteCommandType::kForceWrite, credsIssuerConfig), //
+        make_unique<WriteAttribute<uint32_t>>(Id, "feature-map", 0, UINT32_MAX, Attributes::FeatureMap::Id,
+                                              WriteCommandType::kForceWrite, credsIssuerConfig), //
+        make_unique<WriteAttribute<uint16_t>>(Id, "cluster-revision", 0, UINT16_MAX, Attributes::ClusterRevision::Id,
+                                              WriteCommandType::kForceWrite, credsIssuerConfig),                                  //
+        make_unique<SubscribeAttribute>(Id, credsIssuerConfig),                                                                   //
+        make_unique<SubscribeAttribute>(Id, "run", Attributes::Run::Id, credsIssuerConfig),                                       //
+        make_unique<SubscribeAttribute>(Id, "rotate", Attributes::Rotate::Id, credsIssuerConfig),                                 //
+        make_unique<SubscribeAttribute>(Id, "speed", Attributes::Speed::Id, credsIssuerConfig),                                   //
+        make_unique<SubscribeAttribute>(Id, "axis", Attributes::Axis::Id, credsIssuerConfig),                                     //
+        make_unique<SubscribeAttribute>(Id, "wobble-speed", Attributes::WobbleSpeed::Id, credsIssuerConfig),                      //
+        make_unique<SubscribeAttribute>(Id, "pattern-pattern-pattern", Attributes::PatternPatternPattern::Id, credsIssuerConfig), //
+        make_unique<SubscribeAttribute>(Id, "name-name-name", Attributes::NameNameName::Id, credsIssuerConfig),                   //
+        make_unique<SubscribeAttribute>(Id, "wobble-support", Attributes::WobbleSupport::Id, credsIssuerConfig),                  //
+        make_unique<SubscribeAttribute>(Id, "wobble-setting-wobble-setting-wobble-setting",
+                                        Attributes::WobbleSettingWobbleSettingWobbleSetting::Id, credsIssuerConfig),            //
+        make_unique<SubscribeAttribute>(Id, "generated-command-list", Attributes::GeneratedCommandList::Id, credsIssuerConfig), //
+        make_unique<SubscribeAttribute>(Id, "accepted-command-list", Attributes::AcceptedCommandList::Id, credsIssuerConfig),   //
+        make_unique<SubscribeAttribute>(Id, "event-list", Attributes::EventList::Id, credsIssuerConfig),                        //
+        make_unique<SubscribeAttribute>(Id, "attribute-list", Attributes::AttributeList::Id, credsIssuerConfig),                //
+        make_unique<SubscribeAttribute>(Id, "feature-map", Attributes::FeatureMap::Id, credsIssuerConfig),                      //
+        make_unique<SubscribeAttribute>(Id, "cluster-revision", Attributes::ClusterRevision::Id, credsIssuerConfig),            //
+        //
+        // Events
+        //
+        make_unique<ReadEvent>(Id, credsIssuerConfig),                                                   //
+        make_unique<ReadEvent>(Id, "started", Events::Started::Id, credsIssuerConfig),                   //
+        make_unique<ReadEvent>(Id, "stopped", Events::Stopped::Id, credsIssuerConfig),                   //
+        make_unique<ReadEvent>(Id, "pattern-change", Events::PatternChange::Id, credsIssuerConfig),      //
+        make_unique<SubscribeEvent>(Id, credsIssuerConfig),                                              //
+        make_unique<SubscribeEvent>(Id, "started", Events::Started::Id, credsIssuerConfig),              //
+        make_unique<SubscribeEvent>(Id, "stopped", Events::Stopped::Id, credsIssuerConfig),              //
+        make_unique<SubscribeEvent>(Id, "pattern-change", Events::PatternChange::Id, credsIssuerConfig), //
+    };
+
+    commands.RegisterCluster(clusterName, clusterCommands);
+}
 void registerClusterUnitTesting(Commands & commands, CredentialIssuerCommands * credsIssuerConfig)
 {
     using namespace chip::app::Clusters::UnitTesting;
@@ -23963,6 +24320,7 @@ void registerClusters(Commands & commands, CredentialIssuerCommands * credsIssue
     registerClusterApplicationBasic(commands, credsIssuerConfig);
     registerClusterAccountLogin(commands, credsIssuerConfig);
     registerClusterElectricalMeasurement(commands, credsIssuerConfig);
+    registerClusterDiscoBall(commands, credsIssuerConfig);
     registerClusterUnitTesting(commands, credsIssuerConfig);
     registerClusterFaultInjection(commands, credsIssuerConfig);
     registerClusterSampleMei(commands, credsIssuerConfig);

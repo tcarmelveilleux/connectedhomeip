@@ -3162,6 +3162,30 @@ static auto __attribute__((unused)) EnsureKnownEnumValue(ApplicationBasic::Appli
     }
 }
 
+static auto __attribute__((unused)) EnsureKnownEnumValue(DiscoBall::RotateEnum val)
+{
+    using EnumType = DiscoBall::RotateEnum;
+    switch (val)
+    {
+    case EnumType::kClockwise:
+    case EnumType::kCounterClockwise:
+        return val;
+    default:
+        return static_cast<EnumType>(0);
+    }
+}
+static auto __attribute__((unused)) EnsureKnownEnumValue(DiscoBall::StatusCode val)
+{
+    using EnumType = DiscoBall::StatusCode;
+    switch (val)
+    {
+    case EnumType::kUnsupportedPattern:
+        return val;
+    default:
+        return static_cast<EnumType>(0);
+    }
+}
+
 static auto __attribute__((unused)) EnsureKnownEnumValue(UnitTesting::SimpleEnum val)
 {
     using EnumType = UnitTesting::SimpleEnum;

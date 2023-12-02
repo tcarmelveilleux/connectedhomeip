@@ -7069,6 +7069,72 @@ static constexpr AttributeId Id = Globals::Attributes::ClusterRevision::Id;
 } // namespace Attributes
 } // namespace ElectricalMeasurement
 
+namespace DiscoBall {
+namespace Attributes {
+
+namespace Run {
+static constexpr AttributeId Id = 0x00000000;
+} // namespace Run
+
+namespace Rotate {
+static constexpr AttributeId Id = 0x00000001;
+} // namespace Rotate
+
+namespace Speed {
+static constexpr AttributeId Id = 0x00000002;
+} // namespace Speed
+
+namespace Axis {
+static constexpr AttributeId Id = 0x00000003;
+} // namespace Axis
+
+namespace WobbleSpeed {
+static constexpr AttributeId Id = 0x00000004;
+} // namespace WobbleSpeed
+
+namespace PatternPatternPattern {
+static constexpr AttributeId Id = 0x00000005;
+} // namespace PatternPatternPattern
+
+namespace NameNameName {
+static constexpr AttributeId Id = 0x00000006;
+} // namespace NameNameName
+
+namespace WobbleSupport {
+static constexpr AttributeId Id = 0x00000007;
+} // namespace WobbleSupport
+
+namespace WobbleSettingWobbleSettingWobbleSetting {
+static constexpr AttributeId Id = 0x00000008;
+} // namespace WobbleSettingWobbleSettingWobbleSetting
+
+namespace GeneratedCommandList {
+static constexpr AttributeId Id = Globals::Attributes::GeneratedCommandList::Id;
+} // namespace GeneratedCommandList
+
+namespace AcceptedCommandList {
+static constexpr AttributeId Id = Globals::Attributes::AcceptedCommandList::Id;
+} // namespace AcceptedCommandList
+
+namespace EventList {
+static constexpr AttributeId Id = Globals::Attributes::EventList::Id;
+} // namespace EventList
+
+namespace AttributeList {
+static constexpr AttributeId Id = Globals::Attributes::AttributeList::Id;
+} // namespace AttributeList
+
+namespace FeatureMap {
+static constexpr AttributeId Id = Globals::Attributes::FeatureMap::Id;
+} // namespace FeatureMap
+
+namespace ClusterRevision {
+static constexpr AttributeId Id = Globals::Attributes::ClusterRevision::Id;
+} // namespace ClusterRevision
+
+} // namespace Attributes
+} // namespace DiscoBall
+
 namespace UnitTesting {
 namespace Attributes {
 

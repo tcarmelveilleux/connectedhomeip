@@ -1532,6 +1532,32 @@ MTR_DEPRECATED("Please use MTRApplicationBasicClusterApplicationStruct", ios(16.
 @interface MTRApplicationBasicClusterApplicationBasicApplication : MTRApplicationBasicClusterApplicationStruct
 @end
 
+MTR_PROVISIONALLY_AVAILABLE
+@interface MTRDiscoBallClusterPatternStruct : NSObject <NSCopying>
+@property (nonatomic, copy) NSNumber * _Nonnull duration MTR_PROVISIONALLY_AVAILABLE;
+@property (nonatomic, copy) NSNumber * _Nullable rotate MTR_PROVISIONALLY_AVAILABLE;
+@property (nonatomic, copy) NSNumber * _Nullable speed MTR_PROVISIONALLY_AVAILABLE;
+@property (nonatomic, copy) NSNumber * _Nullable axis MTR_PROVISIONALLY_AVAILABLE;
+@property (nonatomic, copy) NSNumber * _Nullable wobbleSpeed MTR_PROVISIONALLY_AVAILABLE;
+@property (nonatomic, copy) NSString * _Nullable passcode MTR_PROVISIONALLY_AVAILABLE;
+@end
+
+MTR_PROVISIONALLY_AVAILABLE
+@interface MTRDiscoBallClusterStartedEvent : NSObject <NSCopying>
+@end
+
+MTR_PROVISIONALLY_AVAILABLE
+@interface MTRDiscoBallClusterStoppedEvent : NSObject <NSCopying>
+@end
+
+MTR_PROVISIONALLY_AVAILABLE
+@interface MTRDiscoBallClusterPatternChangeEvent : NSObject <NSCopying>
+@property (nonatomic, copy) MTRDiscoBallClusterPatternStruct * _Nullable prevPattern MTR_PROVISIONALLY_AVAILABLE;
+@property (nonatomic, copy) MTRDiscoBallClusterPatternStruct * _Nonnull curPattern MTR_PROVISIONALLY_AVAILABLE;
+@property (nonatomic, copy) MTRDiscoBallClusterPatternStruct * _Nullable nextPattern MTR_PROVISIONALLY_AVAILABLE;
+@property (nonatomic, copy) NSString * _Nullable label MTR_PROVISIONALLY_AVAILABLE;
+@end
+
 MTR_AVAILABLE(ios(16.4), macos(13.3), watchos(9.4), tvos(16.4))
 @interface MTRUnitTestingClusterSimpleStruct : NSObject <NSCopying>
 @property (nonatomic, copy) NSNumber * _Nonnull a MTR_AVAILABLE(ios(16.4), macos(13.3), watchos(9.4), tvos(16.4));

@@ -17076,6 +17076,111 @@ public class ClusterInfoMapping {
     }
   }
 
+  public static class DelegatedDiscoBallClusterPatternPatternPatternAttributeCallback implements ChipClusters.DiscoBallCluster.PatternPatternPatternAttributeCallback, DelegatedClusterCallback {
+    private ClusterCommandCallback callback;
+    @Override
+    public void setCallbackDelegate(ClusterCommandCallback callback) {
+      this.callback = callback;
+    }
+
+    @Override
+    public void onSuccess(List<ChipStructs.DiscoBallClusterPatternStruct> valueList) {
+      Map<CommandResponseInfo, Object> responseValues = new LinkedHashMap<>();
+      CommandResponseInfo commandResponseInfo = new CommandResponseInfo("valueList", "List<ChipStructs.DiscoBallClusterPatternStruct>");
+      responseValues.put(commandResponseInfo, valueList);
+      callback.onSuccess(responseValues);
+    }
+
+    @Override
+    public void onError(Exception ex) {
+      callback.onFailure(ex);
+    }
+  }
+
+  public static class DelegatedDiscoBallClusterGeneratedCommandListAttributeCallback implements ChipClusters.DiscoBallCluster.GeneratedCommandListAttributeCallback, DelegatedClusterCallback {
+    private ClusterCommandCallback callback;
+    @Override
+    public void setCallbackDelegate(ClusterCommandCallback callback) {
+      this.callback = callback;
+    }
+
+    @Override
+    public void onSuccess(List<Long> valueList) {
+      Map<CommandResponseInfo, Object> responseValues = new LinkedHashMap<>();
+      CommandResponseInfo commandResponseInfo = new CommandResponseInfo("valueList", "List<Long>");
+      responseValues.put(commandResponseInfo, valueList);
+      callback.onSuccess(responseValues);
+    }
+
+    @Override
+    public void onError(Exception ex) {
+      callback.onFailure(ex);
+    }
+  }
+
+  public static class DelegatedDiscoBallClusterAcceptedCommandListAttributeCallback implements ChipClusters.DiscoBallCluster.AcceptedCommandListAttributeCallback, DelegatedClusterCallback {
+    private ClusterCommandCallback callback;
+    @Override
+    public void setCallbackDelegate(ClusterCommandCallback callback) {
+      this.callback = callback;
+    }
+
+    @Override
+    public void onSuccess(List<Long> valueList) {
+      Map<CommandResponseInfo, Object> responseValues = new LinkedHashMap<>();
+      CommandResponseInfo commandResponseInfo = new CommandResponseInfo("valueList", "List<Long>");
+      responseValues.put(commandResponseInfo, valueList);
+      callback.onSuccess(responseValues);
+    }
+
+    @Override
+    public void onError(Exception ex) {
+      callback.onFailure(ex);
+    }
+  }
+
+  public static class DelegatedDiscoBallClusterEventListAttributeCallback implements ChipClusters.DiscoBallCluster.EventListAttributeCallback, DelegatedClusterCallback {
+    private ClusterCommandCallback callback;
+    @Override
+    public void setCallbackDelegate(ClusterCommandCallback callback) {
+      this.callback = callback;
+    }
+
+    @Override
+    public void onSuccess(List<Long> valueList) {
+      Map<CommandResponseInfo, Object> responseValues = new LinkedHashMap<>();
+      CommandResponseInfo commandResponseInfo = new CommandResponseInfo("valueList", "List<Long>");
+      responseValues.put(commandResponseInfo, valueList);
+      callback.onSuccess(responseValues);
+    }
+
+    @Override
+    public void onError(Exception ex) {
+      callback.onFailure(ex);
+    }
+  }
+
+  public static class DelegatedDiscoBallClusterAttributeListAttributeCallback implements ChipClusters.DiscoBallCluster.AttributeListAttributeCallback, DelegatedClusterCallback {
+    private ClusterCommandCallback callback;
+    @Override
+    public void setCallbackDelegate(ClusterCommandCallback callback) {
+      this.callback = callback;
+    }
+
+    @Override
+    public void onSuccess(List<Long> valueList) {
+      Map<CommandResponseInfo, Object> responseValues = new LinkedHashMap<>();
+      CommandResponseInfo commandResponseInfo = new CommandResponseInfo("valueList", "List<Long>");
+      responseValues.put(commandResponseInfo, valueList);
+      callback.onSuccess(responseValues);
+    }
+
+    @Override
+    public void onError(Exception ex) {
+      callback.onFailure(ex);
+    }
+  }
+
 
   public static class DelegatedUnitTestingClusterTestSpecificResponseCallback implements ChipClusters.UnitTestingCluster.TestSpecificResponseCallback, DelegatedClusterCallback {
     private ClusterCommandCallback callback;
@@ -18969,6 +19074,10 @@ public class ClusterInfoMapping {
       (ptr, endpointId) -> new ChipClusters.ElectricalMeasurementCluster(ptr, endpointId), new HashMap<>());
     clusterMap.put("electricalMeasurement", electricalMeasurementClusterInfo);
 
+    ClusterInfo discoBallClusterInfo = new ClusterInfo(
+      (ptr, endpointId) -> new ChipClusters.DiscoBallCluster(ptr, endpointId), new HashMap<>());
+    clusterMap.put("discoBall", discoBallClusterInfo);
+
     ClusterInfo unitTestingClusterInfo = new ClusterInfo(
       (ptr, endpointId) -> new ChipClusters.UnitTestingCluster(ptr, endpointId), new HashMap<>());
     clusterMap.put("unitTesting", unitTestingClusterInfo);
@@ -19090,6 +19199,7 @@ public class ClusterInfoMapping {
     destination.get("applicationBasic").combineCommands(source.get("applicationBasic"));
     destination.get("accountLogin").combineCommands(source.get("accountLogin"));
     destination.get("electricalMeasurement").combineCommands(source.get("electricalMeasurement"));
+    destination.get("discoBall").combineCommands(source.get("discoBall"));
     destination.get("unitTesting").combineCommands(source.get("unitTesting"));
     destination.get("faultInjection").combineCommands(source.get("faultInjection"));
     destination.get("sampleMei").combineCommands(source.get("sampleMei"));
@@ -24302,6 +24412,97 @@ public class ClusterInfoMapping {
     electricalMeasurementClusterInteractionInfoMap.put("getMeasurementProfileCommand", electricalMeasurementgetMeasurementProfileCommandInteractionInfo);
 
     commandMap.put("electricalMeasurement", electricalMeasurementClusterInteractionInfoMap);
+
+    Map<String, InteractionInfo> discoBallClusterInteractionInfoMap = new LinkedHashMap<>();
+
+    Map<String, CommandParameterInfo> discoBallstartRequestCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+
+    CommandParameterInfo discoBallstartRequestspeedCommandParameterInfo = new CommandParameterInfo("speed", Integer.class, Integer.class);
+    discoBallstartRequestCommandParams.put("speed",discoBallstartRequestspeedCommandParameterInfo);
+
+    CommandParameterInfo discoBallstartRequestrotateCommandParameterInfo = new CommandParameterInfo("rotate", Optional.class, Integer.class);
+    discoBallstartRequestCommandParams.put("rotate",discoBallstartRequestrotateCommandParameterInfo);
+    InteractionInfo discoBallstartRequestInteractionInfo = new InteractionInfo(
+      (cluster, callback, commandArguments) -> {
+        ((ChipClusters.DiscoBallCluster) cluster)
+        .startRequest((DefaultClusterCallback) callback
+        , (Integer)
+        commandArguments.get("speed")
+        , (Optional<Integer>)
+        commandArguments.get("rotate")
+        );
+      },
+      () -> new DelegatedDefaultClusterCallback(),
+        discoBallstartRequestCommandParams
+    );
+    discoBallClusterInteractionInfoMap.put("startRequest", discoBallstartRequestInteractionInfo);
+
+    Map<String, CommandParameterInfo> discoBallstopRequestCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+    InteractionInfo discoBallstopRequestInteractionInfo = new InteractionInfo(
+      (cluster, callback, commandArguments) -> {
+        ((ChipClusters.DiscoBallCluster) cluster)
+        .stopRequest((DefaultClusterCallback) callback
+        );
+      },
+      () -> new DelegatedDefaultClusterCallback(),
+        discoBallstopRequestCommandParams
+    );
+    discoBallClusterInteractionInfoMap.put("stopRequest", discoBallstopRequestInteractionInfo);
+
+    Map<String, CommandParameterInfo> discoBallreverseRequestCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+    InteractionInfo discoBallreverseRequestInteractionInfo = new InteractionInfo(
+      (cluster, callback, commandArguments) -> {
+        ((ChipClusters.DiscoBallCluster) cluster)
+        .reverseRequest((DefaultClusterCallback) callback
+        );
+      },
+      () -> new DelegatedDefaultClusterCallback(),
+        discoBallreverseRequestCommandParams
+    );
+    discoBallClusterInteractionInfoMap.put("reverseRequest", discoBallreverseRequestInteractionInfo);
+
+    Map<String, CommandParameterInfo> discoBallwobbleRequestCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+    InteractionInfo discoBallwobbleRequestInteractionInfo = new InteractionInfo(
+      (cluster, callback, commandArguments) -> {
+        ((ChipClusters.DiscoBallCluster) cluster)
+        .wobbleRequest((DefaultClusterCallback) callback
+        );
+      },
+      () -> new DelegatedDefaultClusterCallback(),
+        discoBallwobbleRequestCommandParams
+    );
+    discoBallClusterInteractionInfoMap.put("wobbleRequest", discoBallwobbleRequestInteractionInfo);
+
+    Map<String, CommandParameterInfo> discoBallpatternRequestCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+
+    CommandParameterInfo discoBallpatternRequestpasscodeCommandParameterInfo = new CommandParameterInfo("passcode", String.class, String.class);
+    discoBallpatternRequestCommandParams.put("passcode",discoBallpatternRequestpasscodeCommandParameterInfo);
+    InteractionInfo discoBallpatternRequestInteractionInfo = new InteractionInfo(
+      (cluster, callback, commandArguments) -> {
+        ((ChipClusters.DiscoBallCluster) cluster)
+        .patternRequest((DefaultClusterCallback) callback
+        , (String)
+        commandArguments.get("passcode")
+        );
+      },
+      () -> new DelegatedDefaultClusterCallback(),
+        discoBallpatternRequestCommandParams
+    );
+    discoBallClusterInteractionInfoMap.put("patternRequest", discoBallpatternRequestInteractionInfo);
+
+    Map<String, CommandParameterInfo> discoBallstatsRequestCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+    InteractionInfo discoBallstatsRequestInteractionInfo = new InteractionInfo(
+      (cluster, callback, commandArguments) -> {
+        ((ChipClusters.DiscoBallCluster) cluster)
+        .statsRequest((DefaultClusterCallback) callback
+        );
+      },
+      () -> new DelegatedDefaultClusterCallback(),
+        discoBallstatsRequestCommandParams
+    );
+    discoBallClusterInteractionInfoMap.put("statsRequest", discoBallstatsRequestInteractionInfo);
+
+    commandMap.put("discoBall", discoBallClusterInteractionInfoMap);
 
     Map<String, InteractionInfo> unitTestingClusterInteractionInfoMap = new LinkedHashMap<>();
 

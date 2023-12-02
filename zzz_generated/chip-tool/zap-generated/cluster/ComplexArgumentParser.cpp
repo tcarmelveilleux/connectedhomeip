@@ -3219,6 +3219,62 @@ void ComplexArgumentParser::Finalize(chip::app::Clusters::ApplicationLauncher::S
     ComplexArgumentParser::Finalize(request.endpoint);
 }
 
+CHIP_ERROR ComplexArgumentParser::Setup(const char * label, chip::app::Clusters::DiscoBall::Structs::PatternStruct::Type & request,
+                                        Json::Value & value)
+{
+    VerifyOrReturnError(value.isObject(), CHIP_ERROR_INVALID_ARGUMENT);
+
+    // Copy to track which members we already processed.
+    Json::Value valueCopy(value);
+
+    ReturnErrorOnFailure(
+        ComplexArgumentParser::EnsureMemberExist("PatternStruct.duration", "duration", value.isMember("duration")));
+    ReturnErrorOnFailure(ComplexArgumentParser::EnsureMemberExist("PatternStruct.rotate", "rotate", value.isMember("rotate")));
+    ReturnErrorOnFailure(ComplexArgumentParser::EnsureMemberExist("PatternStruct.speed", "speed", value.isMember("speed")));
+    ReturnErrorOnFailure(ComplexArgumentParser::EnsureMemberExist("PatternStruct.axis", "axis", value.isMember("axis")));
+    ReturnErrorOnFailure(
+        ComplexArgumentParser::EnsureMemberExist("PatternStruct.wobbleSpeed", "wobbleSpeed", value.isMember("wobbleSpeed")));
+    ReturnErrorOnFailure(
+        ComplexArgumentParser::EnsureMemberExist("PatternStruct.passcode", "passcode", value.isMember("passcode")));
+
+    char labelWithMember[kMaxLabelLength];
+    snprintf(labelWithMember, sizeof(labelWithMember), "%s.%s", label, "duration");
+    ReturnErrorOnFailure(ComplexArgumentParser::Setup(labelWithMember, request.duration, value["duration"]));
+    valueCopy.removeMember("duration");
+
+    snprintf(labelWithMember, sizeof(labelWithMember), "%s.%s", label, "rotate");
+    ReturnErrorOnFailure(ComplexArgumentParser::Setup(labelWithMember, request.rotate, value["rotate"]));
+    valueCopy.removeMember("rotate");
+
+    snprintf(labelWithMember, sizeof(labelWithMember), "%s.%s", label, "speed");
+    ReturnErrorOnFailure(ComplexArgumentParser::Setup(labelWithMember, request.speed, value["speed"]));
+    valueCopy.removeMember("speed");
+
+    snprintf(labelWithMember, sizeof(labelWithMember), "%s.%s", label, "axis");
+    ReturnErrorOnFailure(ComplexArgumentParser::Setup(labelWithMember, request.axis, value["axis"]));
+    valueCopy.removeMember("axis");
+
+    snprintf(labelWithMember, sizeof(labelWithMember), "%s.%s", label, "wobbleSpeed");
+    ReturnErrorOnFailure(ComplexArgumentParser::Setup(labelWithMember, request.wobbleSpeed, value["wobbleSpeed"]));
+    valueCopy.removeMember("wobbleSpeed");
+
+    snprintf(labelWithMember, sizeof(labelWithMember), "%s.%s", label, "passcode");
+    ReturnErrorOnFailure(ComplexArgumentParser::Setup(labelWithMember, request.passcode, value["passcode"]));
+    valueCopy.removeMember("passcode");
+
+    return ComplexArgumentParser::EnsureNoMembersRemaining(label, valueCopy);
+}
+
+void ComplexArgumentParser::Finalize(chip::app::Clusters::DiscoBall::Structs::PatternStruct::Type & request)
+{
+    ComplexArgumentParser::Finalize(request.duration);
+    ComplexArgumentParser::Finalize(request.rotate);
+    ComplexArgumentParser::Finalize(request.speed);
+    ComplexArgumentParser::Finalize(request.axis);
+    ComplexArgumentParser::Finalize(request.wobbleSpeed);
+    ComplexArgumentParser::Finalize(request.passcode);
+}
+
 CHIP_ERROR ComplexArgumentParser::Setup(const char * label, chip::app::Clusters::UnitTesting::Structs::SimpleStruct::Type & request,
                                         Json::Value & value)
 {

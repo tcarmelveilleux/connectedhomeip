@@ -3778,6 +3778,96 @@ public class ClusterWriteMapping {
     );
     writeElectricalMeasurementInteractionInfo.put("writeAcOverloadAlarmsMaskAttribute", writeElectricalMeasurementAcOverloadAlarmsMaskAttributeInteractionInfo);
     writeAttributeMap.put("electricalMeasurement", writeElectricalMeasurementInteractionInfo);
+    Map<String, InteractionInfo> writeDiscoBallInteractionInfo = new LinkedHashMap<>();
+    Map<String, CommandParameterInfo> writeDiscoBallAxisCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+    CommandParameterInfo discoBallaxisCommandParameterInfo =
+        new CommandParameterInfo(
+            "value", 
+            Integer.class, 
+            Integer.class 
+        );
+    writeDiscoBallAxisCommandParams.put(
+        "value",
+        discoBallaxisCommandParameterInfo
+    );
+    InteractionInfo writeDiscoBallAxisAttributeInteractionInfo = new InteractionInfo(
+      (cluster, callback, commandArguments) -> {
+        ((ChipClusters.DiscoBallCluster) cluster).writeAxisAttribute(
+          (DefaultClusterCallback) callback,
+          (Integer) commandArguments.get("value")
+        );
+      },
+      () -> new ClusterInfoMapping.DelegatedDefaultClusterCallback(),
+      writeDiscoBallAxisCommandParams
+    );
+    writeDiscoBallInteractionInfo.put("writeAxisAttribute", writeDiscoBallAxisAttributeInteractionInfo);
+    Map<String, CommandParameterInfo> writeDiscoBallWobbleSpeedCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+    CommandParameterInfo discoBallwobbleSpeedCommandParameterInfo =
+        new CommandParameterInfo(
+            "value", 
+            Integer.class, 
+            Integer.class 
+        );
+    writeDiscoBallWobbleSpeedCommandParams.put(
+        "value",
+        discoBallwobbleSpeedCommandParameterInfo
+    );
+    InteractionInfo writeDiscoBallWobbleSpeedAttributeInteractionInfo = new InteractionInfo(
+      (cluster, callback, commandArguments) -> {
+        ((ChipClusters.DiscoBallCluster) cluster).writeWobbleSpeedAttribute(
+          (DefaultClusterCallback) callback,
+          (Integer) commandArguments.get("value")
+        );
+      },
+      () -> new ClusterInfoMapping.DelegatedDefaultClusterCallback(),
+      writeDiscoBallWobbleSpeedCommandParams
+    );
+    writeDiscoBallInteractionInfo.put("writeWobbleSpeedAttribute", writeDiscoBallWobbleSpeedAttributeInteractionInfo);
+    Map<String, CommandParameterInfo> writeDiscoBallNameNameNameCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+    CommandParameterInfo discoBallnameNameNameCommandParameterInfo =
+        new CommandParameterInfo(
+            "value", 
+            String.class, 
+            String.class 
+        );
+    writeDiscoBallNameNameNameCommandParams.put(
+        "value",
+        discoBallnameNameNameCommandParameterInfo
+    );
+    InteractionInfo writeDiscoBallNameNameNameAttributeInteractionInfo = new InteractionInfo(
+      (cluster, callback, commandArguments) -> {
+        ((ChipClusters.DiscoBallCluster) cluster).writeNameNameNameAttribute(
+          (DefaultClusterCallback) callback,
+          (String) commandArguments.get("value")
+        );
+      },
+      () -> new ClusterInfoMapping.DelegatedDefaultClusterCallback(),
+      writeDiscoBallNameNameNameCommandParams
+    );
+    writeDiscoBallInteractionInfo.put("writeNameNameNameAttribute", writeDiscoBallNameNameNameAttributeInteractionInfo);
+    Map<String, CommandParameterInfo> writeDiscoBallWobbleSettingWobbleSettingWobbleSettingCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+    CommandParameterInfo discoBallwobbleSettingWobbleSettingWobbleSettingCommandParameterInfo =
+        new CommandParameterInfo(
+            "value", 
+            Integer.class, 
+            Integer.class 
+        );
+    writeDiscoBallWobbleSettingWobbleSettingWobbleSettingCommandParams.put(
+        "value",
+        discoBallwobbleSettingWobbleSettingWobbleSettingCommandParameterInfo
+    );
+    InteractionInfo writeDiscoBallWobbleSettingWobbleSettingWobbleSettingAttributeInteractionInfo = new InteractionInfo(
+      (cluster, callback, commandArguments) -> {
+        ((ChipClusters.DiscoBallCluster) cluster).writeWobbleSettingWobbleSettingWobbleSettingAttribute(
+          (DefaultClusterCallback) callback,
+          (Integer) commandArguments.get("value")
+        );
+      },
+      () -> new ClusterInfoMapping.DelegatedDefaultClusterCallback(),
+      writeDiscoBallWobbleSettingWobbleSettingWobbleSettingCommandParams
+    );
+    writeDiscoBallInteractionInfo.put("writeWobbleSettingWobbleSettingWobbleSettingAttribute", writeDiscoBallWobbleSettingWobbleSettingWobbleSettingAttributeInteractionInfo);
+    writeAttributeMap.put("discoBall", writeDiscoBallInteractionInfo);
     Map<String, InteractionInfo> writeUnitTestingInteractionInfo = new LinkedHashMap<>();
     Map<String, CommandParameterInfo> writeUnitTestingBooleanCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
     CommandParameterInfo unitTestingbooleanCommandParameterInfo =

@@ -1004,6 +1004,15 @@ static BOOL CommandNeedsTimedInvokeInElectricalMeasurementCluster(AttributeId aA
     }
     }
 }
+static BOOL CommandNeedsTimedInvokeInDiscoBallCluster(AttributeId aAttributeId)
+{
+    using namespace Clusters::DiscoBall;
+    switch (aAttributeId) {
+    default: {
+        return NO;
+    }
+    }
+}
 static BOOL CommandNeedsTimedInvokeInUnitTestingCluster(AttributeId aAttributeId)
 {
     using namespace Clusters::UnitTesting;
@@ -1337,6 +1346,9 @@ BOOL MTRCommandNeedsTimedInvoke(NSNumber * _Nonnull aClusterID, NSNumber * _Nonn
     }
     case Clusters::ElectricalMeasurement::Id: {
         return CommandNeedsTimedInvokeInElectricalMeasurementCluster(commandID);
+    }
+    case Clusters::DiscoBall::Id: {
+        return CommandNeedsTimedInvokeInDiscoBallCluster(commandID);
     }
     case Clusters::UnitTesting::Id: {
         return CommandNeedsTimedInvokeInUnitTestingCluster(commandID);
