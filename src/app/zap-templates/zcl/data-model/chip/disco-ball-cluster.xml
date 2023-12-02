@@ -26,6 +26,35 @@ limitations under the License.
     <field name="Statistics" mask="0x10"/>
     <field name="Reverse" mask="0x20"/>
   </bitmap>
+
+  <bitmap name="WobbleBitmap" type="bitmap8">
+    <cluster code="0x3456"/>
+    <field mask="0x0001" name="WobbleLeftRight"/>
+    <field mask="0x0002" name="WobbleUpDown"/>
+    <field mask="0x0004" name="WobbleRound"/>
+  </bitmap>
+
+  <enum name="RotateEnum" type="enum8">
+    <cluster code="0x3456"/>
+    <item name="Clockwise" value="1"/>
+    <item name="CounterClockwise" value="2"/>
+  </enum>
+
+  <struct name="PatternStruct">
+    <cluster code="0x3456"/>
+    <item fieldId="0" name="Duration" type="int16u" isNullable="false" writable="true"/>
+    <item fieldId="1" name="Rotate" type="RotateEnum" isNullable="true" writable="true"/>
+    <item fieldId="2" name="Speed" type="int8u" isNullable="true" writable="true"/>
+    <item fieldId="3" name="Axis" type="int8u" isNullable="true" writable="true"/>
+    <item fieldId="4" name="WobbleSpeed" type="int8u" isNullable="true" writable="true"/>
+    <item fieldId="5" name="Passcode" type="char_string" isNullable="true" writable="true" isFabricSensitive="true"/>
+  </struct>
+
+  <enum name="StatusCode" type="enum8">
+    <cluster code="0x3456"/>
+     <item name="UnsupportedPattern" value="0x02"/>
+  </enum>
+
   <cluster apiMaturity="provisional">
     <name>Disco Ball</name>
     <domain>CHIP</domain>
@@ -38,8 +67,8 @@ limitations under the License.
     <attribute code="0x0000" side="server" define="RUN" type="boolean" default="0" writable="false" optional="false">Run</attribute>
     <attribute code="0x0001" side="server" define="ROTATE" type="RotateEnum" default="0" min="0x0" max="0x2" writable="false" optional="false">Rotate</attribute>
     <attribute code="0x0002" side="server" define="SPEED" type="int8u" default="0" min="0" max="200" writable="false" optional="false">Speed</attribute>
-    <attribute code="0x0003" side="server" define="AXIS" type="int8u" default="0" min="0" max="90" writable="true" optional="true"/>
-    <attribute code="0x0004" side="server" define="WOBBLE_SPEED" type="int8u" default="0" min="0" max="200" writable="true" optional="true"/>
+    <attribute code="0x0003" side="server" define="AXIS" type="int8u" default="0" min="0" max="90" writable="true" optional="true">Axis</attribute>
+    <attribute code="0x0004" side="server" define="WOBBLE_SPEED" type="int8u" default="0" min="0" max="200" writable="true" optional="true">WobbleSpeed</attribute>
     <attribute code="0x0005" side="server" define="PATTERN" type="ARRAY" entryType="PatternStruct" default="0" writable="true" optional="true" length="16">
       <description>Pattern</description>
       <description>Pattern</description>
