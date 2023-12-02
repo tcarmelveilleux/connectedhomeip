@@ -22,6 +22,7 @@
    <xi:include href="chip/content-launch-cluster.xml" />
    <xi:include href="chip/descriptor-cluster.xml" />
    <xi:include href="chip/diagnostic-logs-cluster.xml" />
+   <xi:include href="chip/disco-ball-cluster.xml" />
    <xi:include href="chip/dishwasher-alarm-cluster.xml" />
    <xi:include href="chip/dishwasher-mode-cluster.xml" />
    <xi:include href="chip/drlc.xml" />

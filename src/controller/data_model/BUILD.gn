@@ -110,6 +110,8 @@ if (current_os == "android" || matter_enable_java_compilation) {
       "jni/DescriptorClient-ReadImpl.cpp",
       "jni/DiagnosticLogsClient-InvokeSubscribeImpl.cpp",
       "jni/DiagnosticLogsClient-ReadImpl.cpp",
+      "jni/DiscoBallClusterClient-InvokeSubscribeImpl.cpp",
+      "jni/DiscoBallClusterClient-ReadImpl.cpp",
       "jni/DishwasherAlarmClient-InvokeSubscribeImpl.cpp",
       "jni/DishwasherAlarmClient-ReadImpl.cpp",
       "jni/DishwasherModeClient-InvokeSubscribeImpl.cpp",

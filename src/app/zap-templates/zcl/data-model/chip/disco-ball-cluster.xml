@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<!--
+Copyright (c) 2023 Project CHIP Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<configurator>
+  <domain name="CHIP"/>
+  <bitmap name="Feature" type="bitmap32">
+    <cluster code="0x3456"/>
+    <cluster code="0xBBCC"/>
+    <field name="Party" mask="0x1"/>
+    <field name="Axis" mask="0x2"/>
+    <field name="Wobble" mask="0x4"/>
+    <field name="Pattern" mask="0x8"/>
+    <field name="Statistics" mask="0x10"/>
+    <field name="Reverse" mask="0x20"/>
+  </bitmap>
+  <cluster apiMaturity="provisional">
+    <name>Disco Ball</name>
+    <domain>CHIP</domain>
+    <code>0x3456</code>
+    <define>DISCO_BALL_CLUSTER</define>
+    <client init="false" tick="false">true</client>
+    <server init="false" tick="false">true</server>
+    <description>This example cluster controls an imaginary mirrored disco ball, for the express purpose of disco dancing.</description>
+    <!--Attributes-->
+    <attribute code="0x0000" side="server" define="RUN" type="boolean" default="0" writable="false" optional="false">Run</attribute>
+    <attribute code="0x0001" side="server" define="ROTATE" type="RotateEnum" default="0" min="0x0" max="0x2" writable="false" optional="false">Rotate</attribute>
+    <attribute code="0x0002" side="server" define="SPEED" type="int8u" default="0" min="0" max="200" writable="false" optional="false">Speed</attribute>
+    <attribute code="0x0003" side="server" define="AXIS" type="int8u" default="0" min="0" max="90" writable="true" optional="true"/>
+    <attribute code="0x0004" side="server" define="WOBBLE_SPEED" type="int8u" default="0" min="0" max="200" writable="true" optional="true"/>
+    <attribute code="0x0005" side="server" define="PATTERN" type="ARRAY" entryType="PatternStruct" default="0" writable="true" optional="true" length="16">
+      <description>Pattern</description>
+      <description>Pattern</description>
+      <access op="write" privilege="manage"/>
+      <description>Pattern</description>
+    </attribute>
+    <attribute code="0x0006" side="server" define="NAME" type="char_string" default="0" length="16" writable="true" optional="true">
+      <description>Name</description>
+      <description>Name</description>
+      <access op="write" privilege="manage"/>
+      <description>Name</description>
+    </attribute>
+    <attribute code="0x0007" side="server" define="WOBBLE_SUPPORT" type="WobbleBitmap" min="0x0" max="0x7" writable="false" optional="true">WobbleSupport</attribute>
+    <attribute code="0x0008" side="server" define="WOBBLE_SETTING" type="WobbleBitmap" min="0x0" max="0x7" writable="true" optional="true">
+      <description>WobbleSetting</description>
+      <description>WobbleSetting</description>
+      <access op="write" privilege="manage"/>
+      <description>WobbleSetting</description>
+    </attribute>
+    <command source="client" code="0x00" name="StartRequest" optional="false">
+      <arg name="Speed" type="int8u" max="200"/>
+      <arg name="Rotate" type="RotateEnum" min="0x0" max="0x2" optional="true" default="1"/>
+      <description>Upon receipt, this SHALL start the disco ball rotating using the data as follows:</description>
+    </command>
+    <command source="client" code="0x01" name="StopRequest" optional="false">
+      <description>Upon receipt, this SHALL stop the disco ball rotating, and SHALL set the Run, Speed and Rotate attributes to 0.</description>
+    </command>
+    <command source="client" code="0x02" name="ReverseRequest" optional="true">
+      <description>Upon receipt, this SHALL reverse the direction of the disco ball rotation. This command MAY generate an error response of UNSUPPORTED_PATTERN.</description>
+    </command>
+    <command source="client" code="0x03" name="WobbleRequest" optional="true">
+      <description>Upon receipt, this SHALL wobble the disco ball on its axis at the speed in the WobbleSpeed attribute. This command MAY generate an error response of UNSUPPORTED_PATTERN.</description>
+    </command>
+    <command source="client" code="0x04" name="PatternRequest" optional="true">
+      <access op="invoke" privilege="manage"/>
+      <arg name="Passcode" type="char_string" length="6" default=""/>
+      <description>ID</description>
+    </command>
+    <command source="client" code="0x05" name="StatsRequest" optional="true">
+      <description>Upon receipt, this SHALL generate a StatsResponse command.</description>
+    </command>
+    <command source="server" code="0x06" name="StatsResponse" optional="true">
+      <arg name="LastRun" type="int32u" default="0"/>
+      <arg name="Patterns" type="int32u" optional="true" default="0"/>
+      <description>This command SHALL be generated in response to a StatsRequest command. The data for this command SHALL be as follows:</description>
+    </command>
+    <event code="0x0000" name="Started" priority="info">
+      <description>Started</description>
+    </event>
+    <event code="0x0001" name="Stopped" priority="info">
+      <description>Stopped</description>
+    </event>
+    <event code="0x0002" name="PatternChange" priority="info" optional="true">
+      <description>PatternChange</description>
+      <field id="0" name="PrevPattern" type="PatternStruct" isNullable="true"/>
+      <field id="1" name="CurPattern" type="PatternStruct"/>
+      <field id="2" name="NextPattern" type="PatternStruct" isNullable="true"/>
+      <field id="3" name="Label" type="char_string" length="32" isNullable="true" optional="true"/>
+    </event>
+  </cluster>
+</configurator>

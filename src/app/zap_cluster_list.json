@@ -28,6 +28,7 @@
         "DESCRIPTOR_CLUSTER": [],
         "DEVICE_TEMP_CLUSTER": [],
         "DIAGNOSTIC_LOGS_CLUSTER": [],
+        "DISCO_BALL_CLUSTER": [],
         "DISHWASHER_ALARM_CLUSTER": [],
         "DISHWASHER_MODE_CLUSTER": [],
         "MICROWAVE_OVEN_MODE_CLUSTER": [],
