@@ -7438,8 +7438,8 @@ public static class DiscoBallClusterPatternStruct {
   public Integer duration;
   public @Nullable Integer rotate;
   public @Nullable Integer speed;
-  public @Nullable Integer axis;
-  public @Nullable Integer wobbleSpeed;
+  public @Nullable Optional<Integer> axis;
+  public @Nullable Optional<Integer> wobbleSpeed;
   public @Nullable String passcode;
   private static final long DURATION_ID = 0L;
   private static final long ROTATE_ID = 1L;
@@ -7452,8 +7452,8 @@ public static class DiscoBallClusterPatternStruct {
     Integer duration,
     @Nullable Integer rotate,
     @Nullable Integer speed,
-    @Nullable Integer axis,
-    @Nullable Integer wobbleSpeed,
+    @Nullable Optional<Integer> axis,
+    @Nullable Optional<Integer> wobbleSpeed,
     @Nullable String passcode
   ) {
     this.duration = duration;
@@ -7469,8 +7469,8 @@ public static class DiscoBallClusterPatternStruct {
     values.add(new StructElement(DURATION_ID, new UIntType(duration)));
     values.add(new StructElement(ROTATE_ID, rotate != null ? new UIntType(rotate) : new NullType()));
     values.add(new StructElement(SPEED_ID, speed != null ? new UIntType(speed) : new NullType()));
-    values.add(new StructElement(AXIS_ID, axis != null ? new UIntType(axis) : new NullType()));
-    values.add(new StructElement(WOBBLE_SPEED_ID, wobbleSpeed != null ? new UIntType(wobbleSpeed) : new NullType()));
+    values.add(new StructElement(AXIS_ID, axis != null ? axis.<BaseTLVType>map((nonOptionalaxis) -> new UIntType(nonOptionalaxis)).orElse(new EmptyType()) : new NullType()));
+    values.add(new StructElement(WOBBLE_SPEED_ID, wobbleSpeed != null ? wobbleSpeed.<BaseTLVType>map((nonOptionalwobbleSpeed) -> new UIntType(nonOptionalwobbleSpeed)).orElse(new EmptyType()) : new NullType()));
     values.add(new StructElement(PASSCODE_ID, passcode != null ? new StringType(passcode) : new NullType()));
 
     return new StructType(values);
@@ -7483,8 +7483,8 @@ public static class DiscoBallClusterPatternStruct {
     Integer duration = null;
     @Nullable Integer rotate = null;
     @Nullable Integer speed = null;
-    @Nullable Integer axis = null;
-    @Nullable Integer wobbleSpeed = null;
+    @Nullable Optional<Integer> axis = null;
+    @Nullable Optional<Integer> wobbleSpeed = null;
     @Nullable String passcode = null;
     for (StructElement element: ((StructType)tlvValue).value()) {
       if (element.contextTagNum() == DURATION_ID) {
@@ -7505,12 +7505,12 @@ public static class DiscoBallClusterPatternStruct {
       } else if (element.contextTagNum() == AXIS_ID) {
         if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
           UIntType castingValue = element.value(UIntType.class);
-          axis = castingValue.value(Integer.class);
+          axis = Optional.of(castingValue.value(Integer.class));
         }
       } else if (element.contextTagNum() == WOBBLE_SPEED_ID) {
         if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
           UIntType castingValue = element.value(UIntType.class);
-          wobbleSpeed = castingValue.value(Integer.class);
+          wobbleSpeed = Optional.of(castingValue.value(Integer.class));
         }
       } else if (element.contextTagNum() == PASSCODE_ID) {
         if (element.value(BaseTLVType.class).type() == TLVType.String) {

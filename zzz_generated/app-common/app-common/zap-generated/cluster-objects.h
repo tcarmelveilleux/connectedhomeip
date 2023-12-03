@@ -36349,8 +36349,8 @@ public:
     uint16_t duration = static_cast<uint16_t>(0);
     DataModel::Nullable<RotateEnum> rotate;
     DataModel::Nullable<uint8_t> speed;
-    DataModel::Nullable<uint8_t> axis;
-    DataModel::Nullable<uint8_t> wobbleSpeed;
+    Optional<DataModel::Nullable<uint8_t>> axis;
+    Optional<DataModel::Nullable<uint8_t>> wobbleSpeed;
     DataModel::Nullable<chip::CharSpan> passcode;
 
     CHIP_ERROR Decode(TLV::TLVReader & reader);
@@ -36427,7 +36427,7 @@ public:
 
     using ResponseType = DataModel::NullObjectType;
 
-    static constexpr bool MustUseTimedInvoke() { return false; }
+    static constexpr bool MustUseTimedInvoke() { return true; }
 };
 
 struct DecodableType
@@ -36571,7 +36571,7 @@ public:
 
     CHIP_ERROR Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const;
 
-    using ResponseType = DataModel::NullObjectType;
+    using ResponseType = Clusters::DiscoBall::Commands::StatsResponse::DecodableType;
 
     static constexpr bool MustUseTimedInvoke() { return false; }
 };
@@ -36698,7 +36698,7 @@ struct TypeInfo
     static constexpr bool MustUseTimedWrite() { return false; }
 };
 } // namespace PatternPatternPattern
-namespace NameNameName {
+namespace Name {
 struct TypeInfo
 {
     using Type             = chip::CharSpan;
@@ -36706,11 +36706,11 @@ struct TypeInfo
     using DecodableArgType = chip::CharSpan;
 
     static constexpr ClusterId GetClusterId() { return Clusters::DiscoBall::Id; }
-    static constexpr AttributeId GetAttributeId() { return Attributes::NameNameName::Id; }
+    static constexpr AttributeId GetAttributeId() { return Attributes::Name::Id; }
     static constexpr bool MustUseTimedWrite() { return false; }
     static constexpr size_t MaxLength() { return 16; }
 };
-} // namespace NameNameName
+} // namespace Name
 namespace WobbleSupport {
 struct TypeInfo
 {
@@ -36723,7 +36723,7 @@ struct TypeInfo
     static constexpr bool MustUseTimedWrite() { return false; }
 };
 } // namespace WobbleSupport
-namespace WobbleSettingWobbleSettingWobbleSetting {
+namespace WobbleSetting {
 struct TypeInfo
 {
     using Type             = chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap>;
@@ -36731,10 +36731,10 @@ struct TypeInfo
     using DecodableArgType = chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap>;
 
     static constexpr ClusterId GetClusterId() { return Clusters::DiscoBall::Id; }
-    static constexpr AttributeId GetAttributeId() { return Attributes::WobbleSettingWobbleSettingWobbleSetting::Id; }
+    static constexpr AttributeId GetAttributeId() { return Attributes::WobbleSetting::Id; }
     static constexpr bool MustUseTimedWrite() { return false; }
 };
-} // namespace WobbleSettingWobbleSettingWobbleSetting
+} // namespace WobbleSetting
 namespace GeneratedCommandList {
 struct TypeInfo : public Clusters::Globals::Attributes::GeneratedCommandList::TypeInfo
 {
@@ -36786,10 +36786,10 @@ struct TypeInfo
         Attributes::Axis::TypeInfo::DecodableType axis               = static_cast<uint8_t>(0);
         Attributes::WobbleSpeed::TypeInfo::DecodableType wobbleSpeed = static_cast<uint8_t>(0);
         Attributes::PatternPatternPattern::TypeInfo::DecodableType patternPatternPattern;
-        Attributes::NameNameName::TypeInfo::DecodableType nameNameName;
+        Attributes::Name::TypeInfo::DecodableType name;
         Attributes::WobbleSupport::TypeInfo::DecodableType wobbleSupport =
             static_cast<chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap>>(0);
-        Attributes::WobbleSettingWobbleSettingWobbleSetting::TypeInfo::DecodableType wobbleSettingWobbleSettingWobbleSetting =
+        Attributes::WobbleSetting::TypeInfo::DecodableType wobbleSetting =
             static_cast<chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap>>(0);
         Attributes::GeneratedCommandList::TypeInfo::DecodableType generatedCommandList;
         Attributes::AcceptedCommandList::TypeInfo::DecodableType acceptedCommandList;

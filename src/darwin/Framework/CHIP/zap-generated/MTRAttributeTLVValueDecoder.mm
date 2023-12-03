@@ -15472,15 +15472,23 @@ static id _Nullable DecodeAttributeValueForDiscoBallCluster(AttributeId aAttribu
                 } else {
                     newElement_0.speed = [NSNumber numberWithUnsignedChar:entry_0.speed.Value()];
                 }
-                if (entry_0.axis.IsNull()) {
+                if (entry_0.axis.HasValue()) {
+                    if (entry_0.axis.Value().IsNull()) {
+                        newElement_0.axis = nil;
+                    } else {
+                        newElement_0.axis = [NSNumber numberWithUnsignedChar:entry_0.axis.Value().Value()];
+                    }
+                } else {
                     newElement_0.axis = nil;
-                } else {
-                    newElement_0.axis = [NSNumber numberWithUnsignedChar:entry_0.axis.Value()];
                 }
-                if (entry_0.wobbleSpeed.IsNull()) {
-                    newElement_0.wobbleSpeed = nil;
+                if (entry_0.wobbleSpeed.HasValue()) {
+                    if (entry_0.wobbleSpeed.Value().IsNull()) {
+                        newElement_0.wobbleSpeed = nil;
+                    } else {
+                        newElement_0.wobbleSpeed = [NSNumber numberWithUnsignedChar:entry_0.wobbleSpeed.Value().Value()];
+                    }
                 } else {
-                    newElement_0.wobbleSpeed = [NSNumber numberWithUnsignedChar:entry_0.wobbleSpeed.Value()];
+                    newElement_0.wobbleSpeed = nil;
                 }
                 if (entry_0.passcode.IsNull()) {
                     newElement_0.passcode = nil;
@@ -15503,8 +15511,8 @@ static id _Nullable DecodeAttributeValueForDiscoBallCluster(AttributeId aAttribu
         }
         return value;
     }
-    case Attributes::NameNameName::Id: {
-        using TypeInfo = Attributes::NameNameName::TypeInfo;
+    case Attributes::Name::Id: {
+        using TypeInfo = Attributes::Name::TypeInfo;
         TypeInfo::DecodableType cppValue;
         *aError = DataModel::Decode(aReader, cppValue);
         if (*aError != CHIP_NO_ERROR) {
@@ -15530,8 +15538,8 @@ static id _Nullable DecodeAttributeValueForDiscoBallCluster(AttributeId aAttribu
         value = [NSNumber numberWithUnsignedChar:cppValue.Raw()];
         return value;
     }
-    case Attributes::WobbleSettingWobbleSettingWobbleSetting::Id: {
-        using TypeInfo = Attributes::WobbleSettingWobbleSettingWobbleSetting::TypeInfo;
+    case Attributes::WobbleSetting::Id: {
+        using TypeInfo = Attributes::WobbleSetting::TypeInfo;
         TypeInfo::DecodableType cppValue;
         *aError = DataModel::Decode(aReader, cppValue);
         if (*aError != CHIP_NO_ERROR) {

@@ -4977,20 +4977,20 @@ EmberAfStatus Get(chip::EndpointId endpoint, uint8_t * value); // int8u
 EmberAfStatus Set(chip::EndpointId endpoint, uint8_t value);
 } // namespace WobbleSpeed
 
-namespace NameNameName {
+namespace Name {
 EmberAfStatus Get(chip::EndpointId endpoint, chip::MutableCharSpan & value); // char_string
 EmberAfStatus Set(chip::EndpointId endpoint, chip::CharSpan value);
-} // namespace NameNameName
+} // namespace Name
 
 namespace WobbleSupport {
 EmberAfStatus Get(chip::EndpointId endpoint, chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap> * value); // WobbleBitmap
 EmberAfStatus Set(chip::EndpointId endpoint, chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap> value);
 } // namespace WobbleSupport
 
-namespace WobbleSettingWobbleSettingWobbleSetting {
+namespace WobbleSetting {
 EmberAfStatus Get(chip::EndpointId endpoint, chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap> * value); // WobbleBitmap
 EmberAfStatus Set(chip::EndpointId endpoint, chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap> value);
-} // namespace WobbleSettingWobbleSettingWobbleSetting
+} // namespace WobbleSetting
 
 namespace FeatureMap {
 EmberAfStatus Get(chip::EndpointId endpoint, uint32_t * value); // bitmap32

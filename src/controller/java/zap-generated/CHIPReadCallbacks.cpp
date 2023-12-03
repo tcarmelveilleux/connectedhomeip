@@ -54053,32 +54053,51 @@ void CHIPDiscoBallPatternPatternPatternAttributeCallback::CallbackFn(
                                                                        jninewElement_0_speed, newElement_0_speed);
         }
         jobject newElement_0_axis;
-        if (entry_0.axis.IsNull())
+        if (!entry_0.axis.HasValue())
         {
-            newElement_0_axis = nullptr;
+            chip::JniReferences::GetInstance().CreateOptional(nullptr, newElement_0_axis);
         }
         else
         {
-            std::string newElement_0_axisClassName     = "java/lang/Integer";
-            std::string newElement_0_axisCtorSignature = "(I)V";
-            jint jninewElement_0_axis                  = static_cast<jint>(entry_0.axis.Value());
-            chip::JniReferences::GetInstance().CreateBoxedObject<jint>(newElement_0_axisClassName.c_str(),
-                                                                       newElement_0_axisCtorSignature.c_str(), jninewElement_0_axis,
-                                                                       newElement_0_axis);
+            jobject newElement_0_axisInsideOptional;
+            if (entry_0.axis.Value().IsNull())
+            {
+                newElement_0_axisInsideOptional = nullptr;
+            }
+            else
+            {
+                std::string newElement_0_axisInsideOptionalClassName     = "java/lang/Integer";
+                std::string newElement_0_axisInsideOptionalCtorSignature = "(I)V";
+                jint jninewElement_0_axisInsideOptional                  = static_cast<jint>(entry_0.axis.Value().Value());
+                chip::JniReferences::GetInstance().CreateBoxedObject<jint>(
+                    newElement_0_axisInsideOptionalClassName.c_str(), newElement_0_axisInsideOptionalCtorSignature.c_str(),
+                    jninewElement_0_axisInsideOptional, newElement_0_axisInsideOptional);
+            }
+            chip::JniReferences::GetInstance().CreateOptional(newElement_0_axisInsideOptional, newElement_0_axis);
         }
         jobject newElement_0_wobbleSpeed;
-        if (entry_0.wobbleSpeed.IsNull())
+        if (!entry_0.wobbleSpeed.HasValue())
         {
-            newElement_0_wobbleSpeed = nullptr;
+            chip::JniReferences::GetInstance().CreateOptional(nullptr, newElement_0_wobbleSpeed);
         }
         else
         {
-            std::string newElement_0_wobbleSpeedClassName     = "java/lang/Integer";
-            std::string newElement_0_wobbleSpeedCtorSignature = "(I)V";
-            jint jninewElement_0_wobbleSpeed                  = static_cast<jint>(entry_0.wobbleSpeed.Value());
-            chip::JniReferences::GetInstance().CreateBoxedObject<jint>(newElement_0_wobbleSpeedClassName.c_str(),
-                                                                       newElement_0_wobbleSpeedCtorSignature.c_str(),
-                                                                       jninewElement_0_wobbleSpeed, newElement_0_wobbleSpeed);
+            jobject newElement_0_wobbleSpeedInsideOptional;
+            if (entry_0.wobbleSpeed.Value().IsNull())
+            {
+                newElement_0_wobbleSpeedInsideOptional = nullptr;
+            }
+            else
+            {
+                std::string newElement_0_wobbleSpeedInsideOptionalClassName     = "java/lang/Integer";
+                std::string newElement_0_wobbleSpeedInsideOptionalCtorSignature = "(I)V";
+                jint jninewElement_0_wobbleSpeedInsideOptional = static_cast<jint>(entry_0.wobbleSpeed.Value().Value());
+                chip::JniReferences::GetInstance().CreateBoxedObject<jint>(
+                    newElement_0_wobbleSpeedInsideOptionalClassName.c_str(),
+                    newElement_0_wobbleSpeedInsideOptionalCtorSignature.c_str(), jninewElement_0_wobbleSpeedInsideOptional,
+                    newElement_0_wobbleSpeedInsideOptional);
+            }
+            chip::JniReferences::GetInstance().CreateOptional(newElement_0_wobbleSpeedInsideOptional, newElement_0_wobbleSpeed);
         }
         jobject newElement_0_passcode;
         if (entry_0.passcode.IsNull())
@@ -54098,9 +54117,9 @@ void CHIPDiscoBallPatternPatternPatternAttributeCallback::CallbackFn(
             ChipLogError(Zcl, "Could not find class ChipStructs$DiscoBallClusterPatternStruct");
             return;
         }
-        jmethodID patternStructStructCtor_1 = env->GetMethodID(
-            patternStructStructClass_1, "<init>",
-            "(Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;)V");
+        jmethodID patternStructStructCtor_1 = env->GetMethodID(patternStructStructClass_1, "<init>",
+                                                               "(Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/"
+                                                               "util/Optional;Ljava/util/Optional;Ljava/lang/String;)V");
         if (patternStructStructCtor_1 == nullptr)
         {
             ChipLogError(Zcl, "Could not find ChipStructs$DiscoBallClusterPatternStruct constructor");

@@ -21,6 +21,8 @@ import matter.controller.MatterController
 import matter.devicecontroller.cluster.structs.*
 
 class DiscoBallCluster(private val controller: MatterController, private val endpointId: UShort) {
+  class StatsResponse(val lastRun: UInt, val patterns: UInt?)
+
   class PatternPatternPatternAttribute(val value: List<DiscoBallClusterPatternStruct>?)
 
   class GeneratedCommandListAttribute(val value: List<UInt>)
@@ -31,14 +33,10 @@ class DiscoBallCluster(private val controller: MatterController, private val end
 
   class AttributeListAttribute(val value: List<UInt>)
 
-  suspend fun startRequest(speed: UByte, rotate: UInt?, timedInvokeTimeoutMs: Int? = null) {
+  suspend fun startRequest(speed: UByte, rotate: UInt?, timedInvokeTimeoutMs: Int) {
     val commandId = 0L
 
-    if (timedInvokeTimeoutMs != null) {
-      // Do the action with timedInvokeTimeoutMs
-    } else {
-      // Do the action without timedInvokeTimeoutMs
-    }
+    // Implementation needs to be added here
   }
 
   suspend fun stopRequest(timedInvokeTimeoutMs: Int? = null) {
@@ -81,7 +79,7 @@ class DiscoBallCluster(private val controller: MatterController, private val end
     }
   }
 
-  suspend fun statsRequest(timedInvokeTimeoutMs: Int? = null) {
+  suspend fun statsRequest(timedInvokeTimeoutMs: Int? = null): StatsResponse {
     val commandId = 5L
 
     if (timedInvokeTimeoutMs != null) {
@@ -169,11 +167,11 @@ class DiscoBallCluster(private val controller: MatterController, private val end
     // Implementation needs to be added here
   }
 
-  suspend fun readNameNameNameAttribute(): CharString {
+  suspend fun readNameAttribute(): CharString {
     // Implementation needs to be added here
   }
 
-  suspend fun writeNameNameNameAttribute(value: String, timedWriteTimeoutMs: Int? = null) {
+  suspend fun writeNameAttribute(value: String, timedWriteTimeoutMs: Int? = null) {
     if (timedWriteTimeoutMs != null) {
       // Do the action with timedWriteTimeoutMs
     } else {
@@ -181,7 +179,7 @@ class DiscoBallCluster(private val controller: MatterController, private val end
     }
   }
 
-  suspend fun subscribeNameNameNameAttribute(minInterval: Int, maxInterval: Int): CharString {
+  suspend fun subscribeNameAttribute(minInterval: Int, maxInterval: Int): CharString {
     // Implementation needs to be added here
   }
 
@@ -193,14 +191,11 @@ class DiscoBallCluster(private val controller: MatterController, private val end
     // Implementation needs to be added here
   }
 
-  suspend fun readWobbleSettingWobbleSettingWobbleSettingAttribute(): UByte {
+  suspend fun readWobbleSettingAttribute(): UByte {
     // Implementation needs to be added here
   }
 
-  suspend fun writeWobbleSettingWobbleSettingWobbleSettingAttribute(
-    value: UInt,
-    timedWriteTimeoutMs: Int? = null
-  ) {
+  suspend fun writeWobbleSettingAttribute(value: UInt, timedWriteTimeoutMs: Int? = null) {
     if (timedWriteTimeoutMs != null) {
       // Do the action with timedWriteTimeoutMs
     } else {
@@ -208,10 +203,7 @@ class DiscoBallCluster(private val controller: MatterController, private val end
     }
   }
 
-  suspend fun subscribeWobbleSettingWobbleSettingWobbleSettingAttribute(
-    minInterval: Int,
-    maxInterval: Int
-  ): UByte {
+  suspend fun subscribeWobbleSettingAttribute(minInterval: Int, maxInterval: Int): UByte {
     // Implementation needs to be added here
   }
 

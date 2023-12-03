@@ -42071,9 +42071,9 @@ class DiscoBall(Cluster):
                 ClusterObjectFieldDescriptor(Label="axis", Tag=0x00000003, Type=typing.Optional[uint]),
                 ClusterObjectFieldDescriptor(Label="wobbleSpeed", Tag=0x00000004, Type=typing.Optional[uint]),
                 ClusterObjectFieldDescriptor(Label="patternPatternPattern", Tag=0x00000005, Type=typing.Optional[typing.List[DiscoBall.Structs.PatternStruct]]),
-                ClusterObjectFieldDescriptor(Label="nameNameName", Tag=0x00000006, Type=typing.Optional[str]),
+                ClusterObjectFieldDescriptor(Label="name", Tag=0x00000006, Type=typing.Optional[str]),
                 ClusterObjectFieldDescriptor(Label="wobbleSupport", Tag=0x00000007, Type=typing.Optional[uint]),
-                ClusterObjectFieldDescriptor(Label="wobbleSettingWobbleSettingWobbleSetting", Tag=0x00000008, Type=typing.Optional[uint]),
+                ClusterObjectFieldDescriptor(Label="wobbleSetting", Tag=0x00000008, Type=typing.Optional[uint]),
                 ClusterObjectFieldDescriptor(Label="generatedCommandList", Tag=0x0000FFF8, Type=typing.List[uint]),
                 ClusterObjectFieldDescriptor(Label="acceptedCommandList", Tag=0x0000FFF9, Type=typing.List[uint]),
                 ClusterObjectFieldDescriptor(Label="eventList", Tag=0x0000FFFA, Type=typing.List[uint]),
@@ -42088,9 +42088,9 @@ class DiscoBall(Cluster):
     axis: 'typing.Optional[uint]' = None
     wobbleSpeed: 'typing.Optional[uint]' = None
     patternPatternPattern: 'typing.Optional[typing.List[DiscoBall.Structs.PatternStruct]]' = None
-    nameNameName: 'typing.Optional[str]' = None
+    name: 'typing.Optional[str]' = None
     wobbleSupport: 'typing.Optional[uint]' = None
-    wobbleSettingWobbleSettingWobbleSetting: 'typing.Optional[uint]' = None
+    wobbleSetting: 'typing.Optional[uint]' = None
     generatedCommandList: 'typing.List[uint]' = None
     acceptedCommandList: 'typing.List[uint]' = None
     eventList: 'typing.List[uint]' = None
@@ -42140,16 +42140,16 @@ class DiscoBall(Cluster):
                         ClusterObjectFieldDescriptor(Label="duration", Tag=0, Type=uint),
                         ClusterObjectFieldDescriptor(Label="rotate", Tag=1, Type=typing.Union[Nullable, DiscoBall.Enums.RotateEnum]),
                         ClusterObjectFieldDescriptor(Label="speed", Tag=2, Type=typing.Union[Nullable, uint]),
-                        ClusterObjectFieldDescriptor(Label="axis", Tag=3, Type=typing.Union[Nullable, uint]),
-                        ClusterObjectFieldDescriptor(Label="wobbleSpeed", Tag=4, Type=typing.Union[Nullable, uint]),
+                        ClusterObjectFieldDescriptor(Label="axis", Tag=3, Type=typing.Union[None, Nullable, uint]),
+                        ClusterObjectFieldDescriptor(Label="wobbleSpeed", Tag=4, Type=typing.Union[None, Nullable, uint]),
                         ClusterObjectFieldDescriptor(Label="passcode", Tag=5, Type=typing.Union[Nullable, str]),
                     ])
 
             duration: 'uint' = 0
             rotate: 'typing.Union[Nullable, DiscoBall.Enums.RotateEnum]' = NullValue
             speed: 'typing.Union[Nullable, uint]' = NullValue
-            axis: 'typing.Union[Nullable, uint]' = NullValue
-            wobbleSpeed: 'typing.Union[Nullable, uint]' = NullValue
+            axis: 'typing.Union[None, Nullable, uint]' = None
+            wobbleSpeed: 'typing.Union[None, Nullable, uint]' = None
             passcode: 'typing.Union[Nullable, str]' = NullValue
 
     class Commands:
@@ -42167,6 +42167,10 @@ class DiscoBall(Cluster):
                         ClusterObjectFieldDescriptor(Label="speed", Tag=0, Type=uint),
                         ClusterObjectFieldDescriptor(Label="rotate", Tag=1, Type=typing.Optional[DiscoBall.Enums.RotateEnum]),
                     ])
+
+            @ChipUtility.classproperty
+            def must_use_timed_invoke(cls) -> bool:
+                return True
 
             speed: 'uint' = 0
             rotate: 'typing.Optional[DiscoBall.Enums.RotateEnum]' = None
@@ -42231,7 +42235,7 @@ class DiscoBall(Cluster):
             cluster_id: typing.ClassVar[int] = 0x00003456
             command_id: typing.ClassVar[int] = 0x00000005
             is_client: typing.ClassVar[bool] = True
-            response_type: typing.ClassVar[str] = None
+            response_type: typing.ClassVar[str] = 'StatsResponse'
 
             @ChipUtility.classproperty
             def descriptor(cls) -> ClusterObjectDescriptor:
@@ -42355,7 +42359,7 @@ class DiscoBall(Cluster):
             value: 'typing.Optional[typing.List[DiscoBall.Structs.PatternStruct]]' = None
 
         @dataclass
-        class NameNameName(ClusterAttributeDescriptor):
+        class Name(ClusterAttributeDescriptor):
             @ChipUtility.classproperty
             def cluster_id(cls) -> int:
                 return 0x00003456
@@ -42387,7 +42391,7 @@ class DiscoBall(Cluster):
             value: 'typing.Optional[uint]' = None
 
         @dataclass
-        class WobbleSettingWobbleSettingWobbleSetting(ClusterAttributeDescriptor):
+        class WobbleSetting(ClusterAttributeDescriptor):
             @ChipUtility.classproperty
             def cluster_id(cls) -> int:
                 return 0x00003456

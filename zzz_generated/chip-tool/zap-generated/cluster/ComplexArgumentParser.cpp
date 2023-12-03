@@ -3231,9 +3231,6 @@ CHIP_ERROR ComplexArgumentParser::Setup(const char * label, chip::app::Clusters:
         ComplexArgumentParser::EnsureMemberExist("PatternStruct.duration", "duration", value.isMember("duration")));
     ReturnErrorOnFailure(ComplexArgumentParser::EnsureMemberExist("PatternStruct.rotate", "rotate", value.isMember("rotate")));
     ReturnErrorOnFailure(ComplexArgumentParser::EnsureMemberExist("PatternStruct.speed", "speed", value.isMember("speed")));
-    ReturnErrorOnFailure(ComplexArgumentParser::EnsureMemberExist("PatternStruct.axis", "axis", value.isMember("axis")));
-    ReturnErrorOnFailure(
-        ComplexArgumentParser::EnsureMemberExist("PatternStruct.wobbleSpeed", "wobbleSpeed", value.isMember("wobbleSpeed")));
     ReturnErrorOnFailure(
         ComplexArgumentParser::EnsureMemberExist("PatternStruct.passcode", "passcode", value.isMember("passcode")));
 
@@ -3250,12 +3247,18 @@ CHIP_ERROR ComplexArgumentParser::Setup(const char * label, chip::app::Clusters:
     ReturnErrorOnFailure(ComplexArgumentParser::Setup(labelWithMember, request.speed, value["speed"]));
     valueCopy.removeMember("speed");
 
-    snprintf(labelWithMember, sizeof(labelWithMember), "%s.%s", label, "axis");
-    ReturnErrorOnFailure(ComplexArgumentParser::Setup(labelWithMember, request.axis, value["axis"]));
+    if (value.isMember("axis"))
+    {
+        snprintf(labelWithMember, sizeof(labelWithMember), "%s.%s", label, "axis");
+        ReturnErrorOnFailure(ComplexArgumentParser::Setup(labelWithMember, request.axis, value["axis"]));
+    }
     valueCopy.removeMember("axis");
 
-    snprintf(labelWithMember, sizeof(labelWithMember), "%s.%s", label, "wobbleSpeed");
-    ReturnErrorOnFailure(ComplexArgumentParser::Setup(labelWithMember, request.wobbleSpeed, value["wobbleSpeed"]));
+    if (value.isMember("wobbleSpeed"))
+    {
+        snprintf(labelWithMember, sizeof(labelWithMember), "%s.%s", label, "wobbleSpeed");
+        ReturnErrorOnFailure(ComplexArgumentParser::Setup(labelWithMember, request.wobbleSpeed, value["wobbleSpeed"]));
+    }
     valueCopy.removeMember("wobbleSpeed");
 
     snprintf(labelWithMember, sizeof(labelWithMember), "%s.%s", label, "passcode");

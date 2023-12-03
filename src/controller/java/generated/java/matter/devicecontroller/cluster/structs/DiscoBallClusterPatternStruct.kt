@@ -16,6 +16,7 @@
  */
 package matter.devicecontroller.cluster.structs
 
+import java.util.Optional
 import matter.devicecontroller.cluster.*
 import matter.tlv.ContextSpecificTag
 import matter.tlv.Tag
@@ -26,8 +27,8 @@ class DiscoBallClusterPatternStruct(
   val duration: UShort,
   val rotate: UInt?,
   val speed: UByte?,
-  val axis: UByte?,
-  val wobbleSpeed: UByte?,
+  val axis: Optional<UByte>?,
+  val wobbleSpeed: Optional<UByte>?,
   val passcode: String?
 ) {
   override fun toString(): String = buildString {
@@ -56,12 +57,18 @@ class DiscoBallClusterPatternStruct(
         putNull(ContextSpecificTag(TAG_SPEED))
       }
       if (axis != null) {
-        put(ContextSpecificTag(TAG_AXIS), axis)
+        if (axis.isPresent) {
+          val optaxis = axis.get()
+          put(ContextSpecificTag(TAG_AXIS), optaxis)
+        }
       } else {
         putNull(ContextSpecificTag(TAG_AXIS))
       }
       if (wobbleSpeed != null) {
-        put(ContextSpecificTag(TAG_WOBBLE_SPEED), wobbleSpeed)
+        if (wobbleSpeed.isPresent) {
+          val optwobbleSpeed = wobbleSpeed.get()
+          put(ContextSpecificTag(TAG_WOBBLE_SPEED), optwobbleSpeed)
+        }
       } else {
         putNull(ContextSpecificTag(TAG_WOBBLE_SPEED))
       }
@@ -101,14 +108,22 @@ class DiscoBallClusterPatternStruct(
         }
       val axis =
         if (!tlvReader.isNull()) {
-          tlvReader.getUByte(ContextSpecificTag(TAG_AXIS))
+          if (tlvReader.isNextTag(ContextSpecificTag(TAG_AXIS))) {
+            Optional.of(tlvReader.getUByte(ContextSpecificTag(TAG_AXIS)))
+          } else {
+            Optional.empty()
+          }
         } else {
           tlvReader.getNull(ContextSpecificTag(TAG_AXIS))
           null
         }
       val wobbleSpeed =
         if (!tlvReader.isNull()) {
-          tlvReader.getUByte(ContextSpecificTag(TAG_WOBBLE_SPEED))
+          if (tlvReader.isNextTag(ContextSpecificTag(TAG_WOBBLE_SPEED))) {
+            Optional.of(tlvReader.getUByte(ContextSpecificTag(TAG_WOBBLE_SPEED)))
+          } else {
+            Optional.empty()
+          }
         } else {
           tlvReader.getNull(ContextSpecificTag(TAG_WOBBLE_SPEED))
           null

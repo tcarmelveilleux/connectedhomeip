@@ -11689,9 +11689,9 @@ private:
 | * Axis                                                              | 0x0003 |
 | * WobbleSpeed                                                       | 0x0004 |
 | * PatternPatternPattern                                             | 0x0005 |
-| * NameNameName                                                      | 0x0006 |
+| * Name                                                              | 0x0006 |
 | * WobbleSupport                                                     | 0x0007 |
-| * WobbleSettingWobbleSettingWobbleSetting                           | 0x0008 |
+| * WobbleSetting                                                     | 0x0008 |
 | * GeneratedCommandList                                              | 0xFFF8 |
 | * AcceptedCommandList                                               | 0xFFF9 |
 | * EventList                                                         | 0xFFFA |
@@ -23559,17 +23559,16 @@ void registerClusterDiscoBall(Commands & commands, CredentialIssuerCommands * cr
         make_unique<ReadAttribute>(Id, "axis", Attributes::Axis::Id, credsIssuerConfig),                                     //
         make_unique<ReadAttribute>(Id, "wobble-speed", Attributes::WobbleSpeed::Id, credsIssuerConfig),                      //
         make_unique<ReadAttribute>(Id, "pattern-pattern-pattern", Attributes::PatternPatternPattern::Id, credsIssuerConfig), //
-        make_unique<ReadAttribute>(Id, "name-name-name", Attributes::NameNameName::Id, credsIssuerConfig),                   //
+        make_unique<ReadAttribute>(Id, "name", Attributes::Name::Id, credsIssuerConfig),                                     //
         make_unique<ReadAttribute>(Id, "wobble-support", Attributes::WobbleSupport::Id, credsIssuerConfig),                  //
-        make_unique<ReadAttribute>(Id, "wobble-setting-wobble-setting-wobble-setting",
-                                   Attributes::WobbleSettingWobbleSettingWobbleSetting::Id, credsIssuerConfig),            //
-        make_unique<ReadAttribute>(Id, "generated-command-list", Attributes::GeneratedCommandList::Id, credsIssuerConfig), //
-        make_unique<ReadAttribute>(Id, "accepted-command-list", Attributes::AcceptedCommandList::Id, credsIssuerConfig),   //
-        make_unique<ReadAttribute>(Id, "event-list", Attributes::EventList::Id, credsIssuerConfig),                        //
-        make_unique<ReadAttribute>(Id, "attribute-list", Attributes::AttributeList::Id, credsIssuerConfig),                //
-        make_unique<ReadAttribute>(Id, "feature-map", Attributes::FeatureMap::Id, credsIssuerConfig),                      //
-        make_unique<ReadAttribute>(Id, "cluster-revision", Attributes::ClusterRevision::Id, credsIssuerConfig),            //
-        make_unique<WriteAttribute<>>(Id, credsIssuerConfig),                                                              //
+        make_unique<ReadAttribute>(Id, "wobble-setting", Attributes::WobbleSetting::Id, credsIssuerConfig),                  //
+        make_unique<ReadAttribute>(Id, "generated-command-list", Attributes::GeneratedCommandList::Id, credsIssuerConfig),   //
+        make_unique<ReadAttribute>(Id, "accepted-command-list", Attributes::AcceptedCommandList::Id, credsIssuerConfig),     //
+        make_unique<ReadAttribute>(Id, "event-list", Attributes::EventList::Id, credsIssuerConfig),                          //
+        make_unique<ReadAttribute>(Id, "attribute-list", Attributes::AttributeList::Id, credsIssuerConfig),                  //
+        make_unique<ReadAttribute>(Id, "feature-map", Attributes::FeatureMap::Id, credsIssuerConfig),                        //
+        make_unique<ReadAttribute>(Id, "cluster-revision", Attributes::ClusterRevision::Id, credsIssuerConfig),              //
+        make_unique<WriteAttribute<>>(Id, credsIssuerConfig),                                                                //
         make_unique<WriteAttribute<bool>>(Id, "run", 0, 1, Attributes::Run::Id, WriteCommandType::kForceWrite,
                                           credsIssuerConfig), //
         make_unique<WriteAttribute<chip::app::Clusters::DiscoBall::RotateEnum>>(
@@ -23583,13 +23582,12 @@ void registerClusterDiscoBall(Commands & commands, CredentialIssuerCommands * cr
         make_unique<WriteAttributeAsComplex<
             chip::app::DataModel::List<const chip::app::Clusters::DiscoBall::Structs::PatternStruct::Type>>>(
             Id, "pattern-pattern-pattern", Attributes::PatternPatternPattern::Id, WriteCommandType::kWrite, credsIssuerConfig), //
-        make_unique<WriteAttribute<chip::CharSpan>>(Id, "name-name-name", Attributes::NameNameName::Id, WriteCommandType::kWrite,
+        make_unique<WriteAttribute<chip::CharSpan>>(Id, "name", Attributes::Name::Id, WriteCommandType::kWrite,
                                                     credsIssuerConfig), //
         make_unique<WriteAttribute<chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap>>>(
             Id, "wobble-support", 0, UINT8_MAX, Attributes::WobbleSupport::Id, WriteCommandType::kForceWrite, credsIssuerConfig), //
         make_unique<WriteAttribute<chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap>>>(
-            Id, "wobble-setting-wobble-setting-wobble-setting", 0, UINT8_MAX,
-            Attributes::WobbleSettingWobbleSettingWobbleSetting::Id, WriteCommandType::kWrite, credsIssuerConfig), //
+            Id, "wobble-setting", 0, UINT8_MAX, Attributes::WobbleSetting::Id, WriteCommandType::kWrite, credsIssuerConfig), //
         make_unique<WriteAttributeAsComplex<chip::app::DataModel::List<const chip::CommandId>>>(
             Id, "generated-command-list", Attributes::GeneratedCommandList::Id, WriteCommandType::kForceWrite,
             credsIssuerConfig), //
@@ -23610,16 +23608,15 @@ void registerClusterDiscoBall(Commands & commands, CredentialIssuerCommands * cr
         make_unique<SubscribeAttribute>(Id, "axis", Attributes::Axis::Id, credsIssuerConfig),                                     //
         make_unique<SubscribeAttribute>(Id, "wobble-speed", Attributes::WobbleSpeed::Id, credsIssuerConfig),                      //
         make_unique<SubscribeAttribute>(Id, "pattern-pattern-pattern", Attributes::PatternPatternPattern::Id, credsIssuerConfig), //
-        make_unique<SubscribeAttribute>(Id, "name-name-name", Attributes::NameNameName::Id, credsIssuerConfig),                   //
+        make_unique<SubscribeAttribute>(Id, "name", Attributes::Name::Id, credsIssuerConfig),                                     //
         make_unique<SubscribeAttribute>(Id, "wobble-support", Attributes::WobbleSupport::Id, credsIssuerConfig),                  //
-        make_unique<SubscribeAttribute>(Id, "wobble-setting-wobble-setting-wobble-setting",
-                                        Attributes::WobbleSettingWobbleSettingWobbleSetting::Id, credsIssuerConfig),            //
-        make_unique<SubscribeAttribute>(Id, "generated-command-list", Attributes::GeneratedCommandList::Id, credsIssuerConfig), //
-        make_unique<SubscribeAttribute>(Id, "accepted-command-list", Attributes::AcceptedCommandList::Id, credsIssuerConfig),   //
-        make_unique<SubscribeAttribute>(Id, "event-list", Attributes::EventList::Id, credsIssuerConfig),                        //
-        make_unique<SubscribeAttribute>(Id, "attribute-list", Attributes::AttributeList::Id, credsIssuerConfig),                //
-        make_unique<SubscribeAttribute>(Id, "feature-map", Attributes::FeatureMap::Id, credsIssuerConfig),                      //
-        make_unique<SubscribeAttribute>(Id, "cluster-revision", Attributes::ClusterRevision::Id, credsIssuerConfig),            //
+        make_unique<SubscribeAttribute>(Id, "wobble-setting", Attributes::WobbleSetting::Id, credsIssuerConfig),                  //
+        make_unique<SubscribeAttribute>(Id, "generated-command-list", Attributes::GeneratedCommandList::Id, credsIssuerConfig),   //
+        make_unique<SubscribeAttribute>(Id, "accepted-command-list", Attributes::AcceptedCommandList::Id, credsIssuerConfig),     //
+        make_unique<SubscribeAttribute>(Id, "event-list", Attributes::EventList::Id, credsIssuerConfig),                          //
+        make_unique<SubscribeAttribute>(Id, "attribute-list", Attributes::AttributeList::Id, credsIssuerConfig),                  //
+        make_unique<SubscribeAttribute>(Id, "feature-map", Attributes::FeatureMap::Id, credsIssuerConfig),                        //
+        make_unique<SubscribeAttribute>(Id, "cluster-revision", Attributes::ClusterRevision::Id, credsIssuerConfig),              //
         //
         // Events
         //

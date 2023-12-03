@@ -3492,7 +3492,7 @@ cluster DishwasherMode = 89 {
 
   response struct ChangeToModeResponse = 1 {
     enum8 status = 0;
-    optional char_string statusText = 1;
+    optional char_string<64> statusText = 1;
   }
 
   /** This command is used to change device modes.
@@ -7642,8 +7642,8 @@ provisional cluster DiscoBall = 13398 {
     int16u duration = 0;
     nullable RotateEnum rotate = 1;
     nullable int8u speed = 2;
-    nullable int8u axis = 3;
-    nullable int8u wobbleSpeed = 4;
+    optional nullable int8u axis = 3;
+    optional nullable int8u wobbleSpeed = 4;
     nullable fabric_sensitive char_string passcode = 5;
   }
 
@@ -7666,9 +7666,9 @@ provisional cluster DiscoBall = 13398 {
   attribute optional int8u axis = 3;
   attribute optional int8u wobbleSpeed = 4;
   attribute access(write: manage) optional PatternStruct patternPatternPattern[] = 5;
-  attribute access(write: manage) optional char_string<16> nameNameName = 6;
+  attribute access(write: manage) optional char_string<16> name = 6;
   readonly attribute optional WobbleBitmap wobbleSupport = 7;
-  attribute access(write: manage) optional WobbleBitmap wobbleSettingWobbleSettingWobbleSetting = 8;
+  attribute access(write: manage) optional WobbleBitmap wobbleSetting = 8;
   readonly attribute command_id generatedCommandList[] = 65528;
   readonly attribute command_id acceptedCommandList[] = 65529;
   readonly attribute event_id eventList[] = 65530;
@@ -7691,7 +7691,7 @@ provisional cluster DiscoBall = 13398 {
   }
 
   /** Upon receipt, this SHALL start the disco ball rotating using the data as follows: */
-  command StartRequest(StartRequestRequest): DefaultSuccess = 0;
+  timed command StartRequest(StartRequestRequest): DefaultSuccess = 0;
   /** Upon receipt, this SHALL stop the disco ball rotating, and SHALL set the Run, Speed and Rotate attributes to 0. */
   command StopRequest(): DefaultSuccess = 1;
   /** Upon receipt, this SHALL reverse the direction of the disco ball rotation. This command MAY generate an error response of UNSUPPORTED_PATTERN. */
@@ -7701,7 +7701,7 @@ provisional cluster DiscoBall = 13398 {
   /** ID */
   command access(invoke: manage) PatternRequest(PatternRequestRequest): DefaultSuccess = 4;
   /** Upon receipt, this SHALL generate a StatsResponse command. */
-  command StatsRequest(): DefaultSuccess = 5;
+  command StatsRequest(): StatsResponse = 5;
 }
 
 /** The Test Cluster is meant to validate the generated code */

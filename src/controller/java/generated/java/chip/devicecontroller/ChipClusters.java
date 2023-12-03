@@ -54976,9 +54976,9 @@ public class ChipClusters {
     private static final long AXIS_ATTRIBUTE_ID = 3L;
     private static final long WOBBLE_SPEED_ATTRIBUTE_ID = 4L;
     private static final long PATTERN_PATTERN_PATTERN_ATTRIBUTE_ID = 5L;
-    private static final long NAME_NAME_NAME_ATTRIBUTE_ID = 6L;
+    private static final long NAME_ATTRIBUTE_ID = 6L;
     private static final long WOBBLE_SUPPORT_ATTRIBUTE_ID = 7L;
-    private static final long WOBBLE_SETTING_WOBBLE_SETTING_WOBBLE_SETTING_ATTRIBUTE_ID = 8L;
+    private static final long WOBBLE_SETTING_ATTRIBUTE_ID = 8L;
     private static final long GENERATED_COMMAND_LIST_ATTRIBUTE_ID = 65528L;
     private static final long ACCEPTED_COMMAND_LIST_ATTRIBUTE_ID = 65529L;
     private static final long EVENT_LIST_ATTRIBUTE_ID = 65530L;
@@ -54996,9 +54996,6 @@ public class ChipClusters {
       return 0L;
     }
 
-    public void startRequest(DefaultClusterCallback callback, Integer speed, Optional<Integer> rotate) {
-      startRequest(callback, speed, rotate, 0);
-    }
 
     public void startRequest(DefaultClusterCallback callback, Integer speed, Optional<Integer> rotate, int timedInvokeTimeoutMs) {
       final long commandId = 0L;
@@ -55088,11 +55085,11 @@ public class ChipClusters {
         }}, commandId, value, timedInvokeTimeoutMs);
     }
 
-    public void statsRequest(DefaultClusterCallback callback) {
+    public void statsRequest(StatsResponseCallback callback) {
       statsRequest(callback, 0);
     }
 
-    public void statsRequest(DefaultClusterCallback callback, int timedInvokeTimeoutMs) {
+    public void statsRequest(StatsResponseCallback callback, int timedInvokeTimeoutMs) {
       final long commandId = 5L;
 
       ArrayList<StructElement> elements = new ArrayList<>();
@@ -55100,8 +55097,29 @@ public class ChipClusters {
       invoke(new InvokeCallbackImpl(callback) {
           @Override
           public void onResponse(StructType invokeStructValue) {
-          callback.onSuccess();
+          final long lastRunFieldID = 0L;
+          Long lastRun = null;
+          final long patternsFieldID = 1L;
+          Optional<Long> patterns = Optional.empty();
+          for (StructElement element: invokeStructValue.value()) {
+            if (element.contextTagNum() == lastRunFieldID) {
+              if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+                UIntType castingValue = element.value(UIntType.class);
+                lastRun = castingValue.value(Long.class);
+              }
+            } else if (element.contextTagNum() == patternsFieldID) {
+              if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+                UIntType castingValue = element.value(UIntType.class);
+                patterns = Optional.of(castingValue.value(Long.class));
+              }
+            }
+          }
+          callback.onSuccess(lastRun, patterns);
         }}, commandId, value, timedInvokeTimeoutMs);
+    }
+
+    public interface StatsResponseCallback extends BaseClusterCallback {
+      void onSuccess(Long lastRun, Optional<Long> patterns);
     }
 
     public interface PatternPatternPatternAttributeCallback extends BaseAttributeCallback {
@@ -55301,9 +55319,9 @@ public class ChipClusters {
         }, PATTERN_PATTERN_PATTERN_ATTRIBUTE_ID, minInterval, maxInterval);
     }
 
-    public void readNameNameNameAttribute(
+    public void readNameAttribute(
         CharStringAttributeCallback callback) {
-      ChipAttributePath path = ChipAttributePath.newInstance(endpointId, clusterId, NAME_NAME_NAME_ATTRIBUTE_ID);
+      ChipAttributePath path = ChipAttributePath.newInstance(endpointId, clusterId, NAME_ATTRIBUTE_ID);
 
       readAttribute(new ReportCallbackImpl(callback, path) {
           @Override
@@ -55311,28 +55329,28 @@ public class ChipClusters {
             String value = ChipTLVValueDecoder.decodeAttributeValue(path, tlv);
             callback.onSuccess(value);
           }
-        }, NAME_NAME_NAME_ATTRIBUTE_ID, true);
+        }, NAME_ATTRIBUTE_ID, true);
     }
 
-    public void writeNameNameNameAttribute(DefaultClusterCallback callback, String value) {
-      writeNameNameNameAttribute(callback, value, 0);
+    public void writeNameAttribute(DefaultClusterCallback callback, String value) {
+      writeNameAttribute(callback, value, 0);
     }
 
-    public void writeNameNameNameAttribute(DefaultClusterCallback callback, String value, int timedWriteTimeoutMs) {
+    public void writeNameAttribute(DefaultClusterCallback callback, String value, int timedWriteTimeoutMs) {
       BaseTLVType tlvValue = new StringType(value);
-      writeAttribute(new WriteAttributesCallbackImpl(callback), NAME_NAME_NAME_ATTRIBUTE_ID, tlvValue, timedWriteTimeoutMs);
+      writeAttribute(new WriteAttributesCallbackImpl(callback), NAME_ATTRIBUTE_ID, tlvValue, timedWriteTimeoutMs);
     }
 
-    public void subscribeNameNameNameAttribute(
+    public void subscribeNameAttribute(
         CharStringAttributeCallback callback, int minInterval, int maxInterval) {
-      ChipAttributePath path = ChipAttributePath.newInstance(endpointId, clusterId, NAME_NAME_NAME_ATTRIBUTE_ID);
+      ChipAttributePath path = ChipAttributePath.newInstance(endpointId, clusterId, NAME_ATTRIBUTE_ID);
 
       subscribeAttribute(new ReportCallbackImpl(callback, path) {
           @Override
           public void onSuccess(byte[] tlv) {
             String value = ChipTLVValueDecoder.decodeAttributeValue(path, tlv);
           }
-        }, NAME_NAME_NAME_ATTRIBUTE_ID, minInterval, maxInterval);
+        }, NAME_ATTRIBUTE_ID, minInterval, maxInterval);
     }
 
     public void readWobbleSupportAttribute(
@@ -55360,9 +55378,9 @@ public class ChipClusters {
         }, WOBBLE_SUPPORT_ATTRIBUTE_ID, minInterval, maxInterval);
     }
 
-    public void readWobbleSettingWobbleSettingWobbleSettingAttribute(
+    public void readWobbleSettingAttribute(
         IntegerAttributeCallback callback) {
-      ChipAttributePath path = ChipAttributePath.newInstance(endpointId, clusterId, WOBBLE_SETTING_WOBBLE_SETTING_WOBBLE_SETTING_ATTRIBUTE_ID);
+      ChipAttributePath path = ChipAttributePath.newInstance(endpointId, clusterId, WOBBLE_SETTING_ATTRIBUTE_ID);
 
       readAttribute(new ReportCallbackImpl(callback, path) {
           @Override
@@ -55370,28 +55388,28 @@ public class ChipClusters {
             Integer value = ChipTLVValueDecoder.decodeAttributeValue(path, tlv);
             callback.onSuccess(value);
           }
-        }, WOBBLE_SETTING_WOBBLE_SETTING_WOBBLE_SETTING_ATTRIBUTE_ID, true);
+        }, WOBBLE_SETTING_ATTRIBUTE_ID, true);
     }
 
-    public void writeWobbleSettingWobbleSettingWobbleSettingAttribute(DefaultClusterCallback callback, Integer value) {
-      writeWobbleSettingWobbleSettingWobbleSettingAttribute(callback, value, 0);
+    public void writeWobbleSettingAttribute(DefaultClusterCallback callback, Integer value) {
+      writeWobbleSettingAttribute(callback, value, 0);
     }
 
-    public void writeWobbleSettingWobbleSettingWobbleSettingAttribute(DefaultClusterCallback callback, Integer value, int timedWriteTimeoutMs) {
+    public void writeWobbleSettingAttribute(DefaultClusterCallback callback, Integer value, int timedWriteTimeoutMs) {
       BaseTLVType tlvValue = new UIntType(value);
-      writeAttribute(new WriteAttributesCallbackImpl(callback), WOBBLE_SETTING_WOBBLE_SETTING_WOBBLE_SETTING_ATTRIBUTE_ID, tlvValue, timedWriteTimeoutMs);
+      writeAttribute(new WriteAttributesCallbackImpl(callback), WOBBLE_SETTING_ATTRIBUTE_ID, tlvValue, timedWriteTimeoutMs);
     }
 
-    public void subscribeWobbleSettingWobbleSettingWobbleSettingAttribute(
+    public void subscribeWobbleSettingAttribute(
         IntegerAttributeCallback callback, int minInterval, int maxInterval) {
-      ChipAttributePath path = ChipAttributePath.newInstance(endpointId, clusterId, WOBBLE_SETTING_WOBBLE_SETTING_WOBBLE_SETTING_ATTRIBUTE_ID);
+      ChipAttributePath path = ChipAttributePath.newInstance(endpointId, clusterId, WOBBLE_SETTING_ATTRIBUTE_ID);
 
       subscribeAttribute(new ReportCallbackImpl(callback, path) {
           @Override
           public void onSuccess(byte[] tlv) {
             Integer value = ChipTLVValueDecoder.decodeAttributeValue(path, tlv);
           }
-        }, WOBBLE_SETTING_WOBBLE_SETTING_WOBBLE_SETTING_ATTRIBUTE_ID, minInterval, maxInterval);
+        }, WOBBLE_SETTING_ATTRIBUTE_ID, minInterval, maxInterval);
     }
 
     public void readGeneratedCommandListAttribute(

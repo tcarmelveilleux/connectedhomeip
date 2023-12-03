@@ -1008,6 +1008,9 @@ static BOOL CommandNeedsTimedInvokeInDiscoBallCluster(AttributeId aAttributeId)
 {
     using namespace Clusters::DiscoBall;
     switch (aAttributeId) {
+    case Commands::StartRequest::Id: {
+        return YES;
+    }
     default: {
         return NO;
     }

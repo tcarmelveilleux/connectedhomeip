@@ -17076,6 +17076,30 @@ public class ClusterInfoMapping {
     }
   }
 
+
+  public static class DelegatedDiscoBallClusterStatsResponseCallback implements ChipClusters.DiscoBallCluster.StatsResponseCallback, DelegatedClusterCallback {
+    private ClusterCommandCallback callback;
+    @Override
+    public void setCallbackDelegate(ClusterCommandCallback callback) {
+      this.callback = callback;
+    }
+
+    @Override
+    public void onSuccess(Long lastRun, Optional<Long> patterns) {
+      Map<CommandResponseInfo, Object> responseValues = new LinkedHashMap<>();
+
+      CommandResponseInfo lastRunResponseValue = new CommandResponseInfo("lastRun", "Long");
+      responseValues.put(lastRunResponseValue, lastRun);
+      CommandResponseInfo patternsResponseValue = new CommandResponseInfo("patterns", "Optional<Long>");
+      responseValues.put(patternsResponseValue, patterns);
+      callback.onSuccess(responseValues);
+    }
+
+    @Override
+    public void onError(Exception error) {
+      callback.onFailure(error);
+    }
+  }
   public static class DelegatedDiscoBallClusterPatternPatternPatternAttributeCallback implements ChipClusters.DiscoBallCluster.PatternPatternPatternAttributeCallback, DelegatedClusterCallback {
     private ClusterCommandCallback callback;
     @Override
@@ -24429,7 +24453,7 @@ public class ClusterInfoMapping {
         , (Integer)
         commandArguments.get("speed")
         , (Optional<Integer>)
-        commandArguments.get("rotate")
+        commandArguments.get("rotate"), 10000
         );
       },
       () -> new DelegatedDefaultClusterCallback(),
@@ -24494,12 +24518,12 @@ public class ClusterInfoMapping {
     InteractionInfo discoBallstatsRequestInteractionInfo = new InteractionInfo(
       (cluster, callback, commandArguments) -> {
         ((ChipClusters.DiscoBallCluster) cluster)
-        .statsRequest((DefaultClusterCallback) callback
-        );
-      },
-      () -> new DelegatedDefaultClusterCallback(),
+          .statsRequest((ChipClusters.DiscoBallCluster.StatsResponseCallback) callback
+            );
+        },
+        () -> new DelegatedDiscoBallClusterStatsResponseCallback(),
         discoBallstatsRequestCommandParams
-    );
+      );
     discoBallClusterInteractionInfoMap.put("statsRequest", discoBallstatsRequestInteractionInfo);
 
     commandMap.put("discoBall", discoBallClusterInteractionInfoMap);

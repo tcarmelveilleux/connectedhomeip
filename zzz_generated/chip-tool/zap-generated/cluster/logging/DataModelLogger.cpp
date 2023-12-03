@@ -14756,20 +14756,20 @@ CHIP_ERROR DataModelLogger::LogAttribute(const chip::app::ConcreteDataAttributeP
             ReturnErrorOnFailure(chip::app::DataModel::Decode(*data, value));
             return DataModelLogger::LogValue("PatternPatternPattern", 1, value);
         }
-        case DiscoBall::Attributes::NameNameName::Id: {
+        case DiscoBall::Attributes::Name::Id: {
             chip::CharSpan value;
             ReturnErrorOnFailure(chip::app::DataModel::Decode(*data, value));
-            return DataModelLogger::LogValue("NameNameName", 1, value);
+            return DataModelLogger::LogValue("Name", 1, value);
         }
         case DiscoBall::Attributes::WobbleSupport::Id: {
             chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap> value;
             ReturnErrorOnFailure(chip::app::DataModel::Decode(*data, value));
             return DataModelLogger::LogValue("WobbleSupport", 1, value);
         }
-        case DiscoBall::Attributes::WobbleSettingWobbleSettingWobbleSetting::Id: {
+        case DiscoBall::Attributes::WobbleSetting::Id: {
             chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap> value;
             ReturnErrorOnFailure(chip::app::DataModel::Decode(*data, value));
-            return DataModelLogger::LogValue("WobbleSettingWobbleSettingWobbleSetting", 1, value);
+            return DataModelLogger::LogValue("WobbleSetting", 1, value);
         }
         case DiscoBall::Attributes::GeneratedCommandList::Id: {
             chip::app::DataModel::DecodableList<chip::CommandId> value;

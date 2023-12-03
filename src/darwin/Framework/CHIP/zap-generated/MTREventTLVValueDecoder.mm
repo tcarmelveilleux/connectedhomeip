@@ -3752,15 +3752,23 @@ static id _Nullable DecodeEventPayloadForDiscoBallCluster(EventId aEventId, TLV:
                 } else {
                     memberValue.speed = [NSNumber numberWithUnsignedChar:cppValue.prevPattern.Value().speed.Value()];
                 }
-                if (cppValue.prevPattern.Value().axis.IsNull()) {
+                if (cppValue.prevPattern.Value().axis.HasValue()) {
+                    if (cppValue.prevPattern.Value().axis.Value().IsNull()) {
+                        memberValue.axis = nil;
+                    } else {
+                        memberValue.axis = [NSNumber numberWithUnsignedChar:cppValue.prevPattern.Value().axis.Value().Value()];
+                    }
+                } else {
                     memberValue.axis = nil;
-                } else {
-                    memberValue.axis = [NSNumber numberWithUnsignedChar:cppValue.prevPattern.Value().axis.Value()];
                 }
-                if (cppValue.prevPattern.Value().wobbleSpeed.IsNull()) {
-                    memberValue.wobbleSpeed = nil;
+                if (cppValue.prevPattern.Value().wobbleSpeed.HasValue()) {
+                    if (cppValue.prevPattern.Value().wobbleSpeed.Value().IsNull()) {
+                        memberValue.wobbleSpeed = nil;
+                    } else {
+                        memberValue.wobbleSpeed = [NSNumber numberWithUnsignedChar:cppValue.prevPattern.Value().wobbleSpeed.Value().Value()];
+                    }
                 } else {
-                    memberValue.wobbleSpeed = [NSNumber numberWithUnsignedChar:cppValue.prevPattern.Value().wobbleSpeed.Value()];
+                    memberValue.wobbleSpeed = nil;
                 }
                 if (cppValue.prevPattern.Value().passcode.IsNull()) {
                     memberValue.passcode = nil;
@@ -3789,15 +3797,23 @@ static id _Nullable DecodeEventPayloadForDiscoBallCluster(EventId aEventId, TLV:
             } else {
                 memberValue.speed = [NSNumber numberWithUnsignedChar:cppValue.curPattern.speed.Value()];
             }
-            if (cppValue.curPattern.axis.IsNull()) {
+            if (cppValue.curPattern.axis.HasValue()) {
+                if (cppValue.curPattern.axis.Value().IsNull()) {
+                    memberValue.axis = nil;
+                } else {
+                    memberValue.axis = [NSNumber numberWithUnsignedChar:cppValue.curPattern.axis.Value().Value()];
+                }
+            } else {
                 memberValue.axis = nil;
-            } else {
-                memberValue.axis = [NSNumber numberWithUnsignedChar:cppValue.curPattern.axis.Value()];
             }
-            if (cppValue.curPattern.wobbleSpeed.IsNull()) {
-                memberValue.wobbleSpeed = nil;
+            if (cppValue.curPattern.wobbleSpeed.HasValue()) {
+                if (cppValue.curPattern.wobbleSpeed.Value().IsNull()) {
+                    memberValue.wobbleSpeed = nil;
+                } else {
+                    memberValue.wobbleSpeed = [NSNumber numberWithUnsignedChar:cppValue.curPattern.wobbleSpeed.Value().Value()];
+                }
             } else {
-                memberValue.wobbleSpeed = [NSNumber numberWithUnsignedChar:cppValue.curPattern.wobbleSpeed.Value()];
+                memberValue.wobbleSpeed = nil;
             }
             if (cppValue.curPattern.passcode.IsNull()) {
                 memberValue.passcode = nil;
@@ -3828,15 +3844,23 @@ static id _Nullable DecodeEventPayloadForDiscoBallCluster(EventId aEventId, TLV:
                 } else {
                     memberValue.speed = [NSNumber numberWithUnsignedChar:cppValue.nextPattern.Value().speed.Value()];
                 }
-                if (cppValue.nextPattern.Value().axis.IsNull()) {
+                if (cppValue.nextPattern.Value().axis.HasValue()) {
+                    if (cppValue.nextPattern.Value().axis.Value().IsNull()) {
+                        memberValue.axis = nil;
+                    } else {
+                        memberValue.axis = [NSNumber numberWithUnsignedChar:cppValue.nextPattern.Value().axis.Value().Value()];
+                    }
+                } else {
                     memberValue.axis = nil;
-                } else {
-                    memberValue.axis = [NSNumber numberWithUnsignedChar:cppValue.nextPattern.Value().axis.Value()];
                 }
-                if (cppValue.nextPattern.Value().wobbleSpeed.IsNull()) {
-                    memberValue.wobbleSpeed = nil;
+                if (cppValue.nextPattern.Value().wobbleSpeed.HasValue()) {
+                    if (cppValue.nextPattern.Value().wobbleSpeed.Value().IsNull()) {
+                        memberValue.wobbleSpeed = nil;
+                    } else {
+                        memberValue.wobbleSpeed = [NSNumber numberWithUnsignedChar:cppValue.nextPattern.Value().wobbleSpeed.Value().Value()];
+                    }
                 } else {
-                    memberValue.wobbleSpeed = [NSNumber numberWithUnsignedChar:cppValue.nextPattern.Value().wobbleSpeed.Value()];
+                    memberValue.wobbleSpeed = nil;
                 }
                 if (cppValue.nextPattern.Value().passcode.IsNull()) {
                     memberValue.passcode = nil;

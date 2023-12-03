@@ -9578,29 +9578,47 @@ JNI_METHOD(void, DiscoBallCluster, writePatternPatternPatternAttribute)
                         chip::JniReferences::GetInstance().IntegerToPrimitive(element_0_speedItem_1));
                 }
                 jobject element_0_axisItem_1;
-                chip::JniReferences::GetInstance().GetObjectField(element_0, "axis", "Ljava/lang/Integer;", element_0_axisItem_1);
-                if (element_0_axisItem_1 == nullptr)
+                chip::JniReferences::GetInstance().GetObjectField(element_0, "axis", "Ljava/util/Optional;", element_0_axisItem_1);
+                if (element_0_axisItem_1 != nullptr)
                 {
-                    listHolder_0->mList[i_0].axis.SetNull();
-                }
-                else
-                {
-                    auto & nonNullValue_2 = listHolder_0->mList[i_0].axis.SetNonNull();
-                    nonNullValue_2        = static_cast<std::remove_reference_t<decltype(nonNullValue_2)>>(
-                        chip::JniReferences::GetInstance().IntegerToPrimitive(element_0_axisItem_1));
+                    jobject optionalValue_2;
+                    chip::JniReferences::GetInstance().GetOptionalValue(element_0_axisItem_1, optionalValue_2);
+                    if (optionalValue_2 != nullptr)
+                    {
+                        auto & definedValue_2 = listHolder_0->mList[i_0].axis.Emplace();
+                        if (optionalValue_2 == nullptr)
+                        {
+                            definedValue_2.SetNull();
+                        }
+                        else
+                        {
+                            auto & nonNullValue_3 = definedValue_2.SetNonNull();
+                            nonNullValue_3        = static_cast<std::remove_reference_t<decltype(nonNullValue_3)>>(
+                                chip::JniReferences::GetInstance().IntegerToPrimitive(optionalValue_2));
+                        }
+                    }
                 }
                 jobject element_0_wobbleSpeedItem_1;
-                chip::JniReferences::GetInstance().GetObjectField(element_0, "wobbleSpeed", "Ljava/lang/Integer;",
+                chip::JniReferences::GetInstance().GetObjectField(element_0, "wobbleSpeed", "Ljava/util/Optional;",
                                                                   element_0_wobbleSpeedItem_1);
-                if (element_0_wobbleSpeedItem_1 == nullptr)
+                if (element_0_wobbleSpeedItem_1 != nullptr)
                 {
-                    listHolder_0->mList[i_0].wobbleSpeed.SetNull();
-                }
-                else
-                {
-                    auto & nonNullValue_2 = listHolder_0->mList[i_0].wobbleSpeed.SetNonNull();
-                    nonNullValue_2        = static_cast<std::remove_reference_t<decltype(nonNullValue_2)>>(
-                        chip::JniReferences::GetInstance().IntegerToPrimitive(element_0_wobbleSpeedItem_1));
+                    jobject optionalValue_2;
+                    chip::JniReferences::GetInstance().GetOptionalValue(element_0_wobbleSpeedItem_1, optionalValue_2);
+                    if (optionalValue_2 != nullptr)
+                    {
+                        auto & definedValue_2 = listHolder_0->mList[i_0].wobbleSpeed.Emplace();
+                        if (optionalValue_2 == nullptr)
+                        {
+                            definedValue_2.SetNull();
+                        }
+                        else
+                        {
+                            auto & nonNullValue_3 = definedValue_2.SetNonNull();
+                            nonNullValue_3        = static_cast<std::remove_reference_t<decltype(nonNullValue_3)>>(
+                                chip::JniReferences::GetInstance().IntegerToPrimitive(optionalValue_2));
+                        }
+                    }
                 }
                 jobject element_0_passcodeItem_1;
                 chip::JniReferences::GetInstance().GetObjectField(element_0, "passcode", "Ljava/lang/String;",
@@ -9663,12 +9681,12 @@ JNI_METHOD(void, DiscoBallCluster, writePatternPatternPatternAttribute)
     onFailure.release();
 }
 
-JNI_METHOD(void, DiscoBallCluster, writeNameNameNameAttribute)
+JNI_METHOD(void, DiscoBallCluster, writeNameAttribute)
 (JNIEnv * env, jobject self, jlong clusterPtr, jobject callback, jstring value, jobject timedWriteTimeoutMs)
 {
     chip::DeviceLayer::StackLock lock;
     ListFreer listFreer;
-    using TypeInfo = chip::app::Clusters::DiscoBall::Attributes::NameNameName::TypeInfo;
+    using TypeInfo = chip::app::Clusters::DiscoBall::Attributes::Name::TypeInfo;
     TypeInfo::Type cppValue;
 
     std::vector<Platform::UniquePtr<JniByteArray>> cleanupByteArrays;
@@ -9715,12 +9733,12 @@ JNI_METHOD(void, DiscoBallCluster, writeNameNameNameAttribute)
     onFailure.release();
 }
 
-JNI_METHOD(void, DiscoBallCluster, writeWobbleSettingWobbleSettingWobbleSettingAttribute)
+JNI_METHOD(void, DiscoBallCluster, writeWobbleSettingAttribute)
 (JNIEnv * env, jobject self, jlong clusterPtr, jobject callback, jobject value, jobject timedWriteTimeoutMs)
 {
     chip::DeviceLayer::StackLock lock;
     ListFreer listFreer;
-    using TypeInfo = chip::app::Clusters::DiscoBall::Attributes::WobbleSettingWobbleSettingWobbleSetting::TypeInfo;
+    using TypeInfo = chip::app::Clusters::DiscoBall::Attributes::WobbleSetting::TypeInfo;
     TypeInfo::Type cppValue;
 
     std::vector<Platform::UniquePtr<JniByteArray>> cleanupByteArrays;

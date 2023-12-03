@@ -12436,7 +12436,7 @@ class ChipClusters:
                 "writable": True,
             },
             0x00000006: {
-                "attributeName": "NameNameName",
+                "attributeName": "Name",
                 "attributeId": 0x00000006,
                 "type": "str",
                 "reportable": True,
@@ -12449,7 +12449,7 @@ class ChipClusters:
                 "reportable": True,
             },
             0x00000008: {
-                "attributeName": "WobbleSettingWobbleSettingWobbleSetting",
+                "attributeName": "WobbleSetting",
                 "attributeId": 0x00000008,
                 "type": "int",
                 "reportable": True,

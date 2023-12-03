@@ -23156,12 +23156,12 @@ CHIP_ERROR TypeInfo::DecodableType::Decode(TLV::TLVReader & reader, const Concre
         return DataModel::Decode(reader, wobbleSpeed);
     case Attributes::PatternPatternPattern::TypeInfo::GetAttributeId():
         return DataModel::Decode(reader, patternPatternPattern);
-    case Attributes::NameNameName::TypeInfo::GetAttributeId():
-        return DataModel::Decode(reader, nameNameName);
+    case Attributes::Name::TypeInfo::GetAttributeId():
+        return DataModel::Decode(reader, name);
     case Attributes::WobbleSupport::TypeInfo::GetAttributeId():
         return DataModel::Decode(reader, wobbleSupport);
-    case Attributes::WobbleSettingWobbleSettingWobbleSetting::TypeInfo::GetAttributeId():
-        return DataModel::Decode(reader, wobbleSettingWobbleSettingWobbleSetting);
+    case Attributes::WobbleSetting::TypeInfo::GetAttributeId():
+        return DataModel::Decode(reader, wobbleSetting);
     case Attributes::GeneratedCommandList::TypeInfo::GetAttributeId():
         return DataModel::Decode(reader, generatedCommandList);
     case Attributes::AcceptedCommandList::TypeInfo::GetAttributeId():
@@ -25707,6 +25707,15 @@ bool CommandNeedsTimedInvoke(ClusterId aCluster, CommandId aCommand)
         case Clusters::AccountLogin::Commands::GetSetupPIN::Id:
         case Clusters::AccountLogin::Commands::Login::Id:
         case Clusters::AccountLogin::Commands::Logout::Id:
+            return true;
+        default:
+            return false;
+        }
+    }
+    case Clusters::DiscoBall::Id: {
+        switch (aCommand)
+        {
+        case Clusters::DiscoBall::Commands::StartRequest::Id:
             return true;
         default:
             return false;

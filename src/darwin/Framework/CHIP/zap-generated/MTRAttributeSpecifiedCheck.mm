@@ -5697,13 +5697,13 @@ static BOOL AttributeIsSpecifiedInDiscoBallCluster(AttributeId aAttributeId)
     case Attributes::PatternPatternPattern::Id: {
         return YES;
     }
-    case Attributes::NameNameName::Id: {
+    case Attributes::Name::Id: {
         return YES;
     }
     case Attributes::WobbleSupport::Id: {
         return YES;
     }
-    case Attributes::WobbleSettingWobbleSettingWobbleSetting::Id: {
+    case Attributes::WobbleSetting::Id: {
         return YES;
     }
     case Attributes::GeneratedCommandList::Id: {

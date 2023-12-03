@@ -17903,17 +17903,17 @@ public class ClusterReadMapping {
           readDiscoBallPatternPatternPatternCommandParams
         );
         result.put("readPatternPatternPatternAttribute", readDiscoBallPatternPatternPatternAttributeInteractionInfo);
-     Map<String, CommandParameterInfo> readDiscoBallNameNameNameCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
-        InteractionInfo readDiscoBallNameNameNameAttributeInteractionInfo = new InteractionInfo(
+     Map<String, CommandParameterInfo> readDiscoBallNameCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallNameAttributeInteractionInfo = new InteractionInfo(
           (cluster, callback, commandArguments) -> {
-            ((ChipClusters.DiscoBallCluster) cluster).readNameNameNameAttribute(
+            ((ChipClusters.DiscoBallCluster) cluster).readNameAttribute(
               (ChipClusters.CharStringAttributeCallback) callback
             );
           },
           () -> new ClusterInfoMapping.DelegatedCharStringAttributeCallback(),
-          readDiscoBallNameNameNameCommandParams
+          readDiscoBallNameCommandParams
         );
-        result.put("readNameNameNameAttribute", readDiscoBallNameNameNameAttributeInteractionInfo);
+        result.put("readNameAttribute", readDiscoBallNameAttributeInteractionInfo);
      Map<String, CommandParameterInfo> readDiscoBallWobbleSupportCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
         InteractionInfo readDiscoBallWobbleSupportAttributeInteractionInfo = new InteractionInfo(
           (cluster, callback, commandArguments) -> {
@@ -17925,17 +17925,17 @@ public class ClusterReadMapping {
           readDiscoBallWobbleSupportCommandParams
         );
         result.put("readWobbleSupportAttribute", readDiscoBallWobbleSupportAttributeInteractionInfo);
-     Map<String, CommandParameterInfo> readDiscoBallWobbleSettingWobbleSettingWobbleSettingCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
-        InteractionInfo readDiscoBallWobbleSettingWobbleSettingWobbleSettingAttributeInteractionInfo = new InteractionInfo(
+     Map<String, CommandParameterInfo> readDiscoBallWobbleSettingCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
+        InteractionInfo readDiscoBallWobbleSettingAttributeInteractionInfo = new InteractionInfo(
           (cluster, callback, commandArguments) -> {
-            ((ChipClusters.DiscoBallCluster) cluster).readWobbleSettingWobbleSettingWobbleSettingAttribute(
+            ((ChipClusters.DiscoBallCluster) cluster).readWobbleSettingAttribute(
               (ChipClusters.IntegerAttributeCallback) callback
             );
           },
           () -> new ClusterInfoMapping.DelegatedIntegerAttributeCallback(),
-          readDiscoBallWobbleSettingWobbleSettingWobbleSettingCommandParams
+          readDiscoBallWobbleSettingCommandParams
         );
-        result.put("readWobbleSettingWobbleSettingWobbleSettingAttribute", readDiscoBallWobbleSettingWobbleSettingWobbleSettingAttributeInteractionInfo);
+        result.put("readWobbleSettingAttribute", readDiscoBallWobbleSettingAttributeInteractionInfo);
      Map<String, CommandParameterInfo> readDiscoBallGeneratedCommandListCommandParams = new LinkedHashMap<String, CommandParameterInfo>();
         InteractionInfo readDiscoBallGeneratedCommandListAttributeInteractionInfo = new InteractionInfo(
           (cluster, callback, commandArguments) -> {

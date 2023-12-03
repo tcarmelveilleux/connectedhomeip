@@ -28237,7 +28237,7 @@ EmberAfStatus Set(chip::EndpointId endpoint, uint8_t value)
 
 } // namespace WobbleSpeed
 
-namespace NameNameName {
+namespace Name {
 
 EmberAfStatus Get(chip::EndpointId endpoint, chip::MutableCharSpan & value)
 {
@@ -28266,7 +28266,7 @@ EmberAfStatus Set(chip::EndpointId endpoint, chip::CharSpan value)
     return emberAfWriteAttribute(endpoint, Clusters::DiscoBall::Id, Id, zclString, ZCL_CHAR_STRING_ATTRIBUTE_TYPE);
 }
 
-} // namespace NameNameName
+} // namespace Name
 
 namespace WobbleSupport {
 
@@ -28299,7 +28299,7 @@ EmberAfStatus Set(chip::EndpointId endpoint, chip::BitMask<chip::app::Clusters::
 
 } // namespace WobbleSupport
 
-namespace WobbleSettingWobbleSettingWobbleSetting {
+namespace WobbleSetting {
 
 EmberAfStatus Get(chip::EndpointId endpoint, chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap> * value)
 {
@@ -28328,7 +28328,7 @@ EmberAfStatus Set(chip::EndpointId endpoint, chip::BitMask<chip::app::Clusters::
     return emberAfWriteAttribute(endpoint, Clusters::DiscoBall::Id, Id, writable, ZCL_BITMAP8_ATTRIBUTE_TYPE);
 }
 
-} // namespace WobbleSettingWobbleSettingWobbleSetting
+} // namespace WobbleSetting
 
 namespace FeatureMap {
 

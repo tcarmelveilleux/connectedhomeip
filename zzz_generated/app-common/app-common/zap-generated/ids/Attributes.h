@@ -7096,17 +7096,17 @@ namespace PatternPatternPattern {
 static constexpr AttributeId Id = 0x00000005;
 } // namespace PatternPatternPattern
 
-namespace NameNameName {
+namespace Name {
 static constexpr AttributeId Id = 0x00000006;
-} // namespace NameNameName
+} // namespace Name
 
 namespace WobbleSupport {
 static constexpr AttributeId Id = 0x00000007;
 } // namespace WobbleSupport
 
-namespace WobbleSettingWobbleSettingWobbleSetting {
+namespace WobbleSetting {
 static constexpr AttributeId Id = 0x00000008;
-} // namespace WobbleSettingWobbleSettingWobbleSetting
+} // namespace WobbleSetting
 
 namespace GeneratedCommandList {
 static constexpr AttributeId Id = Globals::Attributes::GeneratedCommandList::Id;
