@@ -4952,46 +4952,6 @@ EmberAfStatus Set(chip::EndpointId endpoint, uint16_t value);
 namespace DiscoBall {
 namespace Attributes {
 
-namespace Run {
-EmberAfStatus Get(chip::EndpointId endpoint, bool * value); // boolean
-EmberAfStatus Set(chip::EndpointId endpoint, bool value);
-} // namespace Run
-
-namespace Rotate {
-EmberAfStatus Get(chip::EndpointId endpoint, chip::app::Clusters::DiscoBall::RotateEnum * value); // RotateEnum
-EmberAfStatus Set(chip::EndpointId endpoint, chip::app::Clusters::DiscoBall::RotateEnum value);
-} // namespace Rotate
-
-namespace Speed {
-EmberAfStatus Get(chip::EndpointId endpoint, uint8_t * value); // int8u
-EmberAfStatus Set(chip::EndpointId endpoint, uint8_t value);
-} // namespace Speed
-
-namespace Axis {
-EmberAfStatus Get(chip::EndpointId endpoint, uint8_t * value); // int8u
-EmberAfStatus Set(chip::EndpointId endpoint, uint8_t value);
-} // namespace Axis
-
-namespace WobbleSpeed {
-EmberAfStatus Get(chip::EndpointId endpoint, uint8_t * value); // int8u
-EmberAfStatus Set(chip::EndpointId endpoint, uint8_t value);
-} // namespace WobbleSpeed
-
-namespace Name {
-EmberAfStatus Get(chip::EndpointId endpoint, chip::MutableCharSpan & value); // char_string
-EmberAfStatus Set(chip::EndpointId endpoint, chip::CharSpan value);
-} // namespace Name
-
-namespace WobbleSupport {
-EmberAfStatus Get(chip::EndpointId endpoint, chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap> * value); // WobbleBitmap
-EmberAfStatus Set(chip::EndpointId endpoint, chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap> value);
-} // namespace WobbleSupport
-
-namespace WobbleSetting {
-EmberAfStatus Get(chip::EndpointId endpoint, chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap> * value); // WobbleBitmap
-EmberAfStatus Set(chip::EndpointId endpoint, chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap> value);
-} // namespace WobbleSetting
-
 namespace FeatureMap {
 EmberAfStatus Get(chip::EndpointId endpoint, uint32_t * value); // bitmap32
 EmberAfStatus Set(chip::EndpointId endpoint, uint32_t value);

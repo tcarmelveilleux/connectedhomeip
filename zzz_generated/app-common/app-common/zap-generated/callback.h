@@ -10463,42 +10463,6 @@ bool emberAfElectricalMeasurementClusterGetMeasurementProfileCommandCallback(
     chip::app::CommandHandler * commandObj, const chip::app::ConcreteCommandPath & commandPath,
     const chip::app::Clusters::ElectricalMeasurement::Commands::GetMeasurementProfileCommand::DecodableType & commandData);
 /**
- * @brief Disco Ball Cluster StartRequest Command callback (from client)
- */
-bool emberAfDiscoBallClusterStartRequestCallback(
-    chip::app::CommandHandler * commandObj, const chip::app::ConcreteCommandPath & commandPath,
-    const chip::app::Clusters::DiscoBall::Commands::StartRequest::DecodableType & commandData);
-/**
- * @brief Disco Ball Cluster StopRequest Command callback (from client)
- */
-bool emberAfDiscoBallClusterStopRequestCallback(
-    chip::app::CommandHandler * commandObj, const chip::app::ConcreteCommandPath & commandPath,
-    const chip::app::Clusters::DiscoBall::Commands::StopRequest::DecodableType & commandData);
-/**
- * @brief Disco Ball Cluster ReverseRequest Command callback (from client)
- */
-bool emberAfDiscoBallClusterReverseRequestCallback(
-    chip::app::CommandHandler * commandObj, const chip::app::ConcreteCommandPath & commandPath,
-    const chip::app::Clusters::DiscoBall::Commands::ReverseRequest::DecodableType & commandData);
-/**
- * @brief Disco Ball Cluster WobbleRequest Command callback (from client)
- */
-bool emberAfDiscoBallClusterWobbleRequestCallback(
-    chip::app::CommandHandler * commandObj, const chip::app::ConcreteCommandPath & commandPath,
-    const chip::app::Clusters::DiscoBall::Commands::WobbleRequest::DecodableType & commandData);
-/**
- * @brief Disco Ball Cluster PatternRequest Command callback (from client)
- */
-bool emberAfDiscoBallClusterPatternRequestCallback(
-    chip::app::CommandHandler * commandObj, const chip::app::ConcreteCommandPath & commandPath,
-    const chip::app::Clusters::DiscoBall::Commands::PatternRequest::DecodableType & commandData);
-/**
- * @brief Disco Ball Cluster StatsRequest Command callback (from client)
- */
-bool emberAfDiscoBallClusterStatsRequestCallback(
-    chip::app::CommandHandler * commandObj, const chip::app::ConcreteCommandPath & commandPath,
-    const chip::app::Clusters::DiscoBall::Commands::StatsRequest::DecodableType & commandData);
-/**
  * @brief Unit Testing Cluster Test Command callback (from client)
  */
 bool emberAfUnitTestingClusterTestCallback(chip::app::CommandHandler * commandObj,

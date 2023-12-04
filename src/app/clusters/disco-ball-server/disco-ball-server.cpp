@@ -1,0 +1,146 @@
+/**
+ *
+ *    Copyright (c) 2023 Project CHIP Authors
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
+
+#include <app-common/zap-generated/cluster-objects.h>
+#include <app/CommandHandler.h>
+#include <app/CommandHandlerInterface.h>
+#include <app/ConcreteCommandPath.h>
+#include <app/InteractionModelEngine.h>
+#include <app/clusters/disco-ball-server/disco-ball-server.h>
+#include <app/server/Server.h>
+#include <app/util/af.h>
+#include <app/util/attribute-storage.h>
+
+namespace {
+// TODO: This is rather yucky, but it's Sunday night and I'm being lazy
+chip::app::DiscoBallCommandHandler gCommandhandler;
+chip::app::DiscoBallAttributeAccess gAttributeAccess;
+} // namespace
+
+namespace chip {
+namespace app {
+
+void DiscoBallCommandHandler::InvokeCommand(HandlerContext & handlerContext)
+{
+
+    /*
+    | ID     | Name           | Direction        | Response^**^      | Access | Conformance
+    | 0x00  s| StartRequest   | client => server | Y                 | O T^*^ | M
+    | 0x01  s| StopRequest    | client => server | Y                 | O      | M
+    | 0x02  s| ReverseRequest | client => server | Y                 | O      | REV
+    | 0x03  s| WobbleRequest  | client => server | Y                 | O      | WBL
+    | 0x04  s| PatternRequest | client => server | Y                 | M      | PAT
+    | 0x05  s| StatsRequest   | client => server | StatsResponse^**^ | O      | STA
+    | 0x06  s| StatsResponse  | client <= server | N                 | O      | STA
+    */
+    ChipLogProgress(Zcl, "Handle disco ball command --------------------");
+    // TODO: implement this for real.
+    // TODO: check constraints, add in attribute change reporting as appropriate once this is all tied together
+    switch (handlerContext.mRequestPath.mCommandId)
+    {
+    case Clusters::DiscoBall::Commands::StartRequest::Id:
+        HandleCommand<Clusters::DiscoBall::Commands::StartRequest::DecodableType>(
+            handlerContext, [&](auto & _u, auto & payload) { ChipLogProgress(Zcl, "StartRequest received"); });
+        break;
+    case Clusters::DiscoBall::Commands::StopRequest::Id:
+        HandleCommand<Clusters::DiscoBall::Commands::StopRequest::DecodableType>(
+            handlerContext, [&](auto & _u, auto & payload) { ChipLogProgress(Zcl, "StopRequest received"); });
+        break;
+    case Clusters::DiscoBall::Commands::ReverseRequest::Id:
+        HandleCommand<Clusters::DiscoBall::Commands::ReverseRequest::DecodableType>(
+            handlerContext, [&](auto & _u, auto & payload) { ChipLogProgress(Zcl, "ReverseRequest received"); });
+        break;
+    case Clusters::DiscoBall::Commands::WobbleRequest::Id:
+        HandleCommand<Clusters::DiscoBall::Commands::WobbleRequest::DecodableType>(
+            handlerContext, [&](auto & _u, auto & payload) { ChipLogProgress(Zcl, "WobbleRequest received"); });
+        break;
+    case Clusters::DiscoBall::Commands::PatternRequest::Id:
+        HandleCommand<Clusters::DiscoBall::Commands::PatternRequest::DecodableType>(
+            handlerContext, [&](auto & _u, auto & payload) { ChipLogProgress(Zcl, "PatternRequest received"); });
+        break;
+    case Clusters::DiscoBall::Commands::StatsRequest::Id:
+        HandleCommand<Clusters::DiscoBall::Commands::StatsRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
+            ChipLogProgress(Zcl, "StatsRequest received");
+            Clusters::DiscoBall::Commands::StatsResponse::Type resp;
+            handlerContext.mCommandHandler.AddResponseData(handlerContext.mRequestPath, resp);
+        });
+        break;
+    }
+}
+
+/*
+| 0x0000  s| Run           | bool                        | all^*^         |         | 0       | R V T^*^ | M
+| 0x0001  s| Rotate        | <<ref_RotateEnum>>          | all            |         | 0       | R V      | M
+| 0x0002  s| Speed         | uint8                       | 0 to 200^*^    |         | 0       | R V      | M
+| 0x0003  s| Axis          | uint8                       | 0 to 90        |         | 0       | RW VO    | AX \| WBL
+| 0x0004  s| WobbleSpeed   | uint8                       | 0 to 200       |         | 0       | RW VO    | WBL
+| 0x0005  s| Pattern       | list[<<ref_PatternStruct>>] | max 16^*^      | N       | 0       | RW VM    | PAT
+| 0x0006  s| Name          | string                      | max 16         | N^*^    | 0       | RW VM    | P, O
+| 0x0007  s| WobbleSupport | <<ref_WobbleBitmap>>        | desc           |         |         | R V      | [WBL]
+| 0x0008  s| WobbleSetting | <<ref_WobbleBitmap>>        | desc           |         |         | RW VM    | [WBL]
+*/
+// TODO: hook into delegate and don't encode garbage values
+CHIP_ERROR DiscoBallAttributeAccess::Read(const ConcreteReadAttributePath & aPath, AttributeValueEncoder & aEncoder)
+{
+    ChipLogProgress(Zcl, "Handle disco ball attribute read");
+    switch (aPath.mAttributeId)
+    {
+    case Clusters::DiscoBall::Attributes::Run::Id:
+        ChipLogProgress(Zcl, "Read Run attribute");
+        return aEncoder.Encode(false);
+    case Clusters::DiscoBall::Attributes::Rotate::Id:
+        ChipLogProgress(Zcl, "Read Rotate attribute");
+        return aEncoder.Encode(Clusters::DiscoBall::RotateEnum::kClockwise);
+    case Clusters::DiscoBall::Attributes::Speed::Id:
+        ChipLogProgress(Zcl, "Read speed attribute");
+        return aEncoder.Encode(0);
+    case Clusters::DiscoBall::Attributes::Axis::Id:
+        ChipLogProgress(Zcl, "Read axis attribute");
+        return aEncoder.Encode(0);
+    case Clusters::DiscoBall::Attributes::WobbleSpeed::Id:
+        ChipLogProgress(Zcl, "Read wobble speed attribute");
+        return aEncoder.Encode(0);
+    case Clusters::DiscoBall::Attributes::Pattern::Id:
+        ChipLogProgress(Zcl, "Read pattern attribute");
+        return aEncoder.EncodeEmptyList();
+    case Clusters::DiscoBall::Attributes::Name::Id:
+        ChipLogProgress(Zcl, "Read name attribute");
+        return aEncoder.Encode("Xanadu"_span);
+    case Clusters::DiscoBall::Attributes::WobbleSupport::Id:
+        ChipLogProgress(Zcl, "Read wobble support attribute");
+        return aEncoder.Encode(0);
+    case Clusters::DiscoBall::Attributes::WobbleSetting::Id:
+        ChipLogProgress(Zcl, "Read wobble setting attribute");
+        return aEncoder.Encode(0);
+    }
+    return CHIP_NO_ERROR;
+}
+CHIP_ERROR DiscoBallAttributeAccess::Write(const ConcreteDataAttributePath & aPath, AttributeValueDecoder & aDecoder)
+{
+    // TODO: Add support here.
+    // TODO: Don't forget to check constraints and report attribute changes
+    return CHIP_NO_ERROR;
+}
+
+} // namespace app
+} // namespace chip
+void MatterDiscoBallPluginServerInitCallback()
+{
+    ChipLogProgress(Zcl, "Registering Disco Ball overrides");
+    registerAttributeAccessOverride(&gAttributeAccess);
+    chip::app::InteractionModelEngine::GetInstance()->RegisterCommandHandler(&gCommandhandler);
+}

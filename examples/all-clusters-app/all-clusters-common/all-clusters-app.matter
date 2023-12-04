@@ -5487,6 +5487,100 @@ cluster ElectricalMeasurement = 2820 {
   command GetMeasurementProfileCommand(GetMeasurementProfileCommandRequest): DefaultSuccess = 1;
 }
 
+/** This example cluster controls an imaginary mirrored disco ball, for the express purpose of disco dancing. */
+provisional cluster DiscoBall = 13398 {
+  revision 1; // NOTE: Default/not specifically set
+
+  enum RotateEnum : enum8 {
+    kClockwise = 1;
+    kCounterClockwise = 2;
+  }
+
+  enum StatusCode : enum8 {
+    kUnsupportedPattern = 2;
+  }
+
+  bitmap Feature : bitmap32 {
+    kParty = 0x1;
+    kAxis = 0x2;
+    kWobble = 0x4;
+    kPattern = 0x8;
+    kStatistics = 0x10;
+    kReverse = 0x20;
+  }
+
+  bitmap WobbleBitmap : bitmap8 {
+    kWobbleLeftRight = 0x1;
+    kWobbleUpDown = 0x2;
+    kWobbleRound = 0x4;
+  }
+
+  struct PatternStruct {
+    int16u duration = 0;
+    nullable RotateEnum rotate = 1;
+    nullable int8u speed = 2;
+    optional nullable int8u axis = 3;
+    optional nullable int8u wobbleSpeed = 4;
+    nullable fabric_sensitive char_string passcode = 5;
+  }
+
+  info event Started = 0 {
+  }
+
+  info event Stopped = 1 {
+  }
+
+  info event PatternChange = 2 {
+    nullable PatternStruct prevPattern = 0;
+    PatternStruct curPattern = 1;
+    nullable PatternStruct nextPattern = 2;
+    optional nullable char_string label = 3;
+  }
+
+  readonly attribute boolean run = 0;
+  readonly attribute RotateEnum rotate = 1;
+  readonly attribute int8u speed = 2;
+  attribute optional int8u axis = 3;
+  attribute optional int8u wobbleSpeed = 4;
+  attribute access(write: manage) optional PatternStruct pattern[] = 5;
+  attribute access(write: manage) optional char_string<16> name = 6;
+  readonly attribute optional WobbleBitmap wobbleSupport = 7;
+  attribute access(write: manage) optional WobbleBitmap wobbleSetting = 8;
+  readonly attribute command_id generatedCommandList[] = 65528;
+  readonly attribute command_id acceptedCommandList[] = 65529;
+  readonly attribute event_id eventList[] = 65530;
+  readonly attribute attrib_id attributeList[] = 65531;
+  readonly attribute bitmap32 featureMap = 65532;
+  readonly attribute int16u clusterRevision = 65533;
+
+  request struct StartRequestRequest {
+    int8u speed = 0;
+    optional RotateEnum rotate = 1;
+  }
+
+  request struct PatternRequestRequest {
+    char_string<6> passcode = 0;
+  }
+
+  response struct StatsResponse = 6 {
+    int32u lastRun = 0;
+    optional int32u patterns = 1;
+  }
+
+  /** Upon receipt, this SHALL start the disco ball rotating using the data as follows: */
+  timed command StartRequest(StartRequestRequest): DefaultSuccess = 0;
+  /** Upon receipt, this SHALL stop the disco ball rotating, and SHALL set the Run, Speed and Rotate attributes to 0. */
+  command StopRequest(): DefaultSuccess = 1;
+  /** Upon receipt, this SHALL reverse the direction of the disco ball rotation. This command MAY generate an error response of UNSUPPORTED_PATTERN. */
+  command ReverseRequest(): DefaultSuccess = 2;
+  /** Upon receipt, this SHALL wobble the disco ball on its axis at the speed in the WobbleSpeed attribute. This command MAY generate an error response of UNSUPPORTED_PATTERN. */
+  command WobbleRequest(): DefaultSuccess = 3;
+  /** ID */
+  command access(invoke: manage) PatternRequest(PatternRequestRequest): DefaultSuccess = 4;
+  /** Upon receipt, this SHALL generate a StatsResponse command. */
+  command StatsRequest(): StatsResponse = 5;
+}
+
 /** The Test Cluster is meant to validate the generated code */
 internal cluster UnitTesting = 4294048773 {
   revision 1; // NOTE: Default/not specifically set
@@ -7450,6 +7544,32 @@ endpoint 1 {
     ram      attribute activePowerMax default = 0xffff;
     ram      attribute featureMap default = 0;
     ram      attribute clusterRevision default = 3;
+  }
+
+  server cluster DiscoBall {
+    ram      attribute run default = 0;
+    ram      attribute rotate default = 0;
+    ram      attribute speed default = 0;
+    ram      attribute axis default = 0;
+    ram      attribute wobbleSpeed default = 0;
+    callback attribute pattern;
+    ram      attribute name default = "0";
+    ram      attribute wobbleSupport;
+    ram      attribute wobbleSetting;
+    callback attribute generatedCommandList;
+    callback attribute acceptedCommandList;
+    callback attribute eventList;
+    callback attribute attributeList;
+    ram      attribute featureMap default = 0x3E;
+    ram      attribute clusterRevision default = 7;
+
+    handle command StartRequest;
+    handle command StopRequest;
+    handle command ReverseRequest;
+    handle command WobbleRequest;
+    handle command PatternRequest;
+    handle command StatsRequest;
+    handle command StatsResponse;
   }
 
   server cluster UnitTesting {
