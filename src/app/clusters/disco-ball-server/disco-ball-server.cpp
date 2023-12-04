@@ -53,24 +53,34 @@ void DiscoBallCommandHandler::InvokeCommand(HandlerContext & handlerContext)
     switch (handlerContext.mRequestPath.mCommandId)
     {
     case Clusters::DiscoBall::Commands::StartRequest::Id:
-        HandleCommand<Clusters::DiscoBall::Commands::StartRequest::DecodableType>(
-            handlerContext, [&](auto & _u, auto & payload) { ChipLogProgress(Zcl, "StartRequest received"); });
+        HandleCommand<Clusters::DiscoBall::Commands::StartRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
+            ChipLogProgress(Zcl, "StartRequest received");
+            handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, Protocols::InteractionModel::Status::Success);
+        });
         break;
     case Clusters::DiscoBall::Commands::StopRequest::Id:
-        HandleCommand<Clusters::DiscoBall::Commands::StopRequest::DecodableType>(
-            handlerContext, [&](auto & _u, auto & payload) { ChipLogProgress(Zcl, "StopRequest received"); });
+        HandleCommand<Clusters::DiscoBall::Commands::StopRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
+            ChipLogProgress(Zcl, "StopRequest received");
+            handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, Protocols::InteractionModel::Status::Success);
+        });
         break;
     case Clusters::DiscoBall::Commands::ReverseRequest::Id:
-        HandleCommand<Clusters::DiscoBall::Commands::ReverseRequest::DecodableType>(
-            handlerContext, [&](auto & _u, auto & payload) { ChipLogProgress(Zcl, "ReverseRequest received"); });
+        HandleCommand<Clusters::DiscoBall::Commands::ReverseRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
+            ChipLogProgress(Zcl, "ReverseRequest received");
+            handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, Protocols::InteractionModel::Status::Success);
+        });
         break;
     case Clusters::DiscoBall::Commands::WobbleRequest::Id:
-        HandleCommand<Clusters::DiscoBall::Commands::WobbleRequest::DecodableType>(
-            handlerContext, [&](auto & _u, auto & payload) { ChipLogProgress(Zcl, "WobbleRequest received"); });
+        HandleCommand<Clusters::DiscoBall::Commands::WobbleRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
+            ChipLogProgress(Zcl, "WobbleRequest received");
+            handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, Protocols::InteractionModel::Status::Success);
+        });
         break;
     case Clusters::DiscoBall::Commands::PatternRequest::Id:
-        HandleCommand<Clusters::DiscoBall::Commands::PatternRequest::DecodableType>(
-            handlerContext, [&](auto & _u, auto & payload) { ChipLogProgress(Zcl, "PatternRequest received"); });
+        HandleCommand<Clusters::DiscoBall::Commands::PatternRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
+            ChipLogProgress(Zcl, "PatternRequest received");
+            handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, Protocols::InteractionModel::Status::Success);
+        });
         break;
     case Clusters::DiscoBall::Commands::StatsRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::StatsRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
