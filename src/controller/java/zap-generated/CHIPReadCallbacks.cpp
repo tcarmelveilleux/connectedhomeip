@@ -53957,9 +53957,8 @@ void CHIPElectricalMeasurementAttributeListAttributeCallback::CallbackFn(
     env->CallVoidMethod(javaCallbackRef, javaMethod, arrayListObj);
 }
 
-CHIPDiscoBallPatternPatternPatternAttributeCallback::CHIPDiscoBallPatternPatternPatternAttributeCallback(jobject javaCallback,
-                                                                                                         bool keepAlive) :
-    chip::Callback::Callback<CHIPDiscoBallClusterPatternPatternPatternAttributeCallbackType>(CallbackFn, this), keepAlive(keepAlive)
+CHIPDiscoBallPatternAttributeCallback::CHIPDiscoBallPatternAttributeCallback(jobject javaCallback, bool keepAlive) :
+    chip::Callback::Callback<CHIPDiscoBallClusterPatternAttributeCallbackType>(CallbackFn, this), keepAlive(keepAlive)
 {
     JNIEnv * env = chip::JniReferences::GetInstance().GetEnvForCurrentThread();
     if (env == nullptr)
@@ -53975,7 +53974,7 @@ CHIPDiscoBallPatternPatternPatternAttributeCallback::CHIPDiscoBallPatternPattern
     }
 }
 
-CHIPDiscoBallPatternPatternPatternAttributeCallback::~CHIPDiscoBallPatternPatternPatternAttributeCallback()
+CHIPDiscoBallPatternAttributeCallback::~CHIPDiscoBallPatternAttributeCallback()
 {
     JNIEnv * env = chip::JniReferences::GetInstance().GetEnvForCurrentThread();
     if (env == nullptr)
@@ -53986,7 +53985,7 @@ CHIPDiscoBallPatternPatternPatternAttributeCallback::~CHIPDiscoBallPatternPatter
     env->DeleteGlobalRef(javaCallbackRef);
 }
 
-void CHIPDiscoBallPatternPatternPatternAttributeCallback::CallbackFn(
+void CHIPDiscoBallPatternAttributeCallback::CallbackFn(
     void * context,
     const chip::app::DataModel::DecodableList<chip::app::Clusters::DiscoBall::Structs::PatternStruct::DecodableType> & list)
 {
@@ -53997,8 +53996,8 @@ void CHIPDiscoBallPatternPatternPatternAttributeCallback::CallbackFn(
 
     VerifyOrReturn(env != nullptr, ChipLogError(Zcl, "Could not get JNI env"));
 
-    std::unique_ptr<CHIPDiscoBallPatternPatternPatternAttributeCallback, decltype(&maybeDestroy)> cppCallback(
-        reinterpret_cast<CHIPDiscoBallPatternPatternPatternAttributeCallback *>(context), maybeDestroy);
+    std::unique_ptr<CHIPDiscoBallPatternAttributeCallback, decltype(&maybeDestroy)> cppCallback(
+        reinterpret_cast<CHIPDiscoBallPatternAttributeCallback *>(context), maybeDestroy);
 
     // It's valid for javaCallbackRef to be nullptr if the Java code passed in a null callback.
     javaCallbackRef = cppCallback.get()->javaCallbackRef;

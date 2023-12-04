@@ -12429,7 +12429,7 @@ class ChipClusters:
                 "writable": True,
             },
             0x00000005: {
-                "attributeName": "PatternPatternPattern",
+                "attributeName": "Pattern",
                 "attributeId": 0x00000005,
                 "type": "",
                 "reportable": True,

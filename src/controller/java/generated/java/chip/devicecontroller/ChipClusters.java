@@ -54975,7 +54975,7 @@ public class ChipClusters {
     private static final long SPEED_ATTRIBUTE_ID = 2L;
     private static final long AXIS_ATTRIBUTE_ID = 3L;
     private static final long WOBBLE_SPEED_ATTRIBUTE_ID = 4L;
-    private static final long PATTERN_PATTERN_PATTERN_ATTRIBUTE_ID = 5L;
+    private static final long PATTERN_ATTRIBUTE_ID = 5L;
     private static final long NAME_ATTRIBUTE_ID = 6L;
     private static final long WOBBLE_SUPPORT_ATTRIBUTE_ID = 7L;
     private static final long WOBBLE_SETTING_ATTRIBUTE_ID = 8L;
@@ -55122,7 +55122,7 @@ public class ChipClusters {
       void onSuccess(Long lastRun, Optional<Long> patterns);
     }
 
-    public interface PatternPatternPatternAttributeCallback extends BaseAttributeCallback {
+    public interface PatternAttributeCallback extends BaseAttributeCallback {
       void onSuccess(List<ChipStructs.DiscoBallClusterPatternStruct> value);
     }
 
@@ -55285,9 +55285,9 @@ public class ChipClusters {
         }, WOBBLE_SPEED_ATTRIBUTE_ID, minInterval, maxInterval);
     }
 
-    public void readPatternPatternPatternAttribute(
-        PatternPatternPatternAttributeCallback callback) {
-      ChipAttributePath path = ChipAttributePath.newInstance(endpointId, clusterId, PATTERN_PATTERN_PATTERN_ATTRIBUTE_ID);
+    public void readPatternAttribute(
+        PatternAttributeCallback callback) {
+      ChipAttributePath path = ChipAttributePath.newInstance(endpointId, clusterId, PATTERN_ATTRIBUTE_ID);
 
       readAttribute(new ReportCallbackImpl(callback, path) {
           @Override
@@ -55295,28 +55295,28 @@ public class ChipClusters {
             List<ChipStructs.DiscoBallClusterPatternStruct> value = ChipTLVValueDecoder.decodeAttributeValue(path, tlv);
             callback.onSuccess(value);
           }
-        }, PATTERN_PATTERN_PATTERN_ATTRIBUTE_ID, true);
+        }, PATTERN_ATTRIBUTE_ID, true);
     }
 
-    public void writePatternPatternPatternAttribute(DefaultClusterCallback callback, ArrayList<ChipStructs.DiscoBallClusterPatternStruct> value) {
-      writePatternPatternPatternAttribute(callback, value, 0);
+    public void writePatternAttribute(DefaultClusterCallback callback, ArrayList<ChipStructs.DiscoBallClusterPatternStruct> value) {
+      writePatternAttribute(callback, value, 0);
     }
 
-    public void writePatternPatternPatternAttribute(DefaultClusterCallback callback, ArrayList<ChipStructs.DiscoBallClusterPatternStruct> value, int timedWriteTimeoutMs) {
+    public void writePatternAttribute(DefaultClusterCallback callback, ArrayList<ChipStructs.DiscoBallClusterPatternStruct> value, int timedWriteTimeoutMs) {
       BaseTLVType tlvValue = ArrayType.generateArrayType(value, (elementvalue) -> elementvalue.encodeTlv());
-      writeAttribute(new WriteAttributesCallbackImpl(callback), PATTERN_PATTERN_PATTERN_ATTRIBUTE_ID, tlvValue, timedWriteTimeoutMs);
+      writeAttribute(new WriteAttributesCallbackImpl(callback), PATTERN_ATTRIBUTE_ID, tlvValue, timedWriteTimeoutMs);
     }
 
-    public void subscribePatternPatternPatternAttribute(
-        PatternPatternPatternAttributeCallback callback, int minInterval, int maxInterval) {
-      ChipAttributePath path = ChipAttributePath.newInstance(endpointId, clusterId, PATTERN_PATTERN_PATTERN_ATTRIBUTE_ID);
+    public void subscribePatternAttribute(
+        PatternAttributeCallback callback, int minInterval, int maxInterval) {
+      ChipAttributePath path = ChipAttributePath.newInstance(endpointId, clusterId, PATTERN_ATTRIBUTE_ID);
 
       subscribeAttribute(new ReportCallbackImpl(callback, path) {
           @Override
           public void onSuccess(byte[] tlv) {
             List<ChipStructs.DiscoBallClusterPatternStruct> value = ChipTLVValueDecoder.decodeAttributeValue(path, tlv);
           }
-        }, PATTERN_PATTERN_PATTERN_ATTRIBUTE_ID, minInterval, maxInterval);
+        }, PATTERN_ATTRIBUTE_ID, minInterval, maxInterval);
     }
 
     public void readNameAttribute(

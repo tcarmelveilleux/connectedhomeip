@@ -17100,7 +17100,7 @@ public class ClusterInfoMapping {
       callback.onFailure(error);
     }
   }
-  public static class DelegatedDiscoBallClusterPatternPatternPatternAttributeCallback implements ChipClusters.DiscoBallCluster.PatternPatternPatternAttributeCallback, DelegatedClusterCallback {
+  public static class DelegatedDiscoBallClusterPatternAttributeCallback implements ChipClusters.DiscoBallCluster.PatternAttributeCallback, DelegatedClusterCallback {
     private ClusterCommandCallback callback;
     @Override
     public void setCallbackDelegate(ClusterCommandCallback callback) {

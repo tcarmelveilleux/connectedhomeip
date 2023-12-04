@@ -7092,9 +7092,9 @@ namespace WobbleSpeed {
 static constexpr AttributeId Id = 0x00000004;
 } // namespace WobbleSpeed
 
-namespace PatternPatternPattern {
+namespace Pattern {
 static constexpr AttributeId Id = 0x00000005;
-} // namespace PatternPatternPattern
+} // namespace Pattern
 
 namespace Name {
 static constexpr AttributeId Id = 0x00000006;

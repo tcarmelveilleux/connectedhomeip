@@ -15005,7 +15005,7 @@ public class ClusterIDMapping {
             Speed(2L),
             Axis(3L),
             WobbleSpeed(4L),
-            PatternPatternPattern(5L),
+            Pattern(5L),
             Name(6L),
             WobbleSupport(7L),
             WobbleSetting(8L),

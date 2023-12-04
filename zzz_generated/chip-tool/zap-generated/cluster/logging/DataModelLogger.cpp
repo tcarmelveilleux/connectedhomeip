@@ -14751,10 +14751,10 @@ CHIP_ERROR DataModelLogger::LogAttribute(const chip::app::ConcreteDataAttributeP
             ReturnErrorOnFailure(chip::app::DataModel::Decode(*data, value));
             return DataModelLogger::LogValue("WobbleSpeed", 1, value);
         }
-        case DiscoBall::Attributes::PatternPatternPattern::Id: {
+        case DiscoBall::Attributes::Pattern::Id: {
             chip::app::DataModel::DecodableList<chip::app::Clusters::DiscoBall::Structs::PatternStruct::DecodableType> value;
             ReturnErrorOnFailure(chip::app::DataModel::Decode(*data, value));
-            return DataModelLogger::LogValue("PatternPatternPattern", 1, value);
+            return DataModelLogger::LogValue("Pattern", 1, value);
         }
         case DiscoBall::Attributes::Name::Id: {
             chip::CharSpan value;

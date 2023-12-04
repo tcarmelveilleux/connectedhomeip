@@ -36684,7 +36684,7 @@ struct TypeInfo
     static constexpr bool MustUseTimedWrite() { return false; }
 };
 } // namespace WobbleSpeed
-namespace PatternPatternPattern {
+namespace Pattern {
 struct TypeInfo
 {
     using Type = chip::app::DataModel::List<const chip::app::Clusters::DiscoBall::Structs::PatternStruct::Type>;
@@ -36694,10 +36694,10 @@ struct TypeInfo
         const chip::app::DataModel::DecodableList<chip::app::Clusters::DiscoBall::Structs::PatternStruct::DecodableType> &;
 
     static constexpr ClusterId GetClusterId() { return Clusters::DiscoBall::Id; }
-    static constexpr AttributeId GetAttributeId() { return Attributes::PatternPatternPattern::Id; }
+    static constexpr AttributeId GetAttributeId() { return Attributes::Pattern::Id; }
     static constexpr bool MustUseTimedWrite() { return false; }
 };
-} // namespace PatternPatternPattern
+} // namespace Pattern
 namespace Name {
 struct TypeInfo
 {
@@ -36785,7 +36785,7 @@ struct TypeInfo
         Attributes::Speed::TypeInfo::DecodableType speed             = static_cast<uint8_t>(0);
         Attributes::Axis::TypeInfo::DecodableType axis               = static_cast<uint8_t>(0);
         Attributes::WobbleSpeed::TypeInfo::DecodableType wobbleSpeed = static_cast<uint8_t>(0);
-        Attributes::PatternPatternPattern::TypeInfo::DecodableType patternPatternPattern;
+        Attributes::Pattern::TypeInfo::DecodableType pattern;
         Attributes::Name::TypeInfo::DecodableType name;
         Attributes::WobbleSupport::TypeInfo::DecodableType wobbleSupport =
             static_cast<chip::BitMask<chip::app::Clusters::DiscoBall::WobbleBitmap>>(0);

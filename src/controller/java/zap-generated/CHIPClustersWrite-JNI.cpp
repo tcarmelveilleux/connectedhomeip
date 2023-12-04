@@ -9521,12 +9521,12 @@ JNI_METHOD(void, DiscoBallCluster, writeWobbleSpeedAttribute)
     onFailure.release();
 }
 
-JNI_METHOD(void, DiscoBallCluster, writePatternPatternPatternAttribute)
+JNI_METHOD(void, DiscoBallCluster, writePatternAttribute)
 (JNIEnv * env, jobject self, jlong clusterPtr, jobject callback, jobject value, jobject timedWriteTimeoutMs)
 {
     chip::DeviceLayer::StackLock lock;
     ListFreer listFreer;
-    using TypeInfo = chip::app::Clusters::DiscoBall::Attributes::PatternPatternPattern::TypeInfo;
+    using TypeInfo = chip::app::Clusters::DiscoBall::Attributes::Pattern::TypeInfo;
     TypeInfo::Type cppValue;
 
     std::vector<Platform::UniquePtr<JniByteArray>> cleanupByteArrays;

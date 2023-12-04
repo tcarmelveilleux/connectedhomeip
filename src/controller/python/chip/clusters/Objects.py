@@ -42070,7 +42070,7 @@ class DiscoBall(Cluster):
                 ClusterObjectFieldDescriptor(Label="speed", Tag=0x00000002, Type=uint),
                 ClusterObjectFieldDescriptor(Label="axis", Tag=0x00000003, Type=typing.Optional[uint]),
                 ClusterObjectFieldDescriptor(Label="wobbleSpeed", Tag=0x00000004, Type=typing.Optional[uint]),
-                ClusterObjectFieldDescriptor(Label="patternPatternPattern", Tag=0x00000005, Type=typing.Optional[typing.List[DiscoBall.Structs.PatternStruct]]),
+                ClusterObjectFieldDescriptor(Label="pattern", Tag=0x00000005, Type=typing.Optional[typing.List[DiscoBall.Structs.PatternStruct]]),
                 ClusterObjectFieldDescriptor(Label="name", Tag=0x00000006, Type=typing.Optional[str]),
                 ClusterObjectFieldDescriptor(Label="wobbleSupport", Tag=0x00000007, Type=typing.Optional[uint]),
                 ClusterObjectFieldDescriptor(Label="wobbleSetting", Tag=0x00000008, Type=typing.Optional[uint]),
@@ -42087,7 +42087,7 @@ class DiscoBall(Cluster):
     speed: 'uint' = None
     axis: 'typing.Optional[uint]' = None
     wobbleSpeed: 'typing.Optional[uint]' = None
-    patternPatternPattern: 'typing.Optional[typing.List[DiscoBall.Structs.PatternStruct]]' = None
+    pattern: 'typing.Optional[typing.List[DiscoBall.Structs.PatternStruct]]' = None
     name: 'typing.Optional[str]' = None
     wobbleSupport: 'typing.Optional[uint]' = None
     wobbleSetting: 'typing.Optional[uint]' = None
@@ -42343,7 +42343,7 @@ class DiscoBall(Cluster):
             value: 'typing.Optional[uint]' = None
 
         @dataclass
-        class PatternPatternPattern(ClusterAttributeDescriptor):
+        class Pattern(ClusterAttributeDescriptor):
             @ChipUtility.classproperty
             def cluster_id(cls) -> int:
                 return 0x00003456

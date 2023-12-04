@@ -36599,8 +36599,8 @@ jobject DecodeAttributeValue(const app::ConcreteAttributePath & aPath, TLV::TLVR
                                                                        value);
             return value;
         }
-        case Attributes::PatternPatternPattern::Id: {
-            using TypeInfo = Attributes::PatternPatternPattern::TypeInfo;
+        case Attributes::Pattern::Id: {
+            using TypeInfo = Attributes::Pattern::TypeInfo;
             TypeInfo::DecodableType cppValue;
             *aError = app::DataModel::Decode(aReader, cppValue);
             if (*aError != CHIP_NO_ERROR)

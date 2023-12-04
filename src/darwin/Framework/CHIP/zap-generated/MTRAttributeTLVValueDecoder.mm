@@ -15446,8 +15446,8 @@ static id _Nullable DecodeAttributeValueForDiscoBallCluster(AttributeId aAttribu
         value = [NSNumber numberWithUnsignedChar:cppValue];
         return value;
     }
-    case Attributes::PatternPatternPattern::Id: {
-        using TypeInfo = Attributes::PatternPatternPattern::TypeInfo;
+    case Attributes::Pattern::Id: {
+        using TypeInfo = Attributes::Pattern::TypeInfo;
         TypeInfo::DecodableType cppValue;
         *aError = DataModel::Decode(aReader, cppValue);
         if (*aError != CHIP_NO_ERROR) {

@@ -1080,7 +1080,7 @@ typedef void (*ElectricalMeasurementEventListListAttributeCallback)(
     void * context, const chip::app::DataModel::DecodableList<chip::EventId> & data);
 typedef void (*ElectricalMeasurementAttributeListListAttributeCallback)(
     void * context, const chip::app::DataModel::DecodableList<chip::AttributeId> & data);
-typedef void (*DiscoBallPatternPatternPatternListAttributeCallback)(
+typedef void (*DiscoBallPatternListAttributeCallback)(
     void * context,
     const chip::app::DataModel::DecodableList<chip::app::Clusters::DiscoBall::Structs::PatternStruct::DecodableType> & data);
 typedef void (*DiscoBallGeneratedCommandListListAttributeCallback)(

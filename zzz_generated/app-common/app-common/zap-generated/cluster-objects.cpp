@@ -23154,8 +23154,8 @@ CHIP_ERROR TypeInfo::DecodableType::Decode(TLV::TLVReader & reader, const Concre
         return DataModel::Decode(reader, axis);
     case Attributes::WobbleSpeed::TypeInfo::GetAttributeId():
         return DataModel::Decode(reader, wobbleSpeed);
-    case Attributes::PatternPatternPattern::TypeInfo::GetAttributeId():
-        return DataModel::Decode(reader, patternPatternPattern);
+    case Attributes::Pattern::TypeInfo::GetAttributeId():
+        return DataModel::Decode(reader, pattern);
     case Attributes::Name::TypeInfo::GetAttributeId():
         return DataModel::Decode(reader, name);
     case Attributes::WobbleSupport::TypeInfo::GetAttributeId():

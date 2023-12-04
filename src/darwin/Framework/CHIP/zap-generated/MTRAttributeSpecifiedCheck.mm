@@ -5694,7 +5694,7 @@ static BOOL AttributeIsSpecifiedInDiscoBallCluster(AttributeId aAttributeId)
     case Attributes::WobbleSpeed::Id: {
         return YES;
     }
-    case Attributes::PatternPatternPattern::Id: {
+    case Attributes::Pattern::Id: {
         return YES;
     }
     case Attributes::Name::Id: {

@@ -23,7 +23,7 @@ import matter.devicecontroller.cluster.structs.*
 class DiscoBallCluster(private val controller: MatterController, private val endpointId: UShort) {
   class StatsResponse(val lastRun: UInt, val patterns: UInt?)
 
-  class PatternPatternPatternAttribute(val value: List<DiscoBallClusterPatternStruct>?)
+  class PatternAttribute(val value: List<DiscoBallClusterPatternStruct>?)
 
   class GeneratedCommandListAttribute(val value: List<UInt>)
 
@@ -145,11 +145,11 @@ class DiscoBallCluster(private val controller: MatterController, private val end
     // Implementation needs to be added here
   }
 
-  suspend fun readPatternPatternPatternAttribute(): PatternPatternPatternAttribute {
+  suspend fun readPatternAttribute(): PatternAttribute {
     // Implementation needs to be added here
   }
 
-  suspend fun writePatternPatternPatternAttribute(
+  suspend fun writePatternAttribute(
     value: List<DiscoBallClusterPatternStruct>,
     timedWriteTimeoutMs: Int? = null
   ) {
@@ -160,10 +160,7 @@ class DiscoBallCluster(private val controller: MatterController, private val end
     }
   }
 
-  suspend fun subscribePatternPatternPatternAttribute(
-    minInterval: Int,
-    maxInterval: Int
-  ): PatternPatternPatternAttribute {
+  suspend fun subscribePatternAttribute(minInterval: Int, maxInterval: Int): PatternAttribute {
     // Implementation needs to be added here
   }
 
