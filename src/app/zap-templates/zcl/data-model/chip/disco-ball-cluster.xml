@@ -72,9 +72,7 @@ limitations under the License.
     <attribute code="0x0004" side="server" define="WOBBLE_SPEED" type="int8u" default="0" min="0" max="200" writable="true" optional="true">WobbleSpeed</attribute>
     <attribute code="0x0005" side="server" define="PATTERN" type="ARRAY" entryType="PatternStruct" default="0" writable="true" optional="true" length="16">
       <description>Pattern</description>
-      <description>Pattern</description>
       <access op="write" privilege="manage"/>
-      <description>Pattern</description>
     </attribute>
     <attribute code="0x0006" side="server" define="NAME" type="char_string" default="0" length="16" writable="true" optional="true">
       <description>Name</description>
