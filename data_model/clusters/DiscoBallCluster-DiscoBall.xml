@@ -55,7 +55,7 @@ Connectivity Standards Alliance
 508 Second Street, Suite 206
 Davis, CA 95616, USA
 -->
-<cluster xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="types types.xsd cluster cluster.xsd" id="0x3456" name="Disco Ball" revision="8">
+<cluster xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="types types.xsd cluster cluster.xsd" id="0x3456" name="Disco Ball" revision="9">
   <revisionHistory>
     <revision revision="1" summary="Initial Release"/>
     <revision revision="2" summary="Deprecated Off enum value in Rotate attribute"/>
@@ -64,7 +64,8 @@ Davis, CA 95616, USA
     <revision revision="5" summary="Added Reverse feature"/>
     <revision revision="6" summary="Updated columns from Data &amp; Interaction Model specs"/>
     <revision revision="7" summary="Deprecated Party feature"/>
-    <revision revision="8" summary="Made Pattern attribute non-volatile"/>
+    <revision revision="8" summary="Added WobbleSupport and WobbleSetting"/>
+    <revision revision="9" summary="Made Pattern attribute non-volatile"/>
   </revisionHistory>
   <classification hierarchy="base" role="application" picsCode="DISCO" scope="Endpoint"/>
   <features>
@@ -192,14 +193,13 @@ Davis, CA 95616, USA
       </mandatoryConform>
       <constraint type="between" from="0" to="200"/>
     </attribute>
-    <attribute id="0x0005" name="Pattern" type="list" default="0">
-      <entry type="PatternStruct"/>
+    <attribute id="0x0005" name="Pattern" type="list[PatternStruct Type]" default="0">
       <access read="true" write="true" readPrivilege="view" writePrivilege="manage"/>
       <quality changeOmitted="false" nullable="false" scene="false" persistence="nonVolatile" reportable="false"/>
       <mandatoryConform>
         <feature name="PAT"/>
       </mandatoryConform>
-      <constraint type="maxCount" value="16"/>
+      <constraint type="max" value="16"/>
     </attribute>
     <attribute id="0x0006" name="Name" type="string" default="0">
       <access read="true" write="true" readPrivilege="view" writePrivilege="manage"/>
