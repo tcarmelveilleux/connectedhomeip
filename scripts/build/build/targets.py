@@ -139,6 +139,7 @@ def BuildHostTarget():
         TargetPart('lit-icd', app=HostApp.LIT_ICD),
         TargetPart('air-quality-sensor', app=HostApp.AIR_QUALITY_SENSOR),
         TargetPart('network-manager', app=HostApp.NETWORK_MANAGER),
+        TargetPart('disco-ball', app=HostApp.DISCO_BALL),
     ]
 
     if (HostBoard.NATIVE.PlatformName() == 'darwin'):
