@@ -63,6 +63,7 @@ limitations under the License.
     <client init="false" tick="false">true</client>
     <server init="false" tick="false">true</server>
     <description>This example cluster controls an imaginary mirrored disco ball, for the express purpose of disco dancing.</description>
+    <globalAttribute side="either" code="0xFFFD" value="9"/>
     <!--Attributes-->
     <!-- Run uses a timed write, but I'm not sure we have a way to express this in the zap XML - mustUseTimedWrite="true"? -->
     <attribute code="0x0000" side="server" define="RUN" type="boolean" default="0" writable="false" optional="false">Run</attribute>
