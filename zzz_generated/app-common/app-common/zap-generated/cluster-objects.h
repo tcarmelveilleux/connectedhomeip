@@ -42009,12 +42009,12 @@ struct TypeInfo
 };
 } // namespace Attributes
 namespace Events {
-namespace Pinged {
+namespace PingCountEvent {
 static constexpr PriorityLevel kPriorityLevel = PriorityLevel::Info;
 
 enum class Fields : uint8_t
 {
-    kArg1        = 1,
+    kCount       = 1,
     kFabricIndex = 254,
 };
 
@@ -42022,11 +42022,11 @@ struct Type
 {
 public:
     static constexpr PriorityLevel GetPriorityLevel() { return kPriorityLevel; }
-    static constexpr EventId GetEventId() { return Events::Pinged::Id; }
+    static constexpr EventId GetEventId() { return Events::PingCountEvent::Id; }
     static constexpr ClusterId GetClusterId() { return Clusters::SampleMei::Id; }
     static constexpr bool kIsFabricScoped = true;
 
-    uint8_t arg1                  = static_cast<uint8_t>(0);
+    uint32_t count                = static_cast<uint32_t>(0);
     chip::FabricIndex fabricIndex = static_cast<chip::FabricIndex>(0);
 
     auto GetFabricIndex() const { return fabricIndex; }
@@ -42038,15 +42038,15 @@ struct DecodableType
 {
 public:
     static constexpr PriorityLevel GetPriorityLevel() { return kPriorityLevel; }
-    static constexpr EventId GetEventId() { return Events::Pinged::Id; }
+    static constexpr EventId GetEventId() { return Events::PingCountEvent::Id; }
     static constexpr ClusterId GetClusterId() { return Clusters::SampleMei::Id; }
 
-    uint8_t arg1                  = static_cast<uint8_t>(0);
+    uint32_t count                = static_cast<uint32_t>(0);
     chip::FabricIndex fabricIndex = static_cast<chip::FabricIndex>(0);
 
     CHIP_ERROR Decode(TLV::TLVReader & reader);
 };
-} // namespace Pinged
+} // namespace PingCountEvent
 } // namespace Events
 } // namespace SampleMei
 
