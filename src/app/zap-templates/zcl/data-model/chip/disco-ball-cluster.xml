@@ -40,7 +40,7 @@ limitations under the License.
     <item name="CounterClockwise" value="2"/>
   </enum>
 
-  <struct name="PatternStruct">
+  <struct name="PatternStruct" isFabricScoped="true">
     <cluster code="0x3456"/>
     <item fieldId="0" name="Duration" type="int16u" isNullable="false" writable="true"/>
     <item fieldId="1" name="Rotate" type="RotateEnum" isNullable="true" writable="true"/>
