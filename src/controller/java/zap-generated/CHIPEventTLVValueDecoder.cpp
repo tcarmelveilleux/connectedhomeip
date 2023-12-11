@@ -6142,6 +6142,13 @@ jobject DecodeEventValue(const app::ConcreteEventPath & aPath, TLV::TLVReader & 
                     LogErrorOnFailure(chip::JniReferences::GetInstance().CharToStringUTF(
                         cppValue.prevPattern.Value().passcode.Value(), value_prevPattern_passcode));
                 }
+                jobject value_prevPattern_fabricIndex;
+                std::string value_prevPattern_fabricIndexClassName     = "java/lang/Integer";
+                std::string value_prevPattern_fabricIndexCtorSignature = "(I)V";
+                jint jnivalue_prevPattern_fabricIndex = static_cast<jint>(cppValue.prevPattern.Value().fabricIndex);
+                chip::JniReferences::GetInstance().CreateBoxedObject<jint>(
+                    value_prevPattern_fabricIndexClassName.c_str(), value_prevPattern_fabricIndexCtorSignature.c_str(),
+                    jnivalue_prevPattern_fabricIndex, value_prevPattern_fabricIndex);
 
                 jclass patternStructStructClass_1;
                 err = chip::JniReferences::GetInstance().GetClassRef(
@@ -6154,16 +6161,17 @@ jobject DecodeEventValue(const app::ConcreteEventPath & aPath, TLV::TLVReader & 
                 jmethodID patternStructStructCtor_1 =
                     env->GetMethodID(patternStructStructClass_1, "<init>",
                                      "(Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/util/Optional;Ljava/util/"
-                                     "Optional;Ljava/lang/String;)V");
+                                     "Optional;Ljava/lang/String;Ljava/lang/Integer;)V");
                 if (patternStructStructCtor_1 == nullptr)
                 {
                     ChipLogError(Zcl, "Could not find ChipStructs$DiscoBallClusterPatternStruct constructor");
                     return nullptr;
                 }
 
-                value_prevPattern = env->NewObject(
-                    patternStructStructClass_1, patternStructStructCtor_1, value_prevPattern_duration, value_prevPattern_rotate,
-                    value_prevPattern_speed, value_prevPattern_axis, value_prevPattern_wobbleSpeed, value_prevPattern_passcode);
+                value_prevPattern =
+                    env->NewObject(patternStructStructClass_1, patternStructStructCtor_1, value_prevPattern_duration,
+                                   value_prevPattern_rotate, value_prevPattern_speed, value_prevPattern_axis,
+                                   value_prevPattern_wobbleSpeed, value_prevPattern_passcode, value_prevPattern_fabricIndex);
             }
 
             jobject value_curPattern;
@@ -6262,6 +6270,13 @@ jobject DecodeEventValue(const app::ConcreteEventPath & aPath, TLV::TLVReader & 
                 LogErrorOnFailure(chip::JniReferences::GetInstance().CharToStringUTF(cppValue.curPattern.passcode.Value(),
                                                                                      value_curPattern_passcode));
             }
+            jobject value_curPattern_fabricIndex;
+            std::string value_curPattern_fabricIndexClassName     = "java/lang/Integer";
+            std::string value_curPattern_fabricIndexCtorSignature = "(I)V";
+            jint jnivalue_curPattern_fabricIndex                  = static_cast<jint>(cppValue.curPattern.fabricIndex);
+            chip::JniReferences::GetInstance().CreateBoxedObject<jint>(
+                value_curPattern_fabricIndexClassName.c_str(), value_curPattern_fabricIndexCtorSignature.c_str(),
+                jnivalue_curPattern_fabricIndex, value_curPattern_fabricIndex);
 
             jclass patternStructStructClass_0;
             err = chip::JniReferences::GetInstance().GetClassRef(
@@ -6274,16 +6289,17 @@ jobject DecodeEventValue(const app::ConcreteEventPath & aPath, TLV::TLVReader & 
             jmethodID patternStructStructCtor_0 =
                 env->GetMethodID(patternStructStructClass_0, "<init>",
                                  "(Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/util/Optional;Ljava/util/"
-                                 "Optional;Ljava/lang/String;)V");
+                                 "Optional;Ljava/lang/String;Ljava/lang/Integer;)V");
             if (patternStructStructCtor_0 == nullptr)
             {
                 ChipLogError(Zcl, "Could not find ChipStructs$DiscoBallClusterPatternStruct constructor");
                 return nullptr;
             }
 
-            value_curPattern = env->NewObject(patternStructStructClass_0, patternStructStructCtor_0, value_curPattern_duration,
-                                              value_curPattern_rotate, value_curPattern_speed, value_curPattern_axis,
-                                              value_curPattern_wobbleSpeed, value_curPattern_passcode);
+            value_curPattern =
+                env->NewObject(patternStructStructClass_0, patternStructStructCtor_0, value_curPattern_duration,
+                               value_curPattern_rotate, value_curPattern_speed, value_curPattern_axis, value_curPattern_wobbleSpeed,
+                               value_curPattern_passcode, value_curPattern_fabricIndex);
 
             jobject value_nextPattern;
             if (cppValue.nextPattern.IsNull())
@@ -6388,6 +6404,13 @@ jobject DecodeEventValue(const app::ConcreteEventPath & aPath, TLV::TLVReader & 
                     LogErrorOnFailure(chip::JniReferences::GetInstance().CharToStringUTF(
                         cppValue.nextPattern.Value().passcode.Value(), value_nextPattern_passcode));
                 }
+                jobject value_nextPattern_fabricIndex;
+                std::string value_nextPattern_fabricIndexClassName     = "java/lang/Integer";
+                std::string value_nextPattern_fabricIndexCtorSignature = "(I)V";
+                jint jnivalue_nextPattern_fabricIndex = static_cast<jint>(cppValue.nextPattern.Value().fabricIndex);
+                chip::JniReferences::GetInstance().CreateBoxedObject<jint>(
+                    value_nextPattern_fabricIndexClassName.c_str(), value_nextPattern_fabricIndexCtorSignature.c_str(),
+                    jnivalue_nextPattern_fabricIndex, value_nextPattern_fabricIndex);
 
                 jclass patternStructStructClass_1;
                 err = chip::JniReferences::GetInstance().GetClassRef(
@@ -6400,16 +6423,17 @@ jobject DecodeEventValue(const app::ConcreteEventPath & aPath, TLV::TLVReader & 
                 jmethodID patternStructStructCtor_1 =
                     env->GetMethodID(patternStructStructClass_1, "<init>",
                                      "(Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/util/Optional;Ljava/util/"
-                                     "Optional;Ljava/lang/String;)V");
+                                     "Optional;Ljava/lang/String;Ljava/lang/Integer;)V");
                 if (patternStructStructCtor_1 == nullptr)
                 {
                     ChipLogError(Zcl, "Could not find ChipStructs$DiscoBallClusterPatternStruct constructor");
                     return nullptr;
                 }
 
-                value_nextPattern = env->NewObject(
-                    patternStructStructClass_1, patternStructStructCtor_1, value_nextPattern_duration, value_nextPattern_rotate,
-                    value_nextPattern_speed, value_nextPattern_axis, value_nextPattern_wobbleSpeed, value_nextPattern_passcode);
+                value_nextPattern =
+                    env->NewObject(patternStructStructClass_1, patternStructStructCtor_1, value_nextPattern_duration,
+                                   value_nextPattern_rotate, value_nextPattern_speed, value_nextPattern_axis,
+                                   value_nextPattern_wobbleSpeed, value_nextPattern_passcode, value_nextPattern_fabricIndex);
             }
 
             jobject value_label;

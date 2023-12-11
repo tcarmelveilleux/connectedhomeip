@@ -90,6 +90,7 @@ constexpr DeviceTypeData knownDeviceTypes[] = {
     { 0x00000307, DeviceTypeClass::Simple, "Matter Humidity Sensor" },
     { 0x00000840, DeviceTypeClass::Simple, "Matter Control Bridge" },
     { 0x00000850, DeviceTypeClass::Simple, "Matter On/Off Sensor" },
+    { 0x00005678, DeviceTypeClass::Simple, "Matter Disco Ball" },
     { 0xFFF10010, DeviceTypeClass::Simple, "Matter Network Infrastructure Manager" },
 };
 

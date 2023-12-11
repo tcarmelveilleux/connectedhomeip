@@ -55287,6 +55287,11 @@ public class ChipClusters {
 
     public void readPatternAttribute(
         PatternAttributeCallback callback) {
+      readPatternAttributeWithFabricFilter(callback, true);
+    }
+
+    public void readPatternAttributeWithFabricFilter(
+        PatternAttributeCallback callback, boolean isFabricFiltered) {
       ChipAttributePath path = ChipAttributePath.newInstance(endpointId, clusterId, PATTERN_ATTRIBUTE_ID);
 
       readAttribute(new ReportCallbackImpl(callback, path) {
@@ -55295,7 +55300,7 @@ public class ChipClusters {
             List<ChipStructs.DiscoBallClusterPatternStruct> value = ChipTLVValueDecoder.decodeAttributeValue(path, tlv);
             callback.onSuccess(value);
           }
-        }, PATTERN_ATTRIBUTE_ID, true);
+        }, PATTERN_ATTRIBUTE_ID, isFabricFiltered);
     }
 
     public void writePatternAttribute(DefaultClusterCallback callback, ArrayList<ChipStructs.DiscoBallClusterPatternStruct> value) {

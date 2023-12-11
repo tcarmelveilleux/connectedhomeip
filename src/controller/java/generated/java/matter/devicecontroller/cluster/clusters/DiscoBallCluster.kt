@@ -149,6 +149,10 @@ class DiscoBallCluster(private val controller: MatterController, private val end
     // Implementation needs to be added here
   }
 
+  suspend fun readPatternAttributeWithFabricFilter(isFabricFiltered: Boolean): PatternAttribute {
+    // Implementation needs to be added here
+  }
+
   suspend fun writePatternAttribute(
     value: List<DiscoBallClusterPatternStruct>,
     timedWriteTimeoutMs: Int? = null

@@ -15500,6 +15500,7 @@ static id _Nullable DecodeAttributeValueForDiscoBallCluster(AttributeId aAttribu
                         return nil;
                     }
                 }
+                newElement_0.fabricIndex = [NSNumber numberWithUnsignedChar:entry_0.fabricIndex];
                 [array_0 addObject:newElement_0];
             }
             CHIP_ERROR err = iter_0.GetStatus();

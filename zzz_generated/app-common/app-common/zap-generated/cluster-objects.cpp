@@ -22883,15 +22883,36 @@ namespace DiscoBall {
 namespace Structs {
 
 namespace PatternStruct {
-CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
+CHIP_ERROR Type::EncodeForWrite(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 {
+    return DoEncode(aWriter, aTag, NullOptional);
+}
+
+CHIP_ERROR Type::EncodeForRead(TLV::TLVWriter & aWriter, TLV::Tag aTag, FabricIndex aAccessingFabricIndex) const
+{
+    return DoEncode(aWriter, aTag, MakeOptional(aAccessingFabricIndex));
+}
+
+CHIP_ERROR Type::DoEncode(TLV::TLVWriter & aWriter, TLV::Tag aTag, const Optional<FabricIndex> & aAccessingFabricIndex) const
+{
+    bool includeSensitive = !aAccessingFabricIndex.HasValue() || (aAccessingFabricIndex.Value() == fabricIndex);
+
     DataModel::WrappedStructEncoder encoder{ aWriter, aTag };
+
     encoder.Encode(to_underlying(Fields::kDuration), duration);
     encoder.Encode(to_underlying(Fields::kRotate), rotate);
     encoder.Encode(to_underlying(Fields::kSpeed), speed);
     encoder.Encode(to_underlying(Fields::kAxis), axis);
     encoder.Encode(to_underlying(Fields::kWobbleSpeed), wobbleSpeed);
-    encoder.Encode(to_underlying(Fields::kPasscode), passcode);
+    if (includeSensitive)
+    {
+        encoder.Encode(to_underlying(Fields::kPasscode), passcode);
+    }
+    if (aAccessingFabricIndex.HasValue())
+    {
+        encoder.Encode(to_underlying(Fields::kFabricIndex), fabricIndex);
+    }
+
     return encoder.Finalize();
 }
 
@@ -22932,6 +22953,10 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
         else if (__context_tag == to_underlying(Fields::kPasscode))
         {
             err = DataModel::Decode(reader, passcode);
+        }
+        else if (__context_tag == to_underlying(Fields::kFabricIndex))
+        {
+            err = DataModel::Decode(reader, fabricIndex);
         }
         else
         {
@@ -23228,9 +23253,9 @@ CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
 {
     TLV::TLVType outer;
     ReturnErrorOnFailure(aWriter.StartContainer(aTag, TLV::kTLVType_Structure, outer));
-    ReturnErrorOnFailure(DataModel::Encode(aWriter, TLV::ContextTag(Fields::kPrevPattern), prevPattern));
-    ReturnErrorOnFailure(DataModel::Encode(aWriter, TLV::ContextTag(Fields::kCurPattern), curPattern));
-    ReturnErrorOnFailure(DataModel::Encode(aWriter, TLV::ContextTag(Fields::kNextPattern), nextPattern));
+    ReturnErrorOnFailure(DataModel::EncodeForRead(aWriter, TLV::ContextTag(Fields::kPrevPattern), GetFabricIndex(), prevPattern));
+    ReturnErrorOnFailure(DataModel::EncodeForRead(aWriter, TLV::ContextTag(Fields::kCurPattern), GetFabricIndex(), curPattern));
+    ReturnErrorOnFailure(DataModel::EncodeForRead(aWriter, TLV::ContextTag(Fields::kNextPattern), GetFabricIndex(), nextPattern));
     ReturnErrorOnFailure(DataModel::Encode(aWriter, TLV::ContextTag(Fields::kLabel), label));
     return aWriter.EndContainer(outer);
 }

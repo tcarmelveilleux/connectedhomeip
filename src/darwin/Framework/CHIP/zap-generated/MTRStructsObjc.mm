@@ -6158,6 +6158,8 @@ NS_ASSUME_NONNULL_BEGIN
         _wobbleSpeed = nil;
 
         _passcode = nil;
+
+        _fabricIndex = @(0);
     }
     return self;
 }
@@ -6172,13 +6174,14 @@ NS_ASSUME_NONNULL_BEGIN
     other.axis = self.axis;
     other.wobbleSpeed = self.wobbleSpeed;
     other.passcode = self.passcode;
+    other.fabricIndex = self.fabricIndex;
 
     return other;
 }
 
 - (NSString *)description
 {
-    NSString * descriptionString = [NSString stringWithFormat:@"<%@: duration:%@; rotate:%@; speed:%@; axis:%@; wobbleSpeed:%@; passcode:%@; >", NSStringFromClass([self class]), _duration, _rotate, _speed, _axis, _wobbleSpeed, _passcode];
+    NSString * descriptionString = [NSString stringWithFormat:@"<%@: duration:%@; rotate:%@; speed:%@; axis:%@; wobbleSpeed:%@; passcode:%@; fabricIndex:%@; >", NSStringFromClass([self class]), _duration, _rotate, _speed, _axis, _wobbleSpeed, _passcode, _fabricIndex];
     return descriptionString;
 }
 

@@ -5489,7 +5489,7 @@ cluster ElectricalMeasurement = 2820 {
 
 /** This example cluster controls an imaginary mirrored disco ball, for the express purpose of disco dancing. */
 provisional cluster DiscoBall = 13398 {
-  revision 1; // NOTE: Default/not specifically set
+  revision 9;
 
   enum RotateEnum : enum8 {
     kClockwise = 1;
@@ -5515,13 +5515,14 @@ provisional cluster DiscoBall = 13398 {
     kWobbleRound = 0x4;
   }
 
-  struct PatternStruct {
+  fabric_scoped struct PatternStruct {
     int16u duration = 0;
     nullable RotateEnum rotate = 1;
     nullable int8u speed = 2;
     optional nullable int8u axis = 3;
     optional nullable int8u wobbleSpeed = 4;
     nullable fabric_sensitive char_string passcode = 5;
+    fabric_idx fabricIndex = 254;
   }
 
   info event Started = 0 {

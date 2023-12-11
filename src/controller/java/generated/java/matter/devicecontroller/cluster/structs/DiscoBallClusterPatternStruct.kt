@@ -29,7 +29,8 @@ class DiscoBallClusterPatternStruct(
   val speed: UByte?,
   val axis: Optional<UByte>?,
   val wobbleSpeed: Optional<UByte>?,
-  val passcode: String?
+  val passcode: String?,
+  val fabricIndex: UByte
 ) {
   override fun toString(): String = buildString {
     append("DiscoBallClusterPatternStruct {\n")
@@ -39,6 +40,7 @@ class DiscoBallClusterPatternStruct(
     append("\taxis : $axis\n")
     append("\twobbleSpeed : $wobbleSpeed\n")
     append("\tpasscode : $passcode\n")
+    append("\tfabricIndex : $fabricIndex\n")
     append("}\n")
   }
 
@@ -77,6 +79,7 @@ class DiscoBallClusterPatternStruct(
       } else {
         putNull(ContextSpecificTag(TAG_PASSCODE))
       }
+      put(ContextSpecificTag(TAG_FABRIC_INDEX), fabricIndex)
       endStructure()
     }
   }
@@ -88,6 +91,7 @@ class DiscoBallClusterPatternStruct(
     private const val TAG_AXIS = 3
     private const val TAG_WOBBLE_SPEED = 4
     private const val TAG_PASSCODE = 5
+    private const val TAG_FABRIC_INDEX = 254
 
     fun fromTlv(tlvTag: Tag, tlvReader: TlvReader): DiscoBallClusterPatternStruct {
       tlvReader.enterStructure(tlvTag)
@@ -135,10 +139,19 @@ class DiscoBallClusterPatternStruct(
           tlvReader.getNull(ContextSpecificTag(TAG_PASSCODE))
           null
         }
+      val fabricIndex = tlvReader.getUByte(ContextSpecificTag(TAG_FABRIC_INDEX))
 
       tlvReader.exitContainer()
 
-      return DiscoBallClusterPatternStruct(duration, rotate, speed, axis, wobbleSpeed, passcode)
+      return DiscoBallClusterPatternStruct(
+        duration,
+        rotate,
+        speed,
+        axis,
+        wobbleSpeed,
+        passcode,
+        fabricIndex
+      )
     }
   }
 }

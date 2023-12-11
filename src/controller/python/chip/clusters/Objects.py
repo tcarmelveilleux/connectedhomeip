@@ -42143,6 +42143,7 @@ class DiscoBall(Cluster):
                         ClusterObjectFieldDescriptor(Label="axis", Tag=3, Type=typing.Union[None, Nullable, uint]),
                         ClusterObjectFieldDescriptor(Label="wobbleSpeed", Tag=4, Type=typing.Union[None, Nullable, uint]),
                         ClusterObjectFieldDescriptor(Label="passcode", Tag=5, Type=typing.Union[Nullable, str]),
+                        ClusterObjectFieldDescriptor(Label="fabricIndex", Tag=254, Type=uint),
                     ])
 
             duration: 'uint' = 0
@@ -42151,6 +42152,7 @@ class DiscoBall(Cluster):
             axis: 'typing.Union[None, Nullable, uint]' = None
             wobbleSpeed: 'typing.Union[None, Nullable, uint]' = None
             passcode: 'typing.Union[Nullable, str]' = NullValue
+            fabricIndex: 'uint' = 0
 
     class Commands:
         @dataclass

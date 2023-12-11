@@ -54107,6 +54107,13 @@ void CHIPDiscoBallPatternAttributeCallback::CallbackFn(
         {
             LogErrorOnFailure(chip::JniReferences::GetInstance().CharToStringUTF(entry_0.passcode.Value(), newElement_0_passcode));
         }
+        jobject newElement_0_fabricIndex;
+        std::string newElement_0_fabricIndexClassName     = "java/lang/Integer";
+        std::string newElement_0_fabricIndexCtorSignature = "(I)V";
+        jint jninewElement_0_fabricIndex                  = static_cast<jint>(entry_0.fabricIndex);
+        chip::JniReferences::GetInstance().CreateBoxedObject<jint>(newElement_0_fabricIndexClassName.c_str(),
+                                                                   newElement_0_fabricIndexCtorSignature.c_str(),
+                                                                   jninewElement_0_fabricIndex, newElement_0_fabricIndex);
 
         jclass patternStructStructClass_1;
         err = chip::JniReferences::GetInstance().GetClassRef(env, "chip/devicecontroller/ChipStructs$DiscoBallClusterPatternStruct",
@@ -54116,18 +54123,19 @@ void CHIPDiscoBallPatternAttributeCallback::CallbackFn(
             ChipLogError(Zcl, "Could not find class ChipStructs$DiscoBallClusterPatternStruct");
             return;
         }
-        jmethodID patternStructStructCtor_1 = env->GetMethodID(patternStructStructClass_1, "<init>",
-                                                               "(Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/"
-                                                               "util/Optional;Ljava/util/Optional;Ljava/lang/String;)V");
+        jmethodID patternStructStructCtor_1 =
+            env->GetMethodID(patternStructStructClass_1, "<init>",
+                             "(Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/util/Optional;Ljava/util/"
+                             "Optional;Ljava/lang/String;Ljava/lang/Integer;)V");
         if (patternStructStructCtor_1 == nullptr)
         {
             ChipLogError(Zcl, "Could not find ChipStructs$DiscoBallClusterPatternStruct constructor");
             return;
         }
 
-        newElement_0 =
-            env->NewObject(patternStructStructClass_1, patternStructStructCtor_1, newElement_0_duration, newElement_0_rotate,
-                           newElement_0_speed, newElement_0_axis, newElement_0_wobbleSpeed, newElement_0_passcode);
+        newElement_0 = env->NewObject(patternStructStructClass_1, patternStructStructCtor_1, newElement_0_duration,
+                                      newElement_0_rotate, newElement_0_speed, newElement_0_axis, newElement_0_wobbleSpeed,
+                                      newElement_0_passcode, newElement_0_fabricIndex);
         chip::JniReferences::GetInstance().AddToList(arrayListObj, newElement_0);
     }
 

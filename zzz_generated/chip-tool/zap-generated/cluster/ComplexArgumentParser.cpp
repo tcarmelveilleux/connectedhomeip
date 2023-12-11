@@ -3265,6 +3265,13 @@ CHIP_ERROR ComplexArgumentParser::Setup(const char * label, chip::app::Clusters:
     ReturnErrorOnFailure(ComplexArgumentParser::Setup(labelWithMember, request.passcode, value["passcode"]));
     valueCopy.removeMember("passcode");
 
+    if (value.isMember("fabricIndex"))
+    {
+        snprintf(labelWithMember, sizeof(labelWithMember), "%s.%s", label, "fabricIndex");
+        ReturnErrorOnFailure(ComplexArgumentParser::Setup(labelWithMember, request.fabricIndex, value["fabricIndex"]));
+    }
+    valueCopy.removeMember("fabricIndex");
+
     return ComplexArgumentParser::EnsureNoMembersRemaining(label, valueCopy);
 }
 
@@ -3276,6 +3283,7 @@ void ComplexArgumentParser::Finalize(chip::app::Clusters::DiscoBall::Structs::Pa
     ComplexArgumentParser::Finalize(request.axis);
     ComplexArgumentParser::Finalize(request.wobbleSpeed);
     ComplexArgumentParser::Finalize(request.passcode);
+    ComplexArgumentParser::Finalize(request.fabricIndex);
 }
 
 CHIP_ERROR ComplexArgumentParser::Setup(const char * label, chip::app::Clusters::UnitTesting::Structs::SimpleStruct::Type & request,

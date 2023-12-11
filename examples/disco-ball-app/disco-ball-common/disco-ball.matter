@@ -1219,13 +1219,14 @@ provisional cluster DiscoBall = 13398 {
     kWobbleRound = 0x4;
   }
 
-  struct PatternStruct {
+  fabric_scoped struct PatternStruct {
     int16u duration = 0;
     nullable RotateEnum rotate = 1;
     nullable int8u speed = 2;
     optional nullable int8u axis = 3;
     optional nullable int8u wobbleSpeed = 4;
     nullable fabric_sensitive char_string passcode = 5;
+    fabric_idx fabricIndex = 254;
   }
 
   info event Started = 0 {

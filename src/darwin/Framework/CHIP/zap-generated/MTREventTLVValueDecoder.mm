@@ -3780,6 +3780,7 @@ static id _Nullable DecodeEventPayloadForDiscoBallCluster(EventId aEventId, TLV:
                         return nil;
                     }
                 }
+                memberValue.fabricIndex = [NSNumber numberWithUnsignedChar:cppValue.prevPattern.Value().fabricIndex];
             }
             value.prevPattern = memberValue;
         } while (0);
@@ -3825,6 +3826,7 @@ static id _Nullable DecodeEventPayloadForDiscoBallCluster(EventId aEventId, TLV:
                     return nil;
                 }
             }
+            memberValue.fabricIndex = [NSNumber numberWithUnsignedChar:cppValue.curPattern.fabricIndex];
             value.curPattern = memberValue;
         } while (0);
         do {
@@ -3872,6 +3874,7 @@ static id _Nullable DecodeEventPayloadForDiscoBallCluster(EventId aEventId, TLV:
                         return nil;
                     }
                 }
+                memberValue.fabricIndex = [NSNumber numberWithUnsignedChar:cppValue.nextPattern.Value().fabricIndex];
             }
             value.nextPattern = memberValue;
         } while (0);

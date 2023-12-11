@@ -1540,6 +1540,7 @@ MTR_PROVISIONALLY_AVAILABLE
 @property (nonatomic, copy) NSNumber * _Nullable axis MTR_PROVISIONALLY_AVAILABLE;
 @property (nonatomic, copy) NSNumber * _Nullable wobbleSpeed MTR_PROVISIONALLY_AVAILABLE;
 @property (nonatomic, copy) NSString * _Nullable passcode MTR_PROVISIONALLY_AVAILABLE;
+@property (nonatomic, copy) NSNumber * _Nonnull fabricIndex MTR_PROVISIONALLY_AVAILABLE;
 @end
 
 MTR_PROVISIONALLY_AVAILABLE

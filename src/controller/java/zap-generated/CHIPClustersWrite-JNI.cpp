@@ -9634,6 +9634,12 @@ JNI_METHOD(void, DiscoBallCluster, writePatternAttribute)
                         chip::Platform::MakeUnique<chip::JniUtfString>(env, static_cast<jstring>(element_0_passcodeItem_1)));
                     nonNullValue_2 = cleanupStrings.back()->charSpan();
                 }
+                jobject element_0_fabricIndexItem_1;
+                chip::JniReferences::GetInstance().GetObjectField(element_0, "fabricIndex", "Ljava/lang/Integer;",
+                                                                  element_0_fabricIndexItem_1);
+                listHolder_0->mList[i_0].fabricIndex =
+                    static_cast<std::remove_reference_t<decltype(listHolder_0->mList[i_0].fabricIndex)>>(
+                        chip::JniReferences::GetInstance().IntegerToPrimitive(element_0_fabricIndexItem_1));
             }
             cppValue = ListType_0(listHolder_0->mList, valueSize);
         }

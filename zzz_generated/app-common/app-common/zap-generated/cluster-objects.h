@@ -36341,6 +36341,7 @@ enum class Fields : uint8_t
     kAxis        = 3,
     kWobbleSpeed = 4,
     kPasscode    = 5,
+    kFabricIndex = 254,
 };
 
 struct Type
@@ -36352,12 +36353,21 @@ public:
     Optional<DataModel::Nullable<uint8_t>> axis;
     Optional<DataModel::Nullable<uint8_t>> wobbleSpeed;
     DataModel::Nullable<chip::CharSpan> passcode;
+    chip::FabricIndex fabricIndex = static_cast<chip::FabricIndex>(0);
 
     CHIP_ERROR Decode(TLV::TLVReader & reader);
 
-    static constexpr bool kIsFabricScoped = false;
+    static constexpr bool kIsFabricScoped = true;
 
-    CHIP_ERROR Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const;
+    auto GetFabricIndex() const { return fabricIndex; }
+
+    void SetFabricIndex(chip::FabricIndex fabricIndex_) { fabricIndex = fabricIndex_; }
+
+    CHIP_ERROR EncodeForWrite(TLV::TLVWriter & aWriter, TLV::Tag aTag) const;
+    CHIP_ERROR EncodeForRead(TLV::TLVWriter & aWriter, TLV::Tag aTag, FabricIndex aAccessingFabricIndex) const;
+
+private:
+    CHIP_ERROR DoEncode(TLV::TLVWriter & aWriter, TLV::Tag aTag, const Optional<FabricIndex> & aAccessingFabricIndex) const;
 };
 
 using DecodableType = Type;
