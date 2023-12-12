@@ -19,6 +19,7 @@
 #pragma once
 
 #include <lib/core/CHIPError.h>
+#include <lib/core/Optional.h>
 #include <lib/support/Span.h>
 #include <lib/support/BitFlags.h>
 
@@ -46,9 +47,8 @@ private:
     char mPasscodeBacking[kPasscodeMaxSize];
 };
 
-class DiscoBallClusterState
+struct DiscoBallClusterState
 {
-public:
     // TODO: Not clear that it's 16 total, or 16 per fabric. Assume 16 total.
     // TODO: Not clear what to do when a pattern recall with password is used...
     static constexpr size_t kNumPatterns = 16;
@@ -66,14 +66,12 @@ public:
     DiscoBallClusterState();
 
 // TODO: Consider observer registration to record attribute changes from driver ?
-    CHIP_ERROR Init(NonVolatileStorageInterface & storage);
+    CHIP_ERROR Init(EndpointId endpoint_id, NonVolatileStorageInterface & storage);
     void Deinit()
     {
         mStorage = nullptr;
-        mInitialized = false;
+        mIsInitialized = false;
     }
-
-    bool IsInitialized() const { return mIsInitialized; }
 
     // No shutdown: all non-volatile mutations are immediately stored.
 
@@ -83,106 +81,90 @@ public:
 // TODO: Record supported features (from driver!!!)
 // TODO: Label
 
-    bool GetRun() const;
-    void SetRunState(bool run_state);
-
-    DiscoBall::RotateEnum GetRotate() const;
-    void SetRotateState(bool DiscoBall::RotateEnum rotate_state);
-
-    uint8_t GetSpeed() const;
-    void SetSpeed(bool DiscoBall::RotateEnum rotate_state);
-
-    uint8_t GetAxis() const;
-    void SetAxis(uint8_t axis);
-    InteractionModel::Status SetAxis(uint8_t axis);
-
-    uint8_t GetWobbleSpeed() const;
-    InteractionModel::Status SetWobbleSpeed(uint8_t wobble_speed);
-
-    size_t GetNumPatterns() const;
-    DiscoBallPatternStructBacking GetPatternListEntry(size_t pattern_idx) const;
-    CHIP_ERROR ClearPattern(size_t pattern_idx);
-    InteractionModel::Status SetPattern(size_t pattern_idx, const Clusters::DiscoBall::Structs::PatternStruct::Type & pattern);
-
-    CharSpan GetName() const;
-    InteractionModel::Status SetName(CharSpan name);
-
-    BitFlags<DiscoBall::WobbleBitmap> GetWobbleSupport() const;
-    void SetWobbleSupport(BitFlags<DiscoBall::WobbleBitmap>) const;
-
-    BitFlags<DiscoBall::WobbleBitmap> GetWobbleSetting() const;
-    InteractionModel::Status SetWobbleSetting(BitFlags<DiscoBall::WobbleBitmap> wobble_setting);
-
-private:
-    bool mIsInitialized = false;
-    NonVolatileStorageInterface * mStorage = nullptr;
-
     // For StatsRequest command.
-    uint32_t mLastRunStatistic;
-    uint32_t mPatternsStatistic;
+    uint32_t last_run_statistic;
+    uint32_t patterns_statistic;
 
     // ------------------------
     // Attributes storage start
     // ------------------------
 
     // 0x0000  s| Run           | bool                        | all^*^         |         | 0       | R V T^*^ | M
-    bool mRun;
+    bool run_attribute;
 
     // 0x0001  s| Rotate        | <<ref_RotateEnum>>          | all            |         | 0       | R V      | M
-    DiscoBall::RotateEnum mRotate;
+    DiscoBall::RotateEnum rotate_attribute;
 
     // 0x0002  s| Speed         | uint8                       | 0 to 200^*^    |         | 0       | R V      | M
-    uint8_t mSpeed;
+    uint8_t speed_attribute;
 
     // 0x0003  s| Axis          | uint8                       | 0 to 90        |         | 0       | RW VO    | AX \| WBL
-    uint8_t mAxis;
+    uint8_t axis_attribute;
 
     // 0x0004  s| WobbleSpeed   | uint8                       | 0 to 200       |         | 0       | RW VO    | WBL
-    uint8_t mWobbleSpeed;
+    uint8_t wobble_speed_attribute;
 
     // 0x0005  s| Pattern       | list[<<ref_PatternStruct>>] | max 16^*^      | N       | 0       | RW VM    | PAT
-    size_t mNumPatterns = 0;
-    DiscoBallPatternStructBacking mPattern[kNumPatterns];
+    size_t num_patterns = 0;
+    DiscoBallPatternStructBacking pattern_attribute[kNumPatterns];
 
     // 0x0006  s| Name          | string                      | max 16         | N^*^    | 0       | RW VM    | P, O
-    char mNameBacking[kNameMaxSize];
-    CharSpan mName;
+    char name_backing[kNameMaxSize];
+    CharSpan name_attribute;
 
     // 0x0007  s| WobbleSupport | <<ref_WobbleBitmap>>        | desc           |         |         | R V      | [WBL]
-    BitFlags<DiscoBall::WobbleBitmap> mWobbleSupport;
+    // --> This attribute is directly obtained from the driver.
 
     // 0x0008  s| WobbleSetting | <<ref_WobbleBitmap>>        | desc           |         |         | RW VM    | [WBL]
-    BitFlags<DiscoBall::WobbleBitmap> mWobbleSetting;
+    BitFlags<DiscoBall::WobbleBitmap> wobble_setting_attribute;
 
     // ----------------------
     // Attributes storage end
     // ----------------------
+  private:
+    bool mIsInitialized = false;
+    NonVolatileStorageInterface * mStorage = nullptr;
+    EndpointId mEndpointId = kInvalidEndpointId;
 };
 
 // TODO: Account for MS commands
 // TODO: How to go from DriverInterface to attribute changes? Observer?
-class DiscoBallDriverInterface
+
+typedef (*DiscoBallTimerCallback)(EndpointId id, void *ctx);
+
+struct DiscoBallCapabilities
 {
-public:
-    class DiscoTimerDelegate
-    {
-    public:
-        virtual OnPatternTimerHit(EndpointId id, void *ctx);
-    }
+    BitFlags<DiscoBall::Feature> supported_features;
 
-    virtual BitFlags<DiscoBall::Feature> GetSupportedFeatures(EndpointId endpoint_id) const = 0;
-    virtual BitFlags<DiscoBall::WobbleBitmap> GetWobbleSupport(EdnpointId endpoint_id) const = 0;
+    uint8_t min_speed_value;
+    uint8_t max_speed_value;
 
-    virtual CHIP_ERROR OnStartRequest(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
-    virtual CHIP_ERROR OnStopRequest(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
-    virtual CHIP_ERROR OnClusterStateChange(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
-    virtual void StartPatternTimer(EndpointId endpoint_id, uint16_t num_seconds, DiscoTimerDelegate & timer_delegate, void * ctx) = 0
-    virtual void CancelPatternTimer(EndpointId endpoint_id) = 0;
+    uint8_t min_axis_value;
+    uint8_t max_axis_value;
+
+    // Only valid if supported_features.Has(DiscoBall::Feature::kWobble)
+    uint8_t min_wobble_speed_value;
+    uint8_t max_wobble_speed_value;
+
+    // Only valid if supported_features.Has(DiscoBall::Feature::kWobble)
+    BitFlags<DiscoBall::WobbleBitmap> wobble_support;
 };
 
 class DiscoBallClusterLogic
 {
 public:
+    class DiscoBallDriverInterface
+    {
+    public:
+        virtual DiscoBallCapabilities GetCapabilities(EndpointId endpoint_id) const = 0;
+
+        virtual CHIP_ERROR OnStartRequest(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
+        virtual CHIP_ERROR OnStopRequest(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
+        virtual CHIP_ERROR OnClusterStateChange(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
+        virtual void StartPatternTimer(EndpointId endpoint_id, uint16_t num_seconds, DiscoBallTimerCallback timer_cb, void * ctx) = 0
+        virtual void CancelPatternTimer(EndpointId endpoint_id) = 0;
+    };
+
 // TODO: Add cluster driver
     DiscoBallClusterLogic() = default;
 
@@ -208,7 +190,35 @@ public:
     // 0x0008  s| WobbleSetting | <<ref_WobbleBitmap>>        | desc           |         |         | RW VM    | [WBL]
 
     // Attribute reads and writes are indirected to the DiscoBallClusterState by the DiscoBallClusterLogic.
-    DiscoBallClusterState & GetClusterState() { return mClusterState; }
+    bool GetRunAttribute() const;
+    InteractionModel::Status SetRunAttribute(bool run_state);
+
+    DiscoBall::RotateEnum GetRotateAttribute() const;
+    InteractionModel::Status SetRotateAttribute(bool DiscoBall::RotateEnum rotate_state);
+
+    uint8_t GetSpeedAttribute() const;
+    InteractionModel::Status SetAttribute(bool DiscoBall::RotateEnum rotate_state);
+
+    uint8_t GetAxisAttribute() const;
+    InteractionModel::Status SetAxisAttribute(uint8_t axis);
+
+    uint8_t GetWobbleSpeedAttribute() const;
+    InteractionModel::Status SetWobbleSpeedAttribute(uint8_t wobble_speed);
+
+    size_t GetNumPatterns(FabricIndex fabric_idx) const;
+    chip::Optional<DiscoBallPatternStructBacking> GetPatternAttributeEntry(FabricIndex fabric_idx, size_t pattern_idx) const;
+    CHIP_ERROR ClearPattern(FabricIndex fabric_idx, size_t pattern_idx);
+    InteractionModel::Status SetPattern(FabricIndex fabric_idx, const Clusters::DiscoBall::Structs::PatternStruct::Type & pattern);
+
+    CharSpan GetNameAttribute() const;
+    InteractionModel::Status SetNameAttribute(CharSpan name);
+
+    BitFlags<DiscoBall::WobbleBitmap> GetWobbleSupportAttribute() const;
+
+    BitFlags<DiscoBall::WobbleBitmap> GetWobbleSettingAttribute() const;
+    InteractionModel::Status SetWobbleSettingAttribute(BitFlags<DiscoBall::WobbleBitmap> wobble_setting);
+
+    BitFlags<DiscoBall::Feature> GetSupportedFeatures() const;
 
     // 0x00  s| StartRequest   | client => server | Y                 | O T^*^ | M
     // 0x01  s| StopRequest    | client => server | Y                 | O      | M
@@ -221,17 +231,18 @@ public:
     InteractionModel::Status HandleStopRequest();
     InteractionModel::Status HandleReverseRequest();
     InteractionModel::Status HandleWobbleRequest();
-    InteractionModel::Status HandlePatternRequest(const Clusters::DiscoBall::Commands::PatternRequest::DecodableType & args);
+    InteractionModel::Status HandlePatternRequest(FabricIndex fabric_index, const Clusters::DiscoBall::Commands::PatternRequest::DecodableType & args);
     InteractionModel::Status HandleStatsRequest(Clusters::DiscoBall::Commands::StatsResponse::Type & out_stats_response);
 
-    DiscoBallDriverInterface & GetDriver() { return *mDriver; }
     EndpointId GetEndpointId() const { return mEndpointId; }
 
 private:
     EndpointId mEndpointId = kInvalidEndpointId;
     DiscoBallDriverInterface * mDriver = nullptr;
 
-    // All data state the for the cluster.
+    DiscoBallCapabilities mCapabilities;
+
+    // All possibly volatile data state the for the cluster.
     DiscoBallClusterState mClusterState{};
 };
 
