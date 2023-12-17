@@ -5206,46 +5206,6 @@ CHIP_ERROR DataModelLogger::LogValue(const char * label, size_t indent, const Di
 
     return CHIP_NO_ERROR;
 }
-CHIP_ERROR DataModelLogger::LogValue(const char * label, size_t indent,
-                                     const DiscoBall::Events::PatternChange::DecodableType & value)
-{
-    DataModelLogger::LogString(label, indent, "{");
-    {
-        CHIP_ERROR err = DataModelLogger::LogValue("PrevPattern", indent + 1, value.prevPattern);
-        if (err != CHIP_NO_ERROR)
-        {
-            DataModelLogger::LogString(indent + 1, "Event truncated due to invalid value for 'PrevPattern'");
-            return err;
-        }
-    }
-    {
-        CHIP_ERROR err = DataModelLogger::LogValue("CurPattern", indent + 1, value.curPattern);
-        if (err != CHIP_NO_ERROR)
-        {
-            DataModelLogger::LogString(indent + 1, "Event truncated due to invalid value for 'CurPattern'");
-            return err;
-        }
-    }
-    {
-        CHIP_ERROR err = DataModelLogger::LogValue("NextPattern", indent + 1, value.nextPattern);
-        if (err != CHIP_NO_ERROR)
-        {
-            DataModelLogger::LogString(indent + 1, "Event truncated due to invalid value for 'NextPattern'");
-            return err;
-        }
-    }
-    {
-        CHIP_ERROR err = DataModelLogger::LogValue("Label", indent + 1, value.label);
-        if (err != CHIP_NO_ERROR)
-        {
-            DataModelLogger::LogString(indent + 1, "Event truncated due to invalid value for 'Label'");
-            return err;
-        }
-    }
-    DataModelLogger::LogString(indent, "}");
-
-    return CHIP_NO_ERROR;
-}
 CHIP_ERROR DataModelLogger::LogValue(const char * label, size_t indent, const UnitTesting::Events::TestEvent::DecodableType & value)
 {
     DataModelLogger::LogString(label, indent, "{");
@@ -16583,11 +16543,6 @@ CHIP_ERROR DataModelLogger::LogEvent(const chip::app::EventHeader & header, chip
             chip::app::Clusters::DiscoBall::Events::Stopped::DecodableType value;
             ReturnErrorOnFailure(chip::app::DataModel::Decode(*data, value));
             return DataModelLogger::LogValue("Stopped", 1, value);
-        }
-        case DiscoBall::Events::PatternChange::Id: {
-            chip::app::Clusters::DiscoBall::Events::PatternChange::DecodableType value;
-            ReturnErrorOnFailure(chip::app::DataModel::Decode(*data, value));
-            return DataModelLogger::LogValue("PatternChange", 1, value);
         }
         }
         break;

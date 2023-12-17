@@ -6233,42 +6233,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@implementation MTRDiscoBallClusterPatternChangeEvent
-- (instancetype)init
-{
-    if (self = [super init]) {
-
-        _prevPattern = nil;
-
-        _curPattern = [MTRDiscoBallClusterPatternStruct new];
-
-        _nextPattern = nil;
-
-        _label = nil;
-    }
-    return self;
-}
-
-- (id)copyWithZone:(NSZone * _Nullable)zone
-{
-    auto other = [[MTRDiscoBallClusterPatternChangeEvent alloc] init];
-
-    other.prevPattern = self.prevPattern;
-    other.curPattern = self.curPattern;
-    other.nextPattern = self.nextPattern;
-    other.label = self.label;
-
-    return other;
-}
-
-- (NSString *)description
-{
-    NSString * descriptionString = [NSString stringWithFormat:@"<%@: prevPattern:%@; curPattern:%@; nextPattern:%@; label:%@; >", NSStringFromClass([self class]), _prevPattern, _curPattern, _nextPattern, _label];
-    return descriptionString;
-}
-
-@end
-
 @implementation MTRUnitTestingClusterSimpleStruct
 - (instancetype)init
 {

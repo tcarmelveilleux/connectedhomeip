@@ -36867,48 +36867,6 @@ public:
     CHIP_ERROR Decode(TLV::TLVReader & reader);
 };
 } // namespace Stopped
-namespace PatternChange {
-static constexpr PriorityLevel kPriorityLevel = PriorityLevel::Info;
-
-enum class Fields : uint8_t
-{
-    kPrevPattern = 0,
-    kCurPattern  = 1,
-    kNextPattern = 2,
-    kLabel       = 3,
-};
-
-struct Type
-{
-public:
-    static constexpr PriorityLevel GetPriorityLevel() { return kPriorityLevel; }
-    static constexpr EventId GetEventId() { return Events::PatternChange::Id; }
-    static constexpr ClusterId GetClusterId() { return Clusters::DiscoBall::Id; }
-    static constexpr bool kIsFabricScoped = false;
-
-    DataModel::Nullable<Structs::PatternStruct::Type> prevPattern;
-    Structs::PatternStruct::Type curPattern;
-    DataModel::Nullable<Structs::PatternStruct::Type> nextPattern;
-    Optional<DataModel::Nullable<chip::CharSpan>> label;
-
-    CHIP_ERROR Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const;
-};
-
-struct DecodableType
-{
-public:
-    static constexpr PriorityLevel GetPriorityLevel() { return kPriorityLevel; }
-    static constexpr EventId GetEventId() { return Events::PatternChange::Id; }
-    static constexpr ClusterId GetClusterId() { return Clusters::DiscoBall::Id; }
-
-    DataModel::Nullable<Structs::PatternStruct::DecodableType> prevPattern;
-    Structs::PatternStruct::DecodableType curPattern;
-    DataModel::Nullable<Structs::PatternStruct::DecodableType> nextPattern;
-    Optional<DataModel::Nullable<chip::CharSpan>> label;
-
-    CHIP_ERROR Decode(TLV::TLVReader & reader);
-};
-} // namespace PatternChange
 } // namespace Events
 } // namespace DiscoBall
 namespace UnitTesting {

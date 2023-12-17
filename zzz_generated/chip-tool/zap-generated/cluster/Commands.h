@@ -11702,7 +11702,6 @@ private:
 | Events:                                                             |        |
 | * Started                                                           | 0x0000 |
 | * Stopped                                                           | 0x0001 |
-| * PatternChange                                                     | 0x0002 |
 \*----------------------------------------------------------------------------*/
 
 /*
@@ -23620,14 +23619,12 @@ void registerClusterDiscoBall(Commands & commands, CredentialIssuerCommands * cr
         //
         // Events
         //
-        make_unique<ReadEvent>(Id, credsIssuerConfig),                                                   //
-        make_unique<ReadEvent>(Id, "started", Events::Started::Id, credsIssuerConfig),                   //
-        make_unique<ReadEvent>(Id, "stopped", Events::Stopped::Id, credsIssuerConfig),                   //
-        make_unique<ReadEvent>(Id, "pattern-change", Events::PatternChange::Id, credsIssuerConfig),      //
-        make_unique<SubscribeEvent>(Id, credsIssuerConfig),                                              //
-        make_unique<SubscribeEvent>(Id, "started", Events::Started::Id, credsIssuerConfig),              //
-        make_unique<SubscribeEvent>(Id, "stopped", Events::Stopped::Id, credsIssuerConfig),              //
-        make_unique<SubscribeEvent>(Id, "pattern-change", Events::PatternChange::Id, credsIssuerConfig), //
+        make_unique<ReadEvent>(Id, credsIssuerConfig),                                      //
+        make_unique<ReadEvent>(Id, "started", Events::Started::Id, credsIssuerConfig),      //
+        make_unique<ReadEvent>(Id, "stopped", Events::Stopped::Id, credsIssuerConfig),      //
+        make_unique<SubscribeEvent>(Id, credsIssuerConfig),                                 //
+        make_unique<SubscribeEvent>(Id, "started", Events::Started::Id, credsIssuerConfig), //
+        make_unique<SubscribeEvent>(Id, "stopped", Events::Stopped::Id, credsIssuerConfig), //
     };
 
     commands.RegisterCluster(clusterName, clusterCommands);

@@ -1551,14 +1551,6 @@ MTR_PROVISIONALLY_AVAILABLE
 @interface MTRDiscoBallClusterStoppedEvent : NSObject <NSCopying>
 @end
 
-MTR_PROVISIONALLY_AVAILABLE
-@interface MTRDiscoBallClusterPatternChangeEvent : NSObject <NSCopying>
-@property (nonatomic, copy) MTRDiscoBallClusterPatternStruct * _Nullable prevPattern MTR_PROVISIONALLY_AVAILABLE;
-@property (nonatomic, copy) MTRDiscoBallClusterPatternStruct * _Nonnull curPattern MTR_PROVISIONALLY_AVAILABLE;
-@property (nonatomic, copy) MTRDiscoBallClusterPatternStruct * _Nullable nextPattern MTR_PROVISIONALLY_AVAILABLE;
-@property (nonatomic, copy) NSString * _Nullable label MTR_PROVISIONALLY_AVAILABLE;
-@end
-
 MTR_AVAILABLE(ios(16.4), macos(13.3), watchos(9.4), tvos(16.4))
 @interface MTRUnitTestingClusterSimpleStruct : NSObject <NSCopying>
 @property (nonatomic, copy) NSNumber * _Nonnull a MTR_AVAILABLE(ios(16.4), macos(13.3), watchos(9.4), tvos(16.4));

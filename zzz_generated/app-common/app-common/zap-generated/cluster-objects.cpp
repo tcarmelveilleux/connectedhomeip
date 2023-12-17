@@ -23248,56 +23248,6 @@ CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
     }
 }
 } // namespace Stopped.
-namespace PatternChange {
-CHIP_ERROR Type::Encode(TLV::TLVWriter & aWriter, TLV::Tag aTag) const
-{
-    TLV::TLVType outer;
-    ReturnErrorOnFailure(aWriter.StartContainer(aTag, TLV::kTLVType_Structure, outer));
-    ReturnErrorOnFailure(DataModel::EncodeForRead(aWriter, TLV::ContextTag(Fields::kPrevPattern), GetFabricIndex(), prevPattern));
-    ReturnErrorOnFailure(DataModel::EncodeForRead(aWriter, TLV::ContextTag(Fields::kCurPattern), GetFabricIndex(), curPattern));
-    ReturnErrorOnFailure(DataModel::EncodeForRead(aWriter, TLV::ContextTag(Fields::kNextPattern), GetFabricIndex(), nextPattern));
-    ReturnErrorOnFailure(DataModel::Encode(aWriter, TLV::ContextTag(Fields::kLabel), label));
-    return aWriter.EndContainer(outer);
-}
-
-CHIP_ERROR DecodableType::Decode(TLV::TLVReader & reader)
-{
-    detail::StructDecodeIterator __iterator(reader);
-    while (true)
-    {
-        auto __element = __iterator.Next();
-        if (std::holds_alternative<CHIP_ERROR>(__element))
-        {
-            return std::get<CHIP_ERROR>(__element);
-        }
-
-        CHIP_ERROR err              = CHIP_NO_ERROR;
-        const uint8_t __context_tag = std::get<uint8_t>(__element);
-
-        if (__context_tag == to_underlying(Fields::kPrevPattern))
-        {
-            err = DataModel::Decode(reader, prevPattern);
-        }
-        else if (__context_tag == to_underlying(Fields::kCurPattern))
-        {
-            err = DataModel::Decode(reader, curPattern);
-        }
-        else if (__context_tag == to_underlying(Fields::kNextPattern))
-        {
-            err = DataModel::Decode(reader, nextPattern);
-        }
-        else if (__context_tag == to_underlying(Fields::kLabel))
-        {
-            err = DataModel::Decode(reader, label);
-        }
-        else
-        {
-        }
-
-        ReturnErrorOnFailure(err);
-    }
-}
-} // namespace PatternChange.
 } // namespace Events
 
 } // namespace DiscoBall

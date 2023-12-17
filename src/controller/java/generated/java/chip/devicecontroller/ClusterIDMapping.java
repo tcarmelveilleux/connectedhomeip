@@ -15036,8 +15036,7 @@ public class ClusterIDMapping {
 
         public enum Event {
             Started(0L),
-            Stopped(1L),
-            PatternChange(2L),;
+            Stopped(1L),;
             private final long id;
             Event(long id) {
                 this.id = id;

@@ -482,8 +482,6 @@ static CHIP_ERROR LogValue(const char * label, size_t indent,
 static CHIP_ERROR LogValue(const char * label, size_t indent,
                            const chip::app::Clusters::DiscoBall::Events::Stopped::DecodableType & value);
 static CHIP_ERROR LogValue(const char * label, size_t indent,
-                           const chip::app::Clusters::DiscoBall::Events::PatternChange::DecodableType & value);
-static CHIP_ERROR LogValue(const char * label, size_t indent,
                            const chip::app::Clusters::UnitTesting::Events::TestEvent::DecodableType & value);
 static CHIP_ERROR LogValue(const char * label, size_t indent,
                            const chip::app::Clusters::UnitTesting::Events::TestFabricScopedEvent::DecodableType & value);

@@ -42537,31 +42537,6 @@ class DiscoBall(Cluster):
                     Fields=[
                     ])
 
-        @dataclass
-        class PatternChange(ClusterEvent):
-            @ChipUtility.classproperty
-            def cluster_id(cls) -> int:
-                return 0x00003456
-
-            @ChipUtility.classproperty
-            def event_id(cls) -> int:
-                return 0x00000002
-
-            @ChipUtility.classproperty
-            def descriptor(cls) -> ClusterObjectDescriptor:
-                return ClusterObjectDescriptor(
-                    Fields=[
-                        ClusterObjectFieldDescriptor(Label="prevPattern", Tag=0, Type=typing.Union[Nullable, DiscoBall.Structs.PatternStruct]),
-                        ClusterObjectFieldDescriptor(Label="curPattern", Tag=1, Type=DiscoBall.Structs.PatternStruct),
-                        ClusterObjectFieldDescriptor(Label="nextPattern", Tag=2, Type=typing.Union[Nullable, DiscoBall.Structs.PatternStruct]),
-                        ClusterObjectFieldDescriptor(Label="label", Tag=3, Type=typing.Union[None, Nullable, str]),
-                    ])
-
-            prevPattern: 'typing.Union[Nullable, DiscoBall.Structs.PatternStruct]' = NullValue
-            curPattern: 'DiscoBall.Structs.PatternStruct' = field(default_factory=lambda: DiscoBall.Structs.PatternStruct())
-            nextPattern: 'typing.Union[Nullable, DiscoBall.Structs.PatternStruct]' = NullValue
-            label: 'typing.Union[None, Nullable, str]' = None
-
 
 @dataclass
 class UnitTesting(Cluster):

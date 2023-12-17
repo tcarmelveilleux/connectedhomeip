@@ -115,7 +115,6 @@ eventstructs_sources = [
   "${chip_root}/src/controller/java/generated/java/chip/devicecontroller/cluster/eventstructs/BridgedDeviceBasicInformationClusterReachableChangedEvent.kt",
   "${chip_root}/src/controller/java/generated/java/chip/devicecontroller/cluster/eventstructs/BridgedDeviceBasicInformationClusterStartUpEvent.kt",
   "${chip_root}/src/controller/java/generated/java/chip/devicecontroller/cluster/eventstructs/DemandResponseLoadControlClusterLoadControlEventStatusChangeEvent.kt",
-  "${chip_root}/src/controller/java/generated/java/chip/devicecontroller/cluster/eventstructs/DiscoBallClusterPatternChangeEvent.kt",
   "${chip_root}/src/controller/java/generated/java/chip/devicecontroller/cluster/eventstructs/DishwasherAlarmClusterNotifyEvent.kt",
   "${chip_root}/src/controller/java/generated/java/chip/devicecontroller/cluster/eventstructs/DoorLockClusterDoorLockAlarmEvent.kt",
   "${chip_root}/src/controller/java/generated/java/chip/devicecontroller/cluster/eventstructs/DoorLockClusterDoorStateChangeEvent.kt",

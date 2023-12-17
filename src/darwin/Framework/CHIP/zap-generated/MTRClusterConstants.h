@@ -7196,7 +7196,6 @@ typedef NS_ENUM(uint32_t, MTREventIDType) {
     // Cluster DiscoBall events
     MTREventIDTypeClusterDiscoBallEventStartedID MTR_PROVISIONALLY_AVAILABLE = 0x00000000,
     MTREventIDTypeClusterDiscoBallEventStoppedID MTR_PROVISIONALLY_AVAILABLE = 0x00000001,
-    MTREventIDTypeClusterDiscoBallEventPatternChangeID MTR_PROVISIONALLY_AVAILABLE = 0x00000002,
 
     // Cluster TestCluster deprecated event names
     MTRClusterTestClusterEventTestEventID

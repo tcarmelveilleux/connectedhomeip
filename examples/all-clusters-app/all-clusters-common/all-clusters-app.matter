@@ -5531,13 +5531,6 @@ provisional cluster DiscoBall = 13398 {
   info event Stopped = 1 {
   }
 
-  info event PatternChange = 2 {
-    nullable PatternStruct prevPattern = 0;
-    PatternStruct curPattern = 1;
-    nullable PatternStruct nextPattern = 2;
-    optional nullable char_string label = 3;
-  }
-
   readonly attribute boolean run = 0;
   readonly attribute RotateEnum rotate = 1;
   readonly attribute int8u speed = 2;
