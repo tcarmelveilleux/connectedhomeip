@@ -29,7 +29,7 @@
 #include <lib/support/UnitTestRegistration.h>
 
 #include <app-common/zap-generated/cluster-objects.h>
-#include <app-common/zap-generated/cluster-enum.h>
+#include <app-common/zap-generated/cluster-enums.h>
 
 using namespace chip;
 using namespace chip::app;

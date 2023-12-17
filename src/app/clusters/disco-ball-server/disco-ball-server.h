@@ -23,7 +23,7 @@
 #include <lib/core/Optional.h>
 
 #include <app-common/zap-generated/cluster-objects.h>
-#include <app-common/zap-generated/cluster-enum.h>
+#include <app-common/zap-generated/cluster-enums.h>
 #include <app/AttributeAccessInterface.h>
 #include <app/CommandHandlerInterface.h>
 
