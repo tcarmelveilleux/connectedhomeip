@@ -111,18 +111,24 @@ limitations under the License.
       <arg name="Patterns" type="int32u" optional="true" default="0"/>
       <description>This command SHALL be generated in response to a StatsRequest command. The data for this command SHALL be as follows:</description>
     </command>
-    <event code="0x0000" name="Started" priority="info">
+
+    <event code="0x00" name="Started" priority="info">
       <description>Started</description>
     </event>
-    <event code="0x0001" name="Stopped" priority="info">
+
+    <event code="0x01" name="Stopped" priority="info">
       <description>Stopped</description>
     </event>
-    <event code="0x0002" name="PatternChange" priority="info" optional="true">
-      <description>PatternChange</description>
-      <field id="0" name="PrevPattern" type="PatternStruct" isNullable="true"/>
-      <field id="1" name="CurPattern" type="PatternStruct"/>
-      <field id="2" name="NextPattern" type="PatternStruct" isNullable="true"/>
-      <field id="3" name="Label" type="char_string" length="32" isNullable="true" optional="true"/>
-    </event>
+
+    <!-- TODO: Bring back the event when code-gen is fixed for events containing fabric-scoped structs...
+      <event code="0x0002" name="PatternChange" priority="info" optional="true">
+        <description>PatternChange</description>
+        <field id="0" name="PrevPattern" type="PatternStruct" isNullable="true"/>
+        <field id="1" name="CurPattern" type="PatternStruct"/>
+        <field id="2" name="NextPattern" type="PatternStruct" isNullable="true"/>
+        <field id="3" name="Label" type="char_string" length="32" isNullable="true" optional="true"/>
+      </event>
+    -->
+
   </cluster>
 </configurator>
