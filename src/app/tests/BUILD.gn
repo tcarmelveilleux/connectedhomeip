@@ -119,18 +119,17 @@ source_set("operational-state-test-srcs") {
   ]
 }
 
-# source_set("disco-ball-cluster-logic-test-srcs") {
-#   sources = [
-#     "${chip_root}/src/app/clusters/disco-ball-server/dicsco-ball-cluster-logic.h",
-#     "${chip_root}/src/app/clusters/disco-ball-server/dicsco-ball-cluster-logic.cpp",
-#   ]
-#
-#   public_deps = [
-#     "${chip_root}/src/app/common:cluster-objects",
-#     "${chip_root}/src/lib/core",
-#     "${chip_root}/src/lib/support",
-#   ]
-# }
+source_set("disco-ball-cluster-logic-test-srcs") {
+  sources = [
+    "${chip_root}/src/app/clusters/disco-ball-server/disco-ball-cluster-logic.h",
+    "${chip_root}/src/app/clusters/disco-ball-server/disco-ball-cluster-logic.cpp",
+  ]
+  public_deps = [
+    "${chip_root}/src/app/common:cluster-objects",
+    "${chip_root}/src/lib/core",
+    "${chip_root}/src/lib/support",
+  ]
+}
 
 chip_test_suite_using_nltest("tests") {
   output_name = "libAppTests"
@@ -210,7 +209,7 @@ chip_test_suite_using_nltest("tests") {
 
   public_deps = [
     ":binding-test-srcs",
-#    ":disco-ball-cluster-logic-test-srcs",
+    ":disco-ball-cluster-logic-test-srcs",
     ":operational-state-test-srcs",
     ":ota-requestor-test-srcs",
     ":time-sync-data-provider-test-srcs",

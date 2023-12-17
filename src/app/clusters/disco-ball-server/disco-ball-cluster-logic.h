@@ -26,6 +26,8 @@
 #include <lib/support/Span.h>
 #include <lib/support/BitFlags.h>
 
+#include <protocols/interaction_model/StatusCode.h>
+
 #include <app-common/zap-generated/cluster-objects.h>
 #include <app-common/zap-generated/cluster-enums.h>
 
@@ -60,11 +62,12 @@ struct DiscoBallClusterState
     public:
         virtual ~NonVolatileStorageInterface() = default;
 
+        // TODO: Add fabric removal and everything-removal.
         virtual CHIP_ERROR SaveToStorage(const DiscoBallClusterState & attributes) = 0;
         virtual CHIP_ERROR LoadFromStorage(DiscoBallClusterState & attributes) = 0;
     };
 
-    DiscoBallClusterState();
+    DiscoBallClusterState() = default;
 
 // TODO: Consider observer registration to record attribute changes from driver ?
     CHIP_ERROR Init(EndpointId endpoint_id, NonVolatileStorageInterface & storage);
@@ -152,6 +155,8 @@ typedef void (*DiscoBallTimerCallback)(EndpointId id, void *ctx);
 
 struct DiscoBallCapabilities
 {
+    DiscoBallCapabilities();
+
     BitFlags<Clusters::DiscoBall::Feature> supported_features;
 
     uint8_t min_speed_value;
@@ -184,7 +189,6 @@ public:
         virtual void CancelPatternTimer(EndpointId endpoint_id) = 0;
     };
 
-// TODO: Add cluster driver
     DiscoBallClusterLogic() = default;
 
     // Not copyable.

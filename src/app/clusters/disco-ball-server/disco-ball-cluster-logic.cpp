@@ -22,15 +22,29 @@
 #include <lib/core/CHIPError.h>
 #include <lib/core/DataModelTypes.h>
 #include <lib/core/Optional.h>
+#include <lib/support/CodeUtils.h>
 #include <lib/support/Span.h>
 #include <lib/support/BitFlags.h>
+
+#include <protocols/interaction_model/StatusCode.h>
 
 #include <app-common/zap-generated/cluster-objects.h>
 #include <app-common/zap-generated/cluster-enums.h>
 
-
 namespace chip {
 namespace app {
+
+using ::chip::Protocols::InteractionModel::Status;
+
+DiscoBallCapabilities::DiscoBallCapabilities() :
+    supported_features(BitFlags<Clusters::DiscoBall::Feature>{0}),
+    min_speed_value{0},
+    max_speed_value{200},
+    min_axis_value{0},
+    max_axis_value{90},
+    min_wobble_speed_value{0},
+    max_wobble_speed_value{100},
+    wobble_support(BitFlags<Clusters::DiscoBall::WobbleBitmap>{0}) {}
 
 /* =========================== Start of DiscoBallClusterState =====================*/
 CHIP_ERROR DiscoBallClusterState::Init(EndpointId endpoint_id, NonVolatileStorageInterface & storage)
@@ -46,7 +60,7 @@ CHIP_ERROR DiscoBallClusterState::Init(EndpointId endpoint_id, NonVolatileStorag
     this->current_pattern_idx = 0;
 
     this->run_attribute = false;
-    this->rotate_attribute = DiscoBall::RotateEnum::kClockwise;
+    this->rotate_attribute = Clusters::DiscoBall::RotateEnum::kClockwise;
     this->speed_attribute = 0;
     this->axis_attribute = 0;
     this->wobble_speed_attribute = 0;
@@ -55,7 +69,7 @@ CHIP_ERROR DiscoBallClusterState::Init(EndpointId endpoint_id, NonVolatileStorag
 
     this->name_attribute = CharSpan{};
 
-    this->wobble_setting_attribute = BitFlags<DiscoBall::WobbleBitmap>{};
+    this->wobble_setting_attribute = BitFlags<Clusters::DiscoBall::WobbleBitmap>{};
 
     CHIP_ERROR err = ReloadFromStorage();
     if (err != CHIP_NO_ERROR)
@@ -74,7 +88,7 @@ bool DiscoBallClusterState::SetNameAttribute(CharSpan name)
         return false;
     }
 
-    memcpy(this->name_backing, name.data(), name.size())
+    memcpy(this->name_backing, name.data(), name.size());
     this->name_attribute = CharSpan(&this->name_backing[0], name.size());
 
     return true;
@@ -84,7 +98,7 @@ CHIP_ERROR DiscoBallClusterState::DiscoBallClusterState::ReloadFromStorage()
 {
     VerifyOrReturnError(mStorage != nullptr, CHIP_ERROR_INCORRECT_STATE);
 
-    CHIP_ERROR err = mStorage.LoadFromStorage(*this);
+    CHIP_ERROR err = mStorage->LoadFromStorage(*this);
     if ((err != CHIP_NO_ERROR) && (err != CHIP_ERROR_NOT_FOUND))
     {
         return err;
@@ -98,7 +112,7 @@ CHIP_ERROR DiscoBallClusterState::SaveToStorage()
 {
     VerifyOrReturnError(mStorage != nullptr, CHIP_ERROR_INCORRECT_STATE);
 
-    return mStorage.SaveToStorage(*this);
+    return mStorage->SaveToStorage(*this);
 }
 
 bool DiscoBallClusterState::SetRunningPasscode(CharSpan passcode)
@@ -108,7 +122,7 @@ bool DiscoBallClusterState::SetRunningPasscode(CharSpan passcode)
         return false;
     }
 
-    memcpy(mCurrentRunningPasscodeBacking, passcode.data(), passcode.size())
+    memcpy(mCurrentRunningPasscodeBacking, passcode.data(), passcode.size());
     mCurrentRunningPasscode = CharSpan(&mCurrentRunningPasscodeBacking[0], passcode.size());
 
     return true;
@@ -138,6 +152,7 @@ CHIP_ERROR DiscoBallClusterLogic::Init(EndpointId endpoint_id, DiscoBallClusterS
     mClusterState.speed_attribute = mCapabilities.min_speed_value;
     mClusterState.axis_attribute = mCapabilities.min_axis_value;
     mClusterState.wobble_speed_attribute = mCapabilities.min_wobble_speed_value;
+    return CHIP_NO_ERROR;
 }
 
 bool DiscoBallClusterLogic::GetRunAttribute() const
@@ -145,19 +160,19 @@ bool DiscoBallClusterLogic::GetRunAttribute() const
     return mClusterState.run_attribute;
 }
 
-InteractionModel::Status DiscoBallClusterLogic::SetRunAttribute(bool run_state)
+Status DiscoBallClusterLogic::SetRunAttribute(bool run_state)
 {
-    return Protocols::InteractionModel::Status::UnsupportedAttribute;
+    return Status::UnsupportedAttribute;
 }
 
-DiscoBall::RotateEnum DiscoBallClusterLogic::GetRotateAttribute() const
+Clusters::DiscoBall::RotateEnum DiscoBallClusterLogic::GetRotateAttribute() const
 {
     return mClusterState.rotate_attribute;
 }
 
-InteractionModel::Status DiscoBallClusterLogic::SetRotateAttribute(DiscoBall::RotateEnum rotate_state)
+Status DiscoBallClusterLogic::SetRotateAttribute(Clusters::DiscoBall::RotateEnum rotate_state)
 {
-    return Protocols::InteractionModel::Status::UnsupportedAttribute;
+    return Status::UnsupportedAttribute;
 }
 
 uint8_t DiscoBallClusterLogic::GetSpeedAttribute() const
@@ -165,9 +180,9 @@ uint8_t DiscoBallClusterLogic::GetSpeedAttribute() const
     return mClusterState.speed_attribute;
 }
 
-InteractionModel::Status DiscoBallClusterLogic::SetSpeedAttribute(uint8_t speed)
+Status DiscoBallClusterLogic::SetSpeedAttribute(uint8_t speed)
 {
-    return Protocols::InteractionModel::Status::UnsupportedAttribute;
+    return Status::UnsupportedAttribute;
 }
 
 uint8_t DiscoBallClusterLogic::GetAxisAttribute() const
@@ -175,9 +190,9 @@ uint8_t DiscoBallClusterLogic::GetAxisAttribute() const
     return mClusterState.axis_attribute;
 }
 
-InteractionModel::Status DiscoBallClusterLogic::SetAxisAttribute(uint8_t axis)
+Status DiscoBallClusterLogic::SetAxisAttribute(uint8_t axis)
 {
-    return Protocols::InteractionModel::Status::UnsupportedAttribute;
+    return Status::UnsupportedAttribute;
 }
 
 uint8_t DiscoBallClusterLogic::GetWobbleSpeedAttribute() const
@@ -185,9 +200,9 @@ uint8_t DiscoBallClusterLogic::GetWobbleSpeedAttribute() const
     return mClusterState.wobble_speed_attribute;
 }
 
-InteractionModel::Status DiscoBallClusterLogic::SetWobbleSpeedAttribute(uint8_t wobble_speed)
+Status DiscoBallClusterLogic::SetWobbleSpeedAttribute(uint8_t wobble_speed)
 {
-    return Protocols::InteractionModel::Status::UnsupportedAttribute;
+    return Status::UnsupportedAttribute;
 }
 
 size_t DiscoBallClusterLogic::GetNumPatterns(FabricIndex fabric_idx) const
@@ -199,7 +214,7 @@ size_t DiscoBallClusterLogic::GetNumPatterns(FabricIndex fabric_idx) const
     }
 
     // With accessing fabric, return count only of those matching the accessing fabric.
-    size_t patter_count = 0;
+    size_t pattern_count = 0;
     for (size_t pattern_idx = 0; pattern_idx < mClusterState.num_patterns; ++pattern_idx)
     {
         const auto & pattern = mClusterState.pattern_attribute[pattern_idx];
@@ -212,7 +227,7 @@ size_t DiscoBallClusterLogic::GetNumPatterns(FabricIndex fabric_idx) const
     return pattern_count;
 }
 
-DiscoBallPatternStructBacking DiscoBallClusterLogic::GetPatternAttributeEntry(FabricIndex fabric_idx, size_t pattern_idx) const
+chip::Optional<DiscoBallPatternStructBacking> DiscoBallClusterLogic::GetPatternAttributeEntry(FabricIndex fabric_idx, size_t pattern_idx) const
 {
     return chip::NullOptional;
 }
@@ -222,9 +237,9 @@ CHIP_ERROR DiscoBallClusterLogic::ClearPattern(FabricIndex fabric_idx, size_t pa
     return CHIP_ERROR_NOT_IMPLEMENTED;
 }
 
-InteractionModel::Status DiscoBallClusterLogic::SetPattern(FabricIndex fabric_idx, const Clusters::DiscoBall::Structs::PatternStruct::Type & pattern)
+Status DiscoBallClusterLogic::SetPattern(FabricIndex fabric_idx, const Clusters::DiscoBall::Structs::PatternStruct::Type & pattern)
 {
-    return Protocols::InteractionModel::Status::UnsupportedAttribute;
+    return Status::UnsupportedAttribute;
 }
 
 CharSpan DiscoBallClusterLogic::GetNameAttribute() const
@@ -232,69 +247,59 @@ CharSpan DiscoBallClusterLogic::GetNameAttribute() const
     return mClusterState.name_attribute;
 }
 
-InteractionModel::Status DiscoBallClusterLogic::SetNameAttribute(CharSpan name)
+Status DiscoBallClusterLogic::SetNameAttribute(CharSpan name)
 {
-    return Protocols::InteractionModel::Status::UnsupportedAttribute;
+    return Status::UnsupportedAttribute;
 }
 
-BitFlags<DiscoBall::WobbleBitmap> DiscoBallClusterLogic::GetWobbleSupportAttribute() const
+BitFlags<Clusters::DiscoBall::WobbleBitmap> DiscoBallClusterLogic::GetWobbleSupportAttribute() const
 {
-    if (!mDriver)
-    {
-        return BitFlags<DiscoBall::WobbleBitmap>{0};
-    }
-
-    return mDriver->GetWobbleSupport(mEndpointId);
+    return mCapabilities.wobble_support;
 }
 
-BitFlags<DiscoBall::WobbleBitmap> DiscoBallClusterLogic::GetWobbleSettingAttribute() const
+BitFlags<Clusters::DiscoBall::WobbleBitmap> DiscoBallClusterLogic::GetWobbleSettingAttribute() const
 {
     return mClusterState.wobble_setting_attribute;
 }
 
-InteractionModel::Status DiscoBallClusterLogic::SetWobbleSettingAttribute(BitFlags<DiscoBall::WobbleBitmap> wobble_setting)
+Status DiscoBallClusterLogic::SetWobbleSettingAttribute(BitFlags<Clusters::DiscoBall::WobbleBitmap> wobble_setting)
 {
-    return Protocols::InteractionModel::Status::UnsupportedAttribute;
+    return Status::UnsupportedAttribute;
 }
 
-BitFlags<DiscoBall::Feature> DiscoBallClusterLogic::GetSupportedFeatures() const
+BitFlags<Clusters::DiscoBall::Feature> DiscoBallClusterLogic::GetSupportedFeatures() const
 {
-    if (!mDriver)
-    {
-        return BitFlags<DiscoBall::Feature>{0};
-    }
-
-    return mDriver->GetSupportedFeatures(mEndpointId);
+    return mCapabilities.supported_features;
 }
 
-InteractionModel::Status HandleStartRequest(const Clusters::DiscoBall::Commands::StartRequest::DecodableType & args)
+Status HandleStartRequest(const Clusters::DiscoBall::Commands::StartRequest::DecodableType & args)
 {
-    return Protocols::InteractionModel::Status::UnsupportedCommand;
+    return Status::UnsupportedCommand;
 }
 
-InteractionModel::Status HandleStopRequest()
+Status HandleStopRequest()
 {
-    return Protocols::InteractionModel::Status::UnsupportedCommand;
+    return Status::UnsupportedCommand;
 }
 
-InteractionModel::Status HandleReverseRequest()
+Status HandleReverseRequest()
 {
-    return Protocols::InteractionModel::Status::UnsupportedCommand;
+    return Status::UnsupportedCommand;
 }
 
-InteractionModel::Status HandleWobbleRequest()
+Status HandleWobbleRequest()
 {
-    return Protocols::InteractionModel::Status::UnsupportedCommand;
+    return Status::UnsupportedCommand;
 }
 
-InteractionModel::Status HandlePatternRequest(FabricIndex fabric_index, const Clusters::DiscoBall::Commands::PatternRequest::DecodableType & args)
+Status HandlePatternRequest(FabricIndex fabric_index, const Clusters::DiscoBall::Commands::PatternRequest::DecodableType & args)
 {
-    return Protocols::InteractionModel::Status::UnsupportedCommand;
+    return Status::UnsupportedCommand;
 }
 
-InteractionModel::Status HandleStatsRequest(Clusters::DiscoBall::Commands::StatsResponse::Type & out_stats_response)
+Status HandleStatsRequest(Clusters::DiscoBall::Commands::StatsResponse::Type & out_stats_response)
 {
-    return Protocols::InteractionModel::Status::UnsupportedCommand;
+    return Status::UnsupportedCommand;
 }
 
 } // namespace app
