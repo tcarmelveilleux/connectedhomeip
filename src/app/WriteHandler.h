@@ -17,6 +17,8 @@
  */
 
 #pragma once
+
+#include <access/SubjectDescriptor.h>
 #include <app/AttributeAccessToken.h>
 #include <app/AttributePathParams.h>
 #include <app/MessageDef/WriteResponseMessage.h>
@@ -89,7 +91,7 @@ public:
     CHIP_ERROR AddClusterSpecificFailure(const ConcreteDataAttributePath & aAttributePathParams, uint8_t aClusterStatus);
 
     FabricIndex GetAccessingFabricIndex() const;
-    SubjectDescriptor GetSubjectDescriptor() const { return mExchangeCtx->GetSessionHandle()->GetSubjectDescriptor(); }
+    Access::SubjectDescriptor GetSubjectDescriptor() const { return mExchangeCtx->GetSessionHandle()->GetSubjectDescriptor(); }
 
     /**
      * Check whether the WriteRequest we are handling is a timed write.
