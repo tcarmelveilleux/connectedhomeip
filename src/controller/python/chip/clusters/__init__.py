@@ -41,12 +41,12 @@ from .Objects import (AccessControl, AccountLogin, Actions, ActivatedCarbonFilte
                       RvcOperationalState, RvcRunMode, Scenes, SmokeCoAlarm, SoftwareDiagnostics, Switch, TargetNavigator,
                       TemperatureControl, TemperatureMeasurement, Thermostat, ThermostatUserInterfaceConfiguration,
                       ThreadNetworkDiagnostics, TimeFormatLocalization, TimeSynchronization,
-                      TotalVolatileOrganicCompoundsConcentrationMeasurement, UnitLocalization, UnitTesting, UserLabel, WakeOnLan,
-                      WiFiNetworkDiagnostics, WindowCovering)
+                      TotalVolatileOrganicCompoundsConcentrationMeasurement, UnitLocalization, UnitTesting, UserLabel,
+                      ValveConfigurationAndControl, WakeOnLan, WiFiNetworkDiagnostics, WindowCovering)
 
 __all__ = [Attribute, CHIPClusters, Command, AccessControl, AccountLogin, Actions, ActivatedCarbonFilterMonitoring, AdministratorCommissioning, AirQuality,
            ApplicationBasic, ApplicationLauncher, AudioOutput, BallastConfiguration, BarrierControl, BasicInformation,
-           BinaryInputBasic, Binding, BooleanState, BridgedDeviceBasicInformation, CarbonDioxideConcentrationMeasurement,
+           BinaryInputBasic, Binding, BooleanSensorConfiguration, BooleanState, BridgedDeviceBasicInformation, CarbonDioxideConcentrationMeasurement,
            CarbonMonoxideConcentrationMeasurement, Channel,
            ColorControl, ContentLauncher, Descriptor, DiagnosticLogs, DiscoBall, DishwasherAlarm, DishwasherMode,
            DoorLock, ElectricalMeasurement,  EnergyEvse, EthernetNetworkDiagnostics, FanControl, FaultInjection, FixedLabel, FlowMeasurement,
@@ -64,4 +64,4 @@ __all__ = [Attribute, CHIPClusters, Command, AccessControl, AccountLogin, Action
            Switch, TargetNavigator, TemperatureControl, TemperatureMeasurement, Thermostat, ThermostatUserInterfaceConfiguration,
            ThreadNetworkDiagnostics, TimeFormatLocalization, TimeSynchronization,
            TotalVolatileOrganicCompoundsConcentrationMeasurement, UnitLocalization,
-           UnitTesting, UserLabel, WakeOnLan, WiFiNetworkDiagnostics, WindowCovering]
+           UnitTesting, UserLabel, ValveConfigurationAndControl, WakeOnLan, WiFiNetworkDiagnostics, WindowCovering]
