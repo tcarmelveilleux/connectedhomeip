@@ -7296,11 +7296,6 @@ typedef NS_ENUM(uint32_t, MTREventIDType) {
     MTREventIDTypeClusterPumpConfigurationAndControlEventAirDetectionID MTR_AVAILABLE(ios(16.4), macos(13.3), watchos(9.4), tvos(16.4)) = 0x0000000F,
     MTREventIDTypeClusterPumpConfigurationAndControlEventTurbineOperationID MTR_AVAILABLE(ios(16.4), macos(13.3), watchos(9.4), tvos(16.4)) = 0x00000010,
 
-<<<<<<< HEAD
-    // Cluster DiscoBall events
-    MTREventIDTypeClusterDiscoBallEventStartedID MTR_PROVISIONALLY_AVAILABLE = 0x00000000,
-    MTREventIDTypeClusterDiscoBallEventStoppedID MTR_PROVISIONALLY_AVAILABLE = 0x00000001,
-=======
     // Cluster TargetNavigator deprecated event names
 
     // Cluster TargetNavigator events
@@ -7318,7 +7313,10 @@ typedef NS_ENUM(uint32_t, MTREventIDType) {
 
     // Cluster ContentControl events
     MTREventIDTypeClusterContentControlEventRemainingScreenTimeExpiredID MTR_PROVISIONALLY_AVAILABLE = 0x00000000,
->>>>>>> upstream/master
+
+    // Cluster DiscoBall events
+    MTREventIDTypeClusterDiscoBallEventStartedID MTR_PROVISIONALLY_AVAILABLE = 0x00000000,
+    MTREventIDTypeClusterDiscoBallEventStoppedID MTR_PROVISIONALLY_AVAILABLE = 0x00000001,
 
     // Cluster TestCluster deprecated event names
     MTRClusterTestClusterEventTestEventID

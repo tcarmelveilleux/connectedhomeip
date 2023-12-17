@@ -19236,6 +19236,19 @@ typedef NS_ENUM(uint8_t, MTRApplicationBasicApplicationStatus) {
     MTRApplicationBasicApplicationStatusActiveVisibleNotFocus MTR_AVAILABLE(ios(16.1), macos(13.0), watchos(9.1), tvos(16.1)) = 0x03,
 } MTR_AVAILABLE(ios(16.1), macos(13.0), watchos(9.1), tvos(16.1));
 
+typedef NS_OPTIONS(uint32_t, MTRContentControlFeature) {
+    MTRContentControlFeatureScreenTime MTR_PROVISIONALLY_AVAILABLE = 0x1,
+    MTRContentControlFeaturePINManagement MTR_PROVISIONALLY_AVAILABLE = 0x2,
+    MTRContentControlFeatureBlockUnrated MTR_PROVISIONALLY_AVAILABLE = 0x3,
+    MTRContentControlFeatureOnDemandContentRating MTR_PROVISIONALLY_AVAILABLE = 0x4,
+    MTRContentControlFeatureScheduledContentRating MTR_PROVISIONALLY_AVAILABLE = 0x5,
+} MTR_PROVISIONALLY_AVAILABLE;
+
+typedef NS_ENUM(uint8_t, MTRContentAppObserverStatus) {
+    MTRContentAppObserverStatusSuccess MTR_PROVISIONALLY_AVAILABLE = 0x00,
+    MTRContentAppObserverStatusUnexpectedData MTR_PROVISIONALLY_AVAILABLE = 0x01,
+} MTR_PROVISIONALLY_AVAILABLE;
+
 typedef NS_ENUM(uint8_t, MTRDiscoBallRotate) {
     MTRDiscoBallRotateClockwise MTR_PROVISIONALLY_AVAILABLE = 0x01,
     MTRDiscoBallRotateCounterClockwise MTR_PROVISIONALLY_AVAILABLE = 0x02,

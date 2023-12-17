@@ -4353,6 +4353,39 @@ void ComplexArgumentParser::Finalize(chip::app::Clusters::ApplicationLauncher::S
     ComplexArgumentParser::Finalize(request.endpoint);
 }
 
+CHIP_ERROR ComplexArgumentParser::Setup(const char * label,
+                                        chip::app::Clusters::ContentControl::Structs::RatingNameStruct::Type & request,
+                                        Json::Value & value)
+{
+    VerifyOrReturnError(value.isObject(), CHIP_ERROR_INVALID_ARGUMENT);
+
+    // Copy to track which members we already processed.
+    Json::Value valueCopy(value);
+
+    ReturnErrorOnFailure(
+        ComplexArgumentParser::EnsureMemberExist("RatingNameStruct.ratingName", "ratingName", value.isMember("ratingName")));
+
+    char labelWithMember[kMaxLabelLength];
+    snprintf(labelWithMember, sizeof(labelWithMember), "%s.%s", label, "ratingName");
+    ReturnErrorOnFailure(ComplexArgumentParser::Setup(labelWithMember, request.ratingName, value["ratingName"]));
+    valueCopy.removeMember("ratingName");
+
+    if (value.isMember("ratingNameDesc"))
+    {
+        snprintf(labelWithMember, sizeof(labelWithMember), "%s.%s", label, "ratingNameDesc");
+        ReturnErrorOnFailure(ComplexArgumentParser::Setup(labelWithMember, request.ratingNameDesc, value["ratingNameDesc"]));
+    }
+    valueCopy.removeMember("ratingNameDesc");
+
+    return ComplexArgumentParser::EnsureNoMembersRemaining(label, valueCopy);
+}
+
+void ComplexArgumentParser::Finalize(chip::app::Clusters::ContentControl::Structs::RatingNameStruct::Type & request)
+{
+    ComplexArgumentParser::Finalize(request.ratingName);
+    ComplexArgumentParser::Finalize(request.ratingNameDesc);
+}
+
 CHIP_ERROR ComplexArgumentParser::Setup(const char * label, chip::app::Clusters::DiscoBall::Structs::PatternStruct::Type & request,
                                         Json::Value & value)
 {

@@ -3445,6 +3445,19 @@ static auto __attribute__((unused)) EnsureKnownEnumValue(ApplicationBasic::Appli
     }
 }
 
+static auto __attribute__((unused)) EnsureKnownEnumValue(ContentAppObserver::StatusEnum val)
+{
+    using EnumType = ContentAppObserver::StatusEnum;
+    switch (val)
+    {
+    case EnumType::kSuccess:
+    case EnumType::kUnexpectedData:
+        return val;
+    default:
+        return static_cast<EnumType>(2);
+    }
+}
+
 static auto __attribute__((unused)) EnsureKnownEnumValue(DiscoBall::RotateEnum val)
 {
     using EnumType = DiscoBall::RotateEnum;

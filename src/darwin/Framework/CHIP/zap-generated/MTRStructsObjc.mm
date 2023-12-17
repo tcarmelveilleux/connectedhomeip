@@ -7186,6 +7186,86 @@ NS_ASSUME_NONNULL_BEGIN
 @implementation MTRApplicationBasicClusterApplicationBasicApplication : MTRApplicationBasicClusterApplicationStruct
 @end
 
+@implementation MTRAccountLoginClusterLoggedOutEvent
+- (instancetype)init
+{
+    if (self = [super init]) {
+
+        _node = nil;
+    }
+    return self;
+}
+
+- (id)copyWithZone:(NSZone * _Nullable)zone
+{
+    auto other = [[MTRAccountLoginClusterLoggedOutEvent alloc] init];
+
+    other.node = self.node;
+
+    return other;
+}
+
+- (NSString *)description
+{
+    NSString * descriptionString = [NSString stringWithFormat:@"<%@: node:%@; >", NSStringFromClass([self class]), _node];
+    return descriptionString;
+}
+
+@end
+
+@implementation MTRContentControlClusterRatingNameStruct
+- (instancetype)init
+{
+    if (self = [super init]) {
+
+        _ratingName = @"";
+
+        _ratingNameDesc = nil;
+    }
+    return self;
+}
+
+- (id)copyWithZone:(NSZone * _Nullable)zone
+{
+    auto other = [[MTRContentControlClusterRatingNameStruct alloc] init];
+
+    other.ratingName = self.ratingName;
+    other.ratingNameDesc = self.ratingNameDesc;
+
+    return other;
+}
+
+- (NSString *)description
+{
+    NSString * descriptionString = [NSString stringWithFormat:@"<%@: ratingName:%@; ratingNameDesc:%@; >", NSStringFromClass([self class]), _ratingName, _ratingNameDesc];
+    return descriptionString;
+}
+
+@end
+
+@implementation MTRContentControlClusterRemainingScreenTimeExpiredEvent
+- (instancetype)init
+{
+    if (self = [super init]) {
+    }
+    return self;
+}
+
+- (id)copyWithZone:(NSZone * _Nullable)zone
+{
+    auto other = [[MTRContentControlClusterRemainingScreenTimeExpiredEvent alloc] init];
+
+    return other;
+}
+
+- (NSString *)description
+{
+    NSString * descriptionString = [NSString stringWithFormat:@"<%@: >", NSStringFromClass([self class])];
+    return descriptionString;
+}
+
+@end
+
 @implementation MTRDiscoBallClusterPatternStruct
 - (instancetype)init
 {

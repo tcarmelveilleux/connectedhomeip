@@ -14,10 +14,10 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package matter.devicecontroller.cluster.structs
+package matter.controller.cluster.structs
 
 import java.util.Optional
-import matter.devicecontroller.cluster.*
+import matter.controller.cluster.*
 import matter.tlv.ContextSpecificTag
 import matter.tlv.Tag
 import matter.tlv.TlvReader
@@ -25,7 +25,7 @@ import matter.tlv.TlvWriter
 
 class DiscoBallClusterPatternStruct(
   val duration: UShort,
-  val rotate: UInt?,
+  val rotate: UByte?,
   val speed: UByte?,
   val axis: Optional<UByte>?,
   val wobbleSpeed: Optional<UByte>?,
@@ -98,7 +98,7 @@ class DiscoBallClusterPatternStruct(
       val duration = tlvReader.getUShort(ContextSpecificTag(TAG_DURATION))
       val rotate =
         if (!tlvReader.isNull()) {
-          tlvReader.getUInt(ContextSpecificTag(TAG_ROTATE))
+          tlvReader.getUByte(ContextSpecificTag(TAG_ROTATE))
         } else {
           tlvReader.getNull(ContextSpecificTag(TAG_ROTATE))
           null

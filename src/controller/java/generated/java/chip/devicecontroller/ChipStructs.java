@@ -9614,6 +9614,67 @@ public static class ApplicationBasicClusterApplicationStruct {
     return output.toString();
   }
 }
+public static class ContentControlClusterRatingNameStruct {
+  public String ratingName;
+  public Optional<String> ratingNameDesc;
+  private static final long RATING_NAME_ID = 0L;
+  private static final long RATING_NAME_DESC_ID = 1L;
+
+  public ContentControlClusterRatingNameStruct(
+    String ratingName,
+    Optional<String> ratingNameDesc
+  ) {
+    this.ratingName = ratingName;
+    this.ratingNameDesc = ratingNameDesc;
+  }
+
+  public StructType encodeTlv() {
+    ArrayList<StructElement> values = new ArrayList<>();
+    values.add(new StructElement(RATING_NAME_ID, new StringType(ratingName)));
+    values.add(new StructElement(RATING_NAME_DESC_ID, ratingNameDesc.<BaseTLVType>map((nonOptionalratingNameDesc) -> new StringType(nonOptionalratingNameDesc)).orElse(new EmptyType())));
+
+    return new StructType(values);
+  }
+
+  public static ContentControlClusterRatingNameStruct decodeTlv(BaseTLVType tlvValue) {
+    if (tlvValue == null || tlvValue.type() != TLVType.Struct) {
+      return null;
+    }
+    String ratingName = null;
+    Optional<String> ratingNameDesc = Optional.empty();
+    for (StructElement element: ((StructType)tlvValue).value()) {
+      if (element.contextTagNum() == RATING_NAME_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.String) {
+          StringType castingValue = element.value(StringType.class);
+          ratingName = castingValue.value(String.class);
+        }
+      } else if (element.contextTagNum() == RATING_NAME_DESC_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.String) {
+          StringType castingValue = element.value(StringType.class);
+          ratingNameDesc = Optional.of(castingValue.value(String.class));
+        }
+      }
+    }
+    return new ContentControlClusterRatingNameStruct(
+      ratingName,
+      ratingNameDesc
+    );
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("ContentControlClusterRatingNameStruct {\n");
+    output.append("\tratingName: ");
+    output.append(ratingName);
+    output.append("\n");
+    output.append("\tratingNameDesc: ");
+    output.append(ratingNameDesc);
+    output.append("\n");
+    output.append("}\n");
+    return output.toString();
+  }
+}
 public static class DiscoBallClusterPatternStruct {
   public Integer duration;
   public @Nullable Integer rotate;
