@@ -58,10 +58,10 @@ struct DiscoBallClusterState
     class NonVolatileStorageInterface
     {
     public:
-        virtual ~NonVolatileStorage = default;
+        virtual ~NonVolatileStorageInterface() = default;
 
-        virtual CHIP_ERROR SaveToStorage(const ClusterState & attributes) = 0;
-        virtual CHIP_ERROR LoadFromStorage(ClusterState & attributes) = 0;
+        virtual CHIP_ERROR SaveToStorage(const DiscoBallClusterState & attributes) = 0;
+        virtual CHIP_ERROR LoadFromStorage(DiscoBallClusterState & attributes) = 0;
     };
 
     DiscoBallClusterState();
@@ -108,7 +108,7 @@ struct DiscoBallClusterState
     bool run_attribute;
 
     // 0x0001  s| Rotate        | <<ref_RotateEnum>>          | all            |         | 0       | R V      | M
-    DiscoBall::RotateEnum rotate_attribute;
+    Clusters::DiscoBall::RotateEnum rotate_attribute;
 
     // 0x0002  s| Speed         | uint8                       | 0 to 200^*^    |         | 0       | R V      | M
     uint8_t speed_attribute;
@@ -131,7 +131,7 @@ struct DiscoBallClusterState
     // --> This attribute is directly obtained from the driver.
 
     // 0x0008  s| WobbleSetting | <<ref_WobbleBitmap>>        | desc           |         |         | RW VM    | [WBL]
-    BitFlags<DiscoBall::WobbleBitmap> wobble_setting_attribute;
+    BitFlags<Clusters::DiscoBall::WobbleBitmap> wobble_setting_attribute;
 
     // ----------------------
     // Attributes storage end
@@ -141,18 +141,18 @@ struct DiscoBallClusterState
     NonVolatileStorageInterface * mStorage = nullptr;
     EndpointId mEndpointId = kInvalidEndpointId;
 
-    CharSpan mCurrentRunningPasscode{nullptr, 0};
+    CharSpan mCurrentRunningPasscode{};
     char mCurrentRunningPasscodeBacking[kDiscoBallPasscodeMaxSize];
 };
 
 // TODO: Account for MS commands
 // TODO: How to go from DriverInterface to attribute changes? Observer?
 
-typedef (*DiscoBallTimerCallback)(EndpointId id, void *ctx);
+typedef void (*DiscoBallTimerCallback)(EndpointId id, void *ctx);
 
 struct DiscoBallCapabilities
 {
-    BitFlags<DiscoBall::Feature> supported_features;
+    BitFlags<Clusters::DiscoBall::Feature> supported_features;
 
     uint8_t min_speed_value;
     uint8_t max_speed_value;
@@ -165,7 +165,7 @@ struct DiscoBallCapabilities
     uint8_t max_wobble_speed_value;
 
     // Only valid if supported_features.Has(DiscoBall::Feature::kWobble)
-    BitFlags<DiscoBall::WobbleBitmap> wobble_support;
+    BitFlags<Clusters::DiscoBall::WobbleBitmap> wobble_support;
 };
 
 class DiscoBallClusterLogic
@@ -174,12 +174,13 @@ public:
     class DiscoBallDriverInterface
     {
     public:
+        virtual ~DiscoBallDriverInterface() = default;
         virtual DiscoBallCapabilities GetCapabilities(EndpointId endpoint_id) const = 0;
 
         virtual CHIP_ERROR OnStartRequest(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
         virtual CHIP_ERROR OnStopRequest(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
         virtual CHIP_ERROR OnClusterStateChange(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
-        virtual void StartPatternTimer(EndpointId endpoint_id, uint16_t num_seconds, DiscoBallTimerCallback timer_cb, void * ctx) = 0
+        virtual void StartPatternTimer(EndpointId endpoint_id, uint16_t num_seconds, DiscoBallTimerCallback timer_cb, void * ctx) = 0;
         virtual void CancelPatternTimer(EndpointId endpoint_id) = 0;
     };
 
@@ -209,34 +210,34 @@ public:
 
     // Attribute reads and writes are indirected to the DiscoBallClusterState by the DiscoBallClusterLogic.
     bool GetRunAttribute() const;
-    InteractionModel::Status SetRunAttribute(bool run_state);
+    Protocols::InteractionModel::Status SetRunAttribute(bool run_state);
 
-    DiscoBall::RotateEnum GetRotateAttribute() const;
-    InteractionModel::Status SetRotateAttribute(bool DiscoBall::RotateEnum rotate_state);
+    Clusters::DiscoBall::RotateEnum GetRotateAttribute() const;
+    Protocols::InteractionModel::Status SetRotateAttribute(Clusters::DiscoBall::RotateEnum rotate_state);
 
     uint8_t GetSpeedAttribute() const;
-    InteractionModel::Status SetAttribute(bool DiscoBall::RotateEnum rotate_state);
+    Protocols::InteractionModel::Status SetSpeedAttribute(uint8_t speed);
 
     uint8_t GetAxisAttribute() const;
-    InteractionModel::Status SetAxisAttribute(uint8_t axis);
+    Protocols::InteractionModel::Status SetAxisAttribute(uint8_t axis);
 
     uint8_t GetWobbleSpeedAttribute() const;
-    InteractionModel::Status SetWobbleSpeedAttribute(uint8_t wobble_speed);
+    Protocols::InteractionModel::Status SetWobbleSpeedAttribute(uint8_t wobble_speed);
 
     size_t GetNumPatterns(FabricIndex fabric_idx) const;
     chip::Optional<DiscoBallPatternStructBacking> GetPatternAttributeEntry(FabricIndex fabric_idx, size_t pattern_idx) const;
     CHIP_ERROR ClearPattern(FabricIndex fabric_idx, size_t pattern_idx);
-    InteractionModel::Status SetPattern(FabricIndex fabric_idx, const Clusters::DiscoBall::Structs::PatternStruct::Type & pattern);
+    Protocols::InteractionModel::Status SetPattern(FabricIndex fabric_idx, const Clusters::DiscoBall::Structs::PatternStruct::Type & pattern);
 
     CharSpan GetNameAttribute() const;
-    InteractionModel::Status SetNameAttribute(CharSpan name);
+    Protocols::InteractionModel::Status SetNameAttribute(CharSpan name);
 
-    BitFlags<DiscoBall::WobbleBitmap> GetWobbleSupportAttribute() const;
+    BitFlags<Clusters::DiscoBall::WobbleBitmap> GetWobbleSupportAttribute() const;
 
-    BitFlags<DiscoBall::WobbleBitmap> GetWobbleSettingAttribute() const;
-    InteractionModel::Status SetWobbleSettingAttribute(BitFlags<DiscoBall::WobbleBitmap> wobble_setting);
+    BitFlags<Clusters::DiscoBall::WobbleBitmap> GetWobbleSettingAttribute() const;
+    Protocols::InteractionModel::Status SetWobbleSettingAttribute(BitFlags<Clusters::DiscoBall::WobbleBitmap> wobble_setting);
 
-    BitFlags<DiscoBall::Feature> GetSupportedFeatures() const;
+    BitFlags<Clusters::DiscoBall::Feature> GetSupportedFeatures() const;
 
     // 0x00  s| StartRequest   | client => server | Y                 | O T^*^ | M
     // 0x01  s| StopRequest    | client => server | Y                 | O      | M
@@ -245,12 +246,12 @@ public:
     // 0x04  s| PatternRequest | client => server | Y                 | M      | PAT
     // 0x05  s| StatsRequest   | client => server | StatsResponse^**^ | O      | STA
     // 0x06  s| StatsResponse  | client <= server | N                 | O      | STA
-    InteractionModel::Status HandleStartRequest(const Clusters::DiscoBall::Commands::StartRequest::DecodableType & args);
-    InteractionModel::Status HandleStopRequest();
-    InteractionModel::Status HandleReverseRequest();
-    InteractionModel::Status HandleWobbleRequest();
-    InteractionModel::Status HandlePatternRequest(FabricIndex fabric_index, const Clusters::DiscoBall::Commands::PatternRequest::DecodableType & args);
-    InteractionModel::Status HandleStatsRequest(Clusters::DiscoBall::Commands::StatsResponse::Type & out_stats_response);
+    Protocols::InteractionModel::Status HandleStartRequest(const Clusters::DiscoBall::Commands::StartRequest::DecodableType & args);
+    Protocols::InteractionModel::Status HandleStopRequest();
+    Protocols::InteractionModel::Status HandleReverseRequest();
+    Protocols::InteractionModel::Status HandleWobbleRequest();
+    Protocols::InteractionModel::Status HandlePatternRequest(FabricIndex fabric_index, const Clusters::DiscoBall::Commands::PatternRequest::DecodableType & args);
+    Protocols::InteractionModel::Status HandleStatsRequest(Clusters::DiscoBall::Commands::StatsResponse::Type & out_stats_response);
 
     EndpointId GetEndpointId() const { return mEndpointId; }
 

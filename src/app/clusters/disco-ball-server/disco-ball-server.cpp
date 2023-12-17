@@ -55,28 +55,28 @@ void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
         HandleCommand<Clusters::DiscoBall::Commands::StartRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
             ChipLogProgress(Zcl, "StartRequest received");
             // TODO: CHeck for timed request!
-            InteractionModel::Status status = cluster->HandleStartRequest(payload);
+            Protocols::InteractionModel::Status status = cluster->HandleStartRequest(payload);
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
     case Clusters::DiscoBall::Commands::StopRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::StopRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
             ChipLogProgress(Zcl, "StopRequest received");
-            InteractionModel::Status status = cluster->HandleStopRequest();
+            Protocols::InteractionModel::Status status = cluster->HandleStopRequest();
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
     case Clusters::DiscoBall::Commands::ReverseRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::ReverseRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
             ChipLogProgress(Zcl, "ReverseRequest received");
-            InteractionModel::Status status = cluster->HandleReverseRequest();
+            Protocols::InteractionModel::Status status = cluster->HandleReverseRequest();
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
     case Clusters::DiscoBall::Commands::WobbleRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::WobbleRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
             ChipLogProgress(Zcl, "WobbleRequest received");
-            InteractionModel::Status status = cluster->HandleWobbleRequest();
+            Protocols::InteractionModel::Status status = cluster->HandleWobbleRequest();
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
@@ -89,11 +89,11 @@ void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
             if (fabric_index == kUndefinedFabricIndex)
             {
                 ChipLogError(Zcl, "PatternRequest requested with no accessing fabric!");
-                handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, InteractionModel::Status::InvalidAccess);
+                handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, Protocols::InteractionModel::Status::InvalidAccess);
                 return;
             }
 
-            InteractionModel::Status status = cluster->HandlePatternRequest(fabric_index, payload);
+            Protocols::InteractionModel::Status status = cluster->HandlePatternRequest(fabric_index, payload);
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
@@ -102,8 +102,8 @@ void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
             ChipLogProgress(Zcl, "StatsRequest received");
             Clusters::DiscoBall::Commands::StatsResponse::Type resp;
 
-            InteractionModel::Status status = cluster->HandleStatsRequest(resp);
-            if (status != InteractionModel::Status::Success)
+            Protocols::InteractionModel::Status status = cluster->HandleStatsRequest(resp);
+            if (status != Protocols::InteractionModel::Status::Success)
             {
                 handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
                 return;

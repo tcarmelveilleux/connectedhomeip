@@ -147,7 +147,7 @@ bool DiscoBallClusterLogic::GetRunAttribute() const
 
 InteractionModel::Status DiscoBallClusterLogic::SetRunAttribute(bool run_state)
 {
-    return InteractionModel::Status::UnsupportedAttribute;
+    return Protocols::InteractionModel::Status::UnsupportedAttribute;
 }
 
 DiscoBall::RotateEnum DiscoBallClusterLogic::GetRotateAttribute() const
@@ -155,9 +155,9 @@ DiscoBall::RotateEnum DiscoBallClusterLogic::GetRotateAttribute() const
     return mClusterState.rotate_attribute;
 }
 
-InteractionModel::Status DiscoBallClusterLogic::SetRotateAttribute(bool DiscoBall::RotateEnum rotate_state)
+InteractionModel::Status DiscoBallClusterLogic::SetRotateAttribute(DiscoBall::RotateEnum rotate_state)
 {
-    return InteractionModel::Status::UnsupportedAttribute;
+    return Protocols::InteractionModel::Status::UnsupportedAttribute;
 }
 
 uint8_t DiscoBallClusterLogic::GetSpeedAttribute() const
@@ -165,9 +165,9 @@ uint8_t DiscoBallClusterLogic::GetSpeedAttribute() const
     return mClusterState.speed_attribute;
 }
 
-InteractionModel::Status DiscoBallClusterLogic::SetSpeedAttribute(bool DiscoBall::RotateEnum rotate_state)
+InteractionModel::Status DiscoBallClusterLogic::SetSpeedAttribute(uint8_t speed)
 {
-    return InteractionModel::Status::UnsupportedAttribute;
+    return Protocols::InteractionModel::Status::UnsupportedAttribute;
 }
 
 uint8_t DiscoBallClusterLogic::GetAxisAttribute() const
@@ -177,7 +177,7 @@ uint8_t DiscoBallClusterLogic::GetAxisAttribute() const
 
 InteractionModel::Status DiscoBallClusterLogic::SetAxisAttribute(uint8_t axis)
 {
-    return InteractionModel::Status::UnsupportedAttribute;
+    return Protocols::InteractionModel::Status::UnsupportedAttribute;
 }
 
 uint8_t DiscoBallClusterLogic::GetWobbleSpeedAttribute() const
@@ -187,7 +187,7 @@ uint8_t DiscoBallClusterLogic::GetWobbleSpeedAttribute() const
 
 InteractionModel::Status DiscoBallClusterLogic::SetWobbleSpeedAttribute(uint8_t wobble_speed)
 {
-    return InteractionModel::Status::UnsupportedAttribute;
+    return Protocols::InteractionModel::Status::UnsupportedAttribute;
 }
 
 size_t DiscoBallClusterLogic::GetNumPatterns(FabricIndex fabric_idx) const
@@ -224,7 +224,7 @@ CHIP_ERROR DiscoBallClusterLogic::ClearPattern(FabricIndex fabric_idx, size_t pa
 
 InteractionModel::Status DiscoBallClusterLogic::SetPattern(FabricIndex fabric_idx, const Clusters::DiscoBall::Structs::PatternStruct::Type & pattern)
 {
-    return InteractionModel::Status::UnsupportedAttribute;
+    return Protocols::InteractionModel::Status::UnsupportedAttribute;
 }
 
 CharSpan DiscoBallClusterLogic::GetNameAttribute() const
@@ -234,7 +234,7 @@ CharSpan DiscoBallClusterLogic::GetNameAttribute() const
 
 InteractionModel::Status DiscoBallClusterLogic::SetNameAttribute(CharSpan name)
 {
-    return InteractionModel::Status::UnsupportedAttribute;
+    return Protocols::InteractionModel::Status::UnsupportedAttribute;
 }
 
 BitFlags<DiscoBall::WobbleBitmap> DiscoBallClusterLogic::GetWobbleSupportAttribute() const
@@ -254,7 +254,7 @@ BitFlags<DiscoBall::WobbleBitmap> DiscoBallClusterLogic::GetWobbleSettingAttribu
 
 InteractionModel::Status DiscoBallClusterLogic::SetWobbleSettingAttribute(BitFlags<DiscoBall::WobbleBitmap> wobble_setting)
 {
-    return InteractionModel::Status::UnsupportedAttribute;
+    return Protocols::InteractionModel::Status::UnsupportedAttribute;
 }
 
 BitFlags<DiscoBall::Feature> DiscoBallClusterLogic::GetSupportedFeatures() const
@@ -269,32 +269,32 @@ BitFlags<DiscoBall::Feature> DiscoBallClusterLogic::GetSupportedFeatures() const
 
 InteractionModel::Status HandleStartRequest(const Clusters::DiscoBall::Commands::StartRequest::DecodableType & args)
 {
-    return InteractionModel::Status::UnsupportedCommand;
+    return Protocols::InteractionModel::Status::UnsupportedCommand;
 }
 
 InteractionModel::Status HandleStopRequest()
 {
-    return InteractionModel::Status::UnsupportedCommand;
+    return Protocols::InteractionModel::Status::UnsupportedCommand;
 }
 
 InteractionModel::Status HandleReverseRequest()
 {
-    return InteractionModel::Status::UnsupportedCommand;
+    return Protocols::InteractionModel::Status::UnsupportedCommand;
 }
 
 InteractionModel::Status HandleWobbleRequest()
 {
-    return InteractionModel::Status::UnsupportedCommand;
+    return Protocols::InteractionModel::Status::UnsupportedCommand;
 }
 
 InteractionModel::Status HandlePatternRequest(FabricIndex fabric_index, const Clusters::DiscoBall::Commands::PatternRequest::DecodableType & args)
 {
-    return InteractionModel::Status::UnsupportedCommand;
+    return Protocols::InteractionModel::Status::UnsupportedCommand;
 }
 
 InteractionModel::Status HandleStatsRequest(Clusters::DiscoBall::Commands::StatsResponse::Type & out_stats_response)
 {
-    return InteractionModel::Status::UnsupportedCommand;
+    return Protocols::InteractionModel::Status::UnsupportedCommand;
 }
 
 } // namespace app

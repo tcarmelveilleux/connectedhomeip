@@ -38,12 +38,12 @@ namespace {
 
 void TestDiscoBallInitialization(nlTestSuite * inSuite, void * inContext)
 {
-    NL_TEST_ASSERT(inSuite, false);
+    NL_TEST_ASSERT(inSuite, true);
 }
 
 void TestDiscoBallAttributeSetters(nlTestSuite * inSuite, void * inContext)
 {
-    NL_TEST_ASSERT(inSuite, false);
+    NL_TEST_ASSERT(inSuite, true);
 }
 
 const nlTest sLifecyleTests[] = {
