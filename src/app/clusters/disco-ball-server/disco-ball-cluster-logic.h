@@ -28,6 +28,7 @@
 
 #include <protocols/interaction_model/StatusCode.h>
 
+#include <app/ConcreteAttributePath.h>
 #include <app-common/zap-generated/cluster-objects.h>
 #include <app-common/zap-generated/cluster-enums.h>
 
@@ -173,20 +174,30 @@ struct DiscoBallCapabilities
     BitFlags<Clusters::DiscoBall::WobbleBitmap> wobble_support;
 };
 
+enum DiscoBallFunction : uint16_t
+{
+    kRunning = (1 << 0),
+    kRotation = (1 << 1),
+    kSpeed = (1 << 2),
+    kAxis = (1 << 3),
+    kWobbleSpeed = (1 << 4),
+    kWobbleSetting = (1 << 5),
+    kName = (1 << 6),
+};
+
 class DiscoBallClusterLogic
 {
 public:
-    class DiscoBallDriverInterface
+    class DriverInterface
     {
     public:
-        virtual ~DiscoBallDriverInterface() = default;
+        virtual ~DriverInterface() = default;
         virtual DiscoBallCapabilities GetCapabilities(EndpointId endpoint_id) const = 0;
 
-        virtual CHIP_ERROR OnStartRequest(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
-        virtual CHIP_ERROR OnStopRequest(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
-        virtual void OnClusterStateChange(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
+        virtual Protocols::InteractionModel::Status OnClusterStateChange(EndpointId endpoint_id, BitFlags<DiscoBallFunction> changes, DiscoBallClusterLogic & cluster) = 0;
         virtual void StartPatternTimer(EndpointId endpoint_id, uint16_t num_seconds, DiscoBallTimerCallback timer_cb, void * ctx) = 0;
         virtual void CancelPatternTimer(EndpointId endpoint_id) = 0;
+        virtual void MarkAttributeDirty(const ConcreteAttributePath& path) = 0;
     };
 
     DiscoBallClusterLogic() = default;
@@ -195,12 +206,15 @@ public:
     DiscoBallClusterLogic(DiscoBallClusterLogic const&) = delete;
     DiscoBallClusterLogic& operator=(DiscoBallClusterLogic const&) = delete;
 
-    CHIP_ERROR Init(EndpointId endpoint_id, DiscoBallClusterState::NonVolatileStorageInterface & storage, DiscoBallDriverInterface & driver);
+    CHIP_ERROR Init(EndpointId endpoint_id, DiscoBallClusterState::NonVolatileStorageInterface & storage, DriverInterface & driver);
     void Deinit()
     {
         mDriver = nullptr;
         mEndpointId = kInvalidEndpointId;
     }
+
+    EndpointId GetEndpointId() const { return mEndpointId; }
+    ClusterId GetClusterId() const { return Clusters::DiscoBall::Id; }
 
     // 0x0000  s| Run           | bool                        | all^*^         |         | 0       | R V T^*^ | M
     // 0x0001  s| Rotate        | <<ref_RotateEnum>>          | all            |         | 0       | R V      | M
@@ -257,11 +271,9 @@ public:
     Protocols::InteractionModel::Status HandlePatternRequest(FabricIndex fabric_index, const Clusters::DiscoBall::Commands::PatternRequest::DecodableType & args);
     Protocols::InteractionModel::Status HandleStatsRequest(Clusters::DiscoBall::Commands::StatsResponse::Type & out_stats_response);
 
-    EndpointId GetEndpointId() const { return mEndpointId; }
-
 private:
     EndpointId mEndpointId = kInvalidEndpointId;
-    DiscoBallDriverInterface * mDriver = nullptr;
+    DriverInterface * mDriver = nullptr;
 
     DiscoBallCapabilities mCapabilities;
 

@@ -175,7 +175,7 @@ CHIP_ERROR DiscoBallServer::Write(const ConcreteDataAttributePath & aPath, Attri
     return CHIP_NO_ERROR;
 }
 
-CHIP_ERROR DiscoBallServer::RegisterEndpoint(EndpointId endpoint_id, DiscoBallClusterState::NonVolatileStorageInterface & storage, DiscoBallDriverInterface & driver)
+CHIP_ERROR DiscoBallServer::RegisterEndpoint(EndpointId endpoint_id, DiscoBallClusterState::NonVolatileStorageInterface & storage, DiscoBallClusterState::NonVolatileStorageInterface & storage, DiscoBallClusterLogic::DriverInterface & driver)
 {
     VerifyOrReturnError(endpoint_id != kInvalidEndpointId, CHIP_ERROR_INVALID_ARGUMENT);
     VerifyOrReturnError(FindEndpoint(endpoint_id) == nullptr, CHIP_ERROR_INVALID_ARGUMENT);

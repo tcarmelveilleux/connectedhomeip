@@ -28,6 +28,7 @@
 
 #include <protocols/interaction_model/StatusCode.h>
 
+#include <app/ConcreteAttributePath.h>
 #include <app-common/zap-generated/cluster-objects.h>
 #include <app-common/zap-generated/cluster-enums.h>
 
@@ -135,7 +136,7 @@ CharSpan DiscoBallClusterState::GetRunningPasscode() const
 }
 
 /* =========================== Start of DiscoBallClusterLogic =====================*/
-CHIP_ERROR DiscoBallClusterLogic::Init(EndpointId endpoint_id, DiscoBallClusterState::NonVolatileStorageInterface & storage, DiscoBallDriverInterface & driver)
+CHIP_ERROR DiscoBallClusterLogic::Init(EndpointId endpoint_id, DiscoBallClusterState::NonVolatileStorageInterface & storage, DriverInterface & driver)
 {
     mEndpointId = endpoint_id;
 
@@ -161,9 +162,25 @@ bool DiscoBallClusterLogic::GetRunAttribute() const
     return mClusterState.run_attribute;
 }
 
+// Never set via attribute, only via command.
 Status DiscoBallClusterLogic::SetRunAttribute(bool run_state)
 {
-    return Status::UnsupportedAttribute;
+    // TODO: HANDLE EVENT
+    VerifyOrReturnValue(mDriver != nullptr, Status::Failure);
+
+    bool changed = (run_state != mClusterState.run_attribute);
+    if (!changed)
+    {
+        return Status::Success;
+    }
+
+    mClusterState.run_attribute = run_state;
+    BitFlags<DiscoBallFunction> changes{DiscoBallFunction::kRunning};
+    Status driver_status = mDriver->OnClusterStateChange(mEndpointId, changes, *this);
+    VerifyOrReturnValue(driver_status == Status::Success, driver_status);
+
+    mDriver->MarkAttributeDirty(ConcreteAttributePath{mEndpointId, GetClusterId(), Clusters::DiscoBall::Attributes::Run::Id});
+    return Status::Success;
 }
 
 Clusters::DiscoBall::RotateEnum DiscoBallClusterLogic::GetRotateAttribute() const
@@ -171,9 +188,25 @@ Clusters::DiscoBall::RotateEnum DiscoBallClusterLogic::GetRotateAttribute() cons
     return mClusterState.rotate_attribute;
 }
 
+// Never set via attribute, only via command.
 Status DiscoBallClusterLogic::SetRotateAttribute(Clusters::DiscoBall::RotateEnum rotate_state)
 {
-    return Status::UnsupportedAttribute;
+    VerifyOrReturnValue(mDriver != nullptr, Status::Failure);
+    VerifyOrReturnValue(rotate_state != Clusters::DiscoBall::RotateEnum::kUnknownEnumValue, Status::Failure);
+
+    bool changed = (rotate_state != mClusterState.rotate_attribute);
+    if (!changed)
+    {
+        return Status::Success;
+    }
+
+    mClusterState.rotate_attribute = rotate_state;
+    BitFlags<DiscoBallFunction> changes{DiscoBallFunction::kRotation};
+    Status driver_status = mDriver->OnClusterStateChange(mEndpointId, changes, *this);
+    VerifyOrReturnValue(driver_status == Status::Success, driver_status);
+
+    mDriver->MarkAttributeDirty(ConcreteAttributePath{mEndpointId, GetClusterId(), Clusters::DiscoBall::Attributes::Rotate::Id});
+    return Status::Success;
 }
 
 uint8_t DiscoBallClusterLogic::GetSpeedAttribute() const
@@ -181,9 +214,27 @@ uint8_t DiscoBallClusterLogic::GetSpeedAttribute() const
     return mClusterState.speed_attribute;
 }
 
+// Never set via attribute, only via command.
 Status DiscoBallClusterLogic::SetSpeedAttribute(uint8_t speed)
 {
-    return Status::UnsupportedAttribute;
+    VerifyOrReturnValue(mDriver != nullptr, Status::Failure);
+    // TODO: Validate speed range fully
+    VerifyOrReturnValue(speed >= mCapabilities.min_speed_value, Status::Failure);
+    VerifyOrReturnValue(speed <= mCapabilities.max_speed_value, Status::Failure);
+
+    bool changed = (speed != mClusterState.speed_attribute);
+    if (!changed)
+    {
+        return Status::Success;
+    }
+
+    mClusterState.speed_attribute = speed;
+    BitFlags<DiscoBallFunction> changes{DiscoBallFunction::kSpeed};
+    Status driver_status = mDriver->OnClusterStateChange(mEndpointId, changes, *this);
+    VerifyOrReturnValue(driver_status == Status::Success, driver_status);
+
+    mDriver->MarkAttributeDirty(ConcreteAttributePath{mEndpointId, GetClusterId(), Clusters::DiscoBall::Attributes::Speed::Id});
+    return Status::Success;
 }
 
 uint8_t DiscoBallClusterLogic::GetAxisAttribute() const
@@ -195,14 +246,25 @@ Status DiscoBallClusterLogic::SetAxisAttribute(uint8_t axis)
 {
     VerifyOrReturnValue(mDriver != nullptr, Status::Failure);
     VerifyOrReturnValue(mCapabilities.supported_features.Has(Feature::kAxis), Status::UnsupportedAttribute);
-    VerifyOrReturnValue(axis <= 90, Status::ConstraintError);
+
+    // TODO: Validate speed range fully
     // TODO: Handle actually-supported axis values when spec updated
+    VerifyOrReturnValue(axis >= mCapabilities.min_axis_value, Status::ConstraintError);
+    VerifyOrReturnValue(axis <= mCapabilities.max_axis_value, Status::ConstraintError);
+
+    bool changed = (axis != mClusterState.axis_attribute);
+    if (!changed)
+    {
+        return Status::Success;
+    }
 
     mClusterState.axis_attribute = axis;
-    mDriver->OnClusterStateChange(mEndpointId, mClusterState);
+    BitFlags<DiscoBallFunction> changes{DiscoBallFunction::kAxis};
+    Status driver_status = mDriver->OnClusterStateChange(mEndpointId, changes, *this);
+    VerifyOrReturnValue(driver_status == Status::Success, driver_status);
 
+    mDriver->MarkAttributeDirty(ConcreteAttributePath{mEndpointId, GetClusterId(), Clusters::DiscoBall::Attributes::Axis::Id});
     return Status::Success;
-
 }
 
 uint8_t DiscoBallClusterLogic::GetWobbleSpeedAttribute() const
@@ -269,7 +331,8 @@ Status DiscoBallClusterLogic::SetNameAttribute(CharSpan name)
         return Status::ResourceExhausted;
     }
 
-    return Status::Success;
+    BitFlags<DiscoBallFunction> changes{DiscoBallFunction::kName};
+    return mDriver->OnClusterStateChange(mEndpointId, changes, *this);
 }
 
 BitFlags<Clusters::DiscoBall::WobbleBitmap> DiscoBallClusterLogic::GetWobbleSupportAttribute() const
@@ -289,9 +352,9 @@ Status DiscoBallClusterLogic::SetWobbleSettingAttribute(BitFlags<Clusters::Disco
     // TODO: Need to return UNSUPPORTED_PATTERN status on failure to support the given wobble.
 
     mClusterState.wobble_setting_attribute = wobble_setting;
-    mDriver->OnClusterStateChange(mEndpointId, mClusterState);
 
-    return Status::Success;
+    BitFlags<DiscoBallFunction> changes{DiscoBallFunction::kWobbleSetting};
+    return mDriver->OnClusterStateChange(mEndpointId, changes, *this);
 }
 
 BitFlags<Clusters::DiscoBall::Feature> DiscoBallClusterLogic::GetSupportedFeatures() const
@@ -299,32 +362,52 @@ BitFlags<Clusters::DiscoBall::Feature> DiscoBallClusterLogic::GetSupportedFeatur
     return mCapabilities.supported_features;
 }
 
-Status HandleStartRequest(const Clusters::DiscoBall::Commands::StartRequest::DecodableType & args)
+Status DiscoBallClusterLogic::HandleStartRequest(const Clusters::DiscoBall::Commands::StartRequest::DecodableType & args)
+{
+    // TODO: Use actual driver capabilities for speed/rotate limits.
+    VerifyOrReturnValue(mDriver != nullptr, Status::Failure);
+
+    // TODO: Validate these errors.
+    VerifyOrReturnValue(args.speed <= mCapabilities.max_speed_value, Status::InvalidCommand);
+    if (args.rotate.HasValue())
+    {
+        VerifyOrReturnValue(args.rotate.Value() != Clusters::DiscoBall::RotateEnum::kUnknownEnumValue, Status::InvalidCommand);
+        VerifyOrReturnValue(SetRotateAttribute(args.rotate.Value()) == Status::Success, Status::InvalidCommand);
+    }
+
+    VerifyOrReturnValue(SetSpeedAttribute(args.speed) == Status::Success, Status::InvalidCommand);
+    VerifyOrReturnValue(SetRunAttribute(true) == Status::Success, Status::InvalidCommand);
+
+    return Status::Success;
+}
+
+Status DiscoBallClusterLogic::HandleStopRequest()
+{
+    // TODO: Set rotate attribute to off.
+    bool success = true;
+
+    success = success && (SetSpeedAttribute(0) == Status::Success);
+    success = success && (SetRunAttribute(false) == Status::Success);
+
+    return success ? Status::Success : Status::Failure;
+}
+
+Status DiscoBallClusterLogic::HandleReverseRequest()
 {
     return Status::UnsupportedCommand;
 }
 
-Status HandleStopRequest()
+Status DiscoBallClusterLogic::HandleWobbleRequest()
 {
     return Status::UnsupportedCommand;
 }
 
-Status HandleReverseRequest()
+Status DiscoBallClusterLogic::HandlePatternRequest(FabricIndex fabric_index, const Clusters::DiscoBall::Commands::PatternRequest::DecodableType & args)
 {
     return Status::UnsupportedCommand;
 }
 
-Status HandleWobbleRequest()
-{
-    return Status::UnsupportedCommand;
-}
-
-Status HandlePatternRequest(FabricIndex fabric_index, const Clusters::DiscoBall::Commands::PatternRequest::DecodableType & args)
-{
-    return Status::UnsupportedCommand;
-}
-
-Status HandleStatsRequest(Clusters::DiscoBall::Commands::StatsResponse::Type & out_stats_response)
+Status DiscoBallClusterLogic::HandleStatsRequest(Clusters::DiscoBall::Commands::StatsResponse::Type & out_stats_response)
 {
     return Status::UnsupportedCommand;
 }

@@ -46,7 +46,7 @@ public:
     CHIP_ERROR Read(const ConcreteReadAttributePath & aPath, AttributeValueEncoder & aEncoder) override;
     CHIP_ERROR Write(const ConcreteDataAttributePath & aPath, AttributeValueDecoder & aDecoder) override;
 
-    CHIP_ERROR RegisterEndpoint(EndpointId endpoint_id, DiscoBallClusterState::NonVolatileStorageInterface & storage, DiscoBallDriverInterface & driver);
+    CHIP_ERROR RegisterEndpoint(EndpointId endpoint_id, DiscoBallClusterState::NonVolatileStorageInterface & storage, DiscoBallClusterLogic::DriverInterface & driver);
     void UnregisterEndpoint(EndpointId endpoint_id);
     DiscoBallClusterLogic * FindEndpoint(EndpointId endpoint_id);
 

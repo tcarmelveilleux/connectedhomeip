@@ -17,9 +17,13 @@
 
 #include <app/clusters/disco-ball-server/disco-ball-cluster-logic.h>
 
-#include <nlunit-test.h>
 #include <stdint.h>
+#include <algorithm>
+#include <memory>
+#include <utility>
+#include <vector>
 
+#include <nlunit-test.h>
 #include <lib/core/CHIPError.h>
 #include <lib/core/CHIPPersistentStorageDelegate.h>
 #include <lib/core/DataModelTypes.h>
@@ -33,6 +37,7 @@
 
 #include <protocols/interaction_model/StatusCode.h>
 
+#include <app/ConcreteAttributePath.h>
 #include <app-common/zap-generated/cluster-objects.h>
 #include <app-common/zap-generated/cluster-enums.h>
 
@@ -45,7 +50,7 @@ namespace {
 
 constexpr EndpointId kExpectedEndpointId = 1;
 
-class FakeDiscoBallDriver: public DiscoBallClusterLogic::DiscoBallDriverInterface
+class FakeDiscoBallDriver: public DiscoBallClusterLogic::DriverInterface
 {
   public:
     void SetCapabilities(DiscoBallCapabilities capabilities) { mCapabilities = capabilities; }
@@ -70,49 +75,58 @@ class FakeDiscoBallDriver: public DiscoBallClusterLogic::DiscoBallDriverInterfac
     {
         mStartRequestCount = 0;
         mStopRequestCount = 0;
+        mClusterStateChangeCount = 0;
+    }
+
+    void ClearDirtyPaths()
+    {
+        mDirtyPaths.clear();
+    }
+
+    bool HasDirtyPath(const chip::app::ConcreteAttributePath& path) const
+    {
+        return std::find(mDirtyPaths.cbegin(), mDirtyPaths.cend(), path) != mDirtyPaths.cend();
     }
 
     void Reset()
     {
         ResetCounts();
-        mClusterStateChangeCount = 0;
+        ClearDirtyPaths();
+
         mLastTimerNumSeconds = 0;
         mLastTimerCallback = nullptr;
         mLastTimerCallbackContext = nullptr;
     }
 
-    // DiscoBallClusterLogic::DiscoBallDriverInterface
+    // DiscoBallClusterLogic::DriverInterface
     DiscoBallCapabilities GetCapabilities(EndpointId endpoint_id) const override
     {
         return mCapabilities;
     }
 
-    CHIP_ERROR OnStartRequest(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) override
+    Status OnClusterStateChange(EndpointId endpoint_id, BitFlags<DiscoBallFunction> changes, DiscoBallClusterLogic & cluster) override
     {
-        ChipLogProgress(Zcl, "DiscoBallDriverInterface::OnStartRequest called");
-        VerifyOrReturnError(endpoint_id == kExpectedEndpointId, CHIP_ERROR_INVALID_ARGUMENT);
-        ++mStartRequestCount;
-        return CHIP_NO_ERROR;
-    }
-
-    CHIP_ERROR OnStopRequest(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) override
-    {
-        ChipLogProgress(Zcl, "DiscoBallDriverInterface::OnStopRequest called");
-        VerifyOrReturnError(endpoint_id == kExpectedEndpointId, CHIP_ERROR_INVALID_ARGUMENT);
-        ++mStopRequestCount;
-        return CHIP_NO_ERROR;
-    }
-
-    void OnClusterStateChange(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) override
-    {
-        ChipLogProgress(Zcl, "DiscoBallDriverInterface::OnClusterStateChange called");
-        VerifyOrReturn(endpoint_id == kExpectedEndpointId);
+        ChipLogProgress(Zcl, "DriverInterface::OnClusterStateChange called, changes: 0x%x", static_cast<unsigned>(changes.Raw()));
+        VerifyOrReturnValue(endpoint_id == kExpectedEndpointId, Status::UnsupportedEndpoint);
         ++mClusterStateChangeCount;
+
+        if (changes.Has(DiscoBallFunction::kRunning))
+        {
+            if (cluster.GetRunAttribute())
+            {
+                ++mStartRequestCount;
+            }
+            else
+            {
+                ++mStopRequestCount;
+            }
+        }
+        return Status::Success;
     }
 
     void StartPatternTimer(EndpointId endpoint_id, uint16_t num_seconds, DiscoBallTimerCallback timer_cb, void * ctx) override
     {
-        ChipLogProgress(Zcl, "DiscoBallDriverInterface::StartPatternTimer called for %d seconds", static_cast<int>(num_seconds));
+        ChipLogProgress(Zcl, "DriverInterface::StartPatternTimer called for %d seconds", static_cast<int>(num_seconds));
         VerifyOrDie(endpoint_id == kExpectedEndpointId);
         mLastTimerNumSeconds = num_seconds;
         mLastTimerCallback = timer_cb;
@@ -121,12 +135,21 @@ class FakeDiscoBallDriver: public DiscoBallClusterLogic::DiscoBallDriverInterfac
 
     void CancelPatternTimer(EndpointId endpoint_id) override
     {
-        ChipLogProgress(Zcl, "DiscoBallDriverInterface::CancelPatternTimer called");
+        ChipLogProgress(Zcl, "DriverInterface::CancelPatternTimer called");
         VerifyOrDie(endpoint_id == kExpectedEndpointId);
         mLastTimerNumSeconds = 0;
         mLastTimerCallback = nullptr;
         mLastTimerCallbackContext = nullptr;
     }
+
+    void MarkAttributeDirty(const chip::app::ConcreteAttributePath& path) override
+    {
+        ChipLogProgress(Zcl, "DriverInterface::MarkAttributeDirty called for <EP%u/0x%04x/0x%04x>",
+            static_cast<unsigned>(path.mEndpointId), static_cast<unsigned>(path.mClusterId), static_cast<unsigned>(path.mAttributeId));
+        VerifyOrDie(path.mEndpointId == kExpectedEndpointId);
+        mDirtyPaths.push_back(path);
+    }
+
 
   private:
     DiscoBallCapabilities mCapabilities{};
@@ -136,6 +159,7 @@ class FakeDiscoBallDriver: public DiscoBallClusterLogic::DiscoBallDriverInterfac
     uint16_t mLastTimerNumSeconds = 0;
     DiscoBallTimerCallback mLastTimerCallback = nullptr;
     void * mLastTimerCallbackContext = nullptr;
+    std::vector<chip::app::ConcreteAttributePath> mDirtyPaths{};
 };
 
 class FakeDiscoBallStorage : public DiscoBallClusterState::NonVolatileStorageInterface
@@ -195,6 +219,82 @@ class FakeDiscoBallStorage : public DiscoBallClusterState::NonVolatileStorageInt
     DiscoBallClusterState mClusterState{};
 };
 
+chip::app::DiscoBallCapabilities BuildFullFeaturedCapabilities()
+{
+    chip::app::DiscoBallCapabilities capabilities;
+
+    capabilities.supported_features.Set(chip::app::Clusters::DiscoBall::Feature::kAxis);
+    capabilities.supported_features.Set(chip::app::Clusters::DiscoBall::Feature::kWobble);
+    capabilities.supported_features.Set(chip::app::Clusters::DiscoBall::Feature::kPattern);
+    capabilities.supported_features.Set(chip::app::Clusters::DiscoBall::Feature::kStatistics);
+    capabilities.supported_features.Set(chip::app::Clusters::DiscoBall::Feature::kReverse);
+
+    // TODO: Make min speed larger
+    capabilities.min_speed_value = 0;
+    capabilities.max_speed_value = 200;
+
+    capabilities.min_axis_value = 0;
+    capabilities.max_axis_value = 90;
+
+    // Only valid if supported_features.Has(DiscoBall::Feature::kWobble)
+    capabilities.min_wobble_speed_value = 0;
+    capabilities.max_wobble_speed_value = 200;
+
+    // Only valid if supported_features.Has(DiscoBall::Feature::kWobble)
+    capabilities.wobble_support.Set(chip::app::Clusters::DiscoBall::WobbleBitmap::kWobbleUpDown);
+    capabilities.wobble_support.Set(chip::app::Clusters::DiscoBall::WobbleBitmap::kWobbleLeftRight);
+    capabilities.wobble_support.Set(chip::app::Clusters::DiscoBall::WobbleBitmap::kWobbleRound);
+
+    return capabilities;
+}
+
+class DiscoBallTestContext
+{
+  public:
+    DiscoBallTestContext() = default;
+    ~DiscoBallTestContext() = default;
+
+    void Setup()
+    {
+
+        mStorage = std::make_unique<FakeDiscoBallStorage>();
+        mDriver = std::make_unique<FakeDiscoBallDriver>();
+
+        // Assume full-featured by default
+        mDriver->SetCapabilities(BuildFullFeaturedCapabilities());
+
+        mCluster = std::make_unique<DiscoBallClusterLogic>();
+
+        VerifyOrDie(mCluster->Init(kExpectedEndpointId, *mStorage, *mDriver) == CHIP_NO_ERROR);
+    }
+
+    void Teardown()
+    {
+        mCluster->Deinit();
+
+        mCluster.reset();
+        mDriver.reset();
+        mStorage.reset();
+    }
+
+    FakeDiscoBallStorage & storage() { return *mStorage; }
+    FakeDiscoBallDriver & driver() { return *mDriver; }
+    DiscoBallClusterLogic & cluster() { return *mCluster; }
+  private:
+    std::unique_ptr<FakeDiscoBallStorage> mStorage;
+    std::unique_ptr<FakeDiscoBallDriver> mDriver;
+    std::unique_ptr<DiscoBallClusterLogic> mCluster;
+};
+
+const chip::app::ConcreteAttributePath kRunAttributePath{kExpectedEndpointId, Clusters::DiscoBall::Id, Clusters::DiscoBall::Attributes::Run::Id};
+const chip::app::ConcreteAttributePath kRotateAttributePath{kExpectedEndpointId, Clusters::DiscoBall::Id, Clusters::DiscoBall::Attributes::Rotate::Id};
+const chip::app::ConcreteAttributePath kSpeedAttributePath{kExpectedEndpointId, Clusters::DiscoBall::Id, Clusters::DiscoBall::Attributes::Speed::Id};
+const chip::app::ConcreteAttributePath kAxisAttributePath{kExpectedEndpointId, Clusters::DiscoBall::Id, Clusters::DiscoBall::Attributes::Axis::Id};
+const chip::app::ConcreteAttributePath kWoobleSpeedAttributePath{kExpectedEndpointId, Clusters::DiscoBall::Id, Clusters::DiscoBall::Attributes::WobbleSpeed::Id};
+const chip::app::ConcreteAttributePath kPatternAttributePath{kExpectedEndpointId, Clusters::DiscoBall::Id, Clusters::DiscoBall::Attributes::Pattern::Id};
+const chip::app::ConcreteAttributePath kNameAttributePath{kExpectedEndpointId, Clusters::DiscoBall::Id, Clusters::DiscoBall::Attributes::Name::Id};
+const chip::app::ConcreteAttributePath kWobbleSupportAttributePath{kExpectedEndpointId, Clusters::DiscoBall::Id, Clusters::DiscoBall::Attributes::WobbleSupport::Id};
+const chip::app::ConcreteAttributePath kWobbleSettingAttributePath{kExpectedEndpointId, Clusters::DiscoBall::Id, Clusters::DiscoBall::Attributes::WobbleSetting::Id};
 
 void TestDiscoBallInitialization(nlTestSuite * inSuite, void * inContext)
 {
@@ -252,9 +352,90 @@ void TestDiscoBallInitialization(nlTestSuite * inSuite, void * inContext)
     }
 }
 
-void TestDiscoBallAttributeSetters(nlTestSuite * inSuite, void * inContext)
+void TestDiscoBallRunning(nlTestSuite * inSuite, void * inContext)
 {
-    NL_TEST_ASSERT(inSuite, true);
+    // ARRANGE: Get the fresh-from-init context.
+    DiscoBallTestContext * context = static_cast<DiscoBallTestContext*>(inContext);
+    DiscoBallClusterLogic & cluster = context->cluster();
+    FakeDiscoBallDriver & driver = context->driver();
+
+    // Step 1: Start.
+    {
+        // ACT + ASSERT: Force running, check running.
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetStartRequestCount(), 0);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRunAttribute(), false);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetSpeedAttribute(), 0);
+
+        Clusters::DiscoBall::Commands::StartRequest::DecodableType start_args;
+        start_args.speed = 100;
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.HandleStartRequest(start_args), Status::Success);
+
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRunAttribute(), true);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetSpeedAttribute(), 100);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRotateAttribute(), Clusters::DiscoBall::RotateEnum::kClockwise);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetAxisAttribute(), 0);
+
+        // ASSERT: Validate that driver was correctly called and only changed attributes marked dirty.
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetStartRequestCount(), 1);
+        // TODO: add checks that speed was set against the driver.
+        // TODO: add test for rotate attribute setting
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetStopRequestCount(), 0);
+        NL_TEST_ASSERT(inSuite, driver.HasDirtyPath(kRunAttributePath));
+        NL_TEST_ASSERT(inSuite, driver.HasDirtyPath(kSpeedAttributePath));
+        NL_TEST_ASSERT(inSuite, !driver.HasDirtyPath(kRotateAttributePath));
+        NL_TEST_ASSERT(inSuite, !driver.HasDirtyPath(kAxisAttributePath));
+    }
+
+    driver.ResetCounts();
+    driver.ClearDirtyPaths();
+
+    // Step 2: Start again when already started, but modifying speed.
+    {
+        // ACT + ASSERT: Force running again, check still running.
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRunAttribute(), true);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetSpeedAttribute(), 100);
+
+        Clusters::DiscoBall::Commands::StartRequest::DecodableType start_args;
+        start_args.speed = 50;
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.HandleStartRequest(start_args), Status::Success);
+
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRunAttribute(), true);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetSpeedAttribute(), 50);
+
+        // ASSERT: Validate that driver was correctly called and only changed attributes marked dirty.
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetStartRequestCount(), 0);
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetStopRequestCount(), 0);
+        // TODO: add checks that speed was set against the driver.
+        NL_TEST_ASSERT(inSuite, !driver.HasDirtyPath(kRunAttributePath));
+        NL_TEST_ASSERT(inSuite, !driver.HasDirtyPath(kRotateAttributePath));
+        NL_TEST_ASSERT(inSuite, !driver.HasDirtyPath(kAxisAttributePath));
+
+        NL_TEST_ASSERT(inSuite, driver.HasDirtyPath(kSpeedAttributePath));
+    }
+
+    driver.ResetCounts();
+    driver.ClearDirtyPaths();
+
+    // Step 3: Stop and check stopped.
+    {
+        // ACT + ASSERT: Force stop, check stopped.
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.HandleStopRequest(), Status::Success);
+
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRunAttribute(), false);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetSpeedAttribute(), 0);
+// TODO: FIX the expected rotation
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRotateAttribute(), Clusters::DiscoBall::RotateEnum::kClockwise);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetAxisAttribute(), 0);
+
+        // ASSERT: Validate that driver was correctly called and only changed attributes marked dirty.
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetStartRequestCount(), 0);
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetStopRequestCount(), 1);
+        NL_TEST_ASSERT(inSuite, driver.HasDirtyPath(kRunAttributePath));
+        NL_TEST_ASSERT(inSuite, driver.HasDirtyPath(kSpeedAttributePath));
+// TODO: Fix the expected rotation
+        // NL_TEST_ASSERT(inSuite, driver.HasDirtyPath(kRotateAttributePath));
+        NL_TEST_ASSERT(inSuite, !driver.HasDirtyPath(kAxisAttributePath));
+    }
 }
 
 const nlTest sLifecyleTests[] = {
@@ -263,9 +444,23 @@ const nlTest sLifecyleTests[] = {
 };
 
 const nlTest sLogicTests[] = {
-    NL_TEST_DEF("Test Disco Ball attribute setters", TestDiscoBallAttributeSetters),
+    NL_TEST_DEF("Test Disco Ball start/stop", TestDiscoBallRunning),
     NL_TEST_SENTINEL()
 };
+
+int InitializeSingleTest(void * inContext)
+{
+    DiscoBallTestContext * context = static_cast<DiscoBallTestContext*>(inContext);
+    context->Setup();
+    return SUCCESS;
+}
+
+int TerminateSingleTest(void * inContext)
+{
+    DiscoBallTestContext * context = static_cast<DiscoBallTestContext*>(inContext);
+    context->Teardown();
+    return SUCCESS;
+}
 
 int TestSetup(void * inContext)
 {
@@ -290,8 +485,11 @@ int TestDiscoBallClusterLogicLifecycle()
 
 int TestDiscoBallClusterLogic()
 {
-    nlTestSuite theSuite = { "Test Disco Ball Cluster's common portable logic", &sLogicTests[0], TestSetup, TestTearDown };
-    nlTestRunner(&theSuite, nullptr);
+    // The context has dynamic re-init for each test.
+    DiscoBallTestContext context_for_whole_test;
+
+    nlTestSuite theSuite = { "Test Disco Ball Cluster's common portable logic", &sLogicTests[0], TestSetup, TestTearDown, InitializeSingleTest, TerminateSingleTest };
+    nlTestRunner(&theSuite, &context_for_whole_test);
     return nlTestRunnerStats(&theSuite);
 }
 
