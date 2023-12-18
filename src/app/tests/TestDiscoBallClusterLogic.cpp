@@ -31,11 +31,15 @@
 #include <lib/support/UnitTestRegistration.h>
 #include <lib/support/logging/CHIPLogging.h>
 
+#include <protocols/interaction_model/StatusCode.h>
+
 #include <app-common/zap-generated/cluster-objects.h>
 #include <app-common/zap-generated/cluster-enums.h>
 
 using namespace chip;
 using namespace chip::app;
+
+using ::chip::Protocols::InteractionModel::Status;
 
 namespace {
 
@@ -62,10 +66,15 @@ class FakeDiscoBallDriver: public DiscoBallClusterLogic::DiscoBallDriverInterfac
     int GetClusterStateChangeCount() const { return mClusterStateChangeCount; }
     uint16_t GetLastTimerNumSeconds() const { return mLastTimerNumSeconds; }
 
-    void Reset()
+    void ResetCounts()
     {
         mStartRequestCount = 0;
         mStopRequestCount = 0;
+    }
+
+    void Reset()
+    {
+        ResetCounts();
         mClusterStateChangeCount = 0;
         mLastTimerNumSeconds = 0;
         mLastTimerCallback = nullptr;
@@ -94,12 +103,11 @@ class FakeDiscoBallDriver: public DiscoBallClusterLogic::DiscoBallDriverInterfac
         return CHIP_NO_ERROR;
     }
 
-    CHIP_ERROR OnClusterStateChange(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) override
+    void OnClusterStateChange(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) override
     {
         ChipLogProgress(Zcl, "DiscoBallDriverInterface::OnClusterStateChange called");
-        VerifyOrReturnError(endpoint_id == kExpectedEndpointId, CHIP_ERROR_INVALID_ARGUMENT);
+        VerifyOrReturn(endpoint_id == kExpectedEndpointId);
         ++mClusterStateChangeCount;
-        return CHIP_NO_ERROR;
     }
 
     void StartPatternTimer(EndpointId endpoint_id, uint16_t num_seconds, DiscoBallTimerCallback timer_cb, void * ctx) override
@@ -134,8 +142,13 @@ class FakeDiscoBallStorage : public DiscoBallClusterState::NonVolatileStorageInt
 {
   public:
     void ClearStorage() { mStorageSaved = false; }
-    int GetLoadFromStorageCount() { return mLoadFromStorageCount; }
-    int GetSaveToStorageCount() { return mSaveToStorageCount; }
+    int GetLoadFromStorageCount() const { return mLoadFromStorageCount; }
+    int GetSaveToStorageCount() const { return mSaveToStorageCount; }
+    void ResetCounts()
+    {
+        mLoadFromStorageCount = 0;
+        mSaveToStorageCount = 0;
+    }
 
     // Implementation of DiscoBallClusterState::NonVolatileStorageInterface
     CHIP_ERROR SaveToStorage(const DiscoBallClusterState & attributes) override
@@ -185,19 +198,58 @@ class FakeDiscoBallStorage : public DiscoBallClusterState::NonVolatileStorageInt
 
 void TestDiscoBallInitialization(nlTestSuite * inSuite, void * inContext)
 {
-    FakeDiscoBallStorage storage{};
-    FakeDiscoBallDriver driver{};
+    // ARRANGE: setup basic fake environment.
+    FakeDiscoBallStorage storage;
+    FakeDiscoBallDriver driver;
 
-    DiscoBallClusterLogic cluster;
+    {
+        DiscoBallClusterLogic cluster;
+        NL_TEST_ASSERT_EQUALS(inSuite, storage.GetLoadFromStorageCount(), 0);
+        NL_TEST_ASSERT_EQUALS(inSuite, storage.GetSaveToStorageCount(), 0);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetEndpointId(), kInvalidEndpointId);
 
-    NL_TEST_ASSERT_EQUALS(inSuite, storage.GetLoadFromStorageCount(), 0);
-    NL_TEST_ASSERT_EQUALS(inSuite, storage.GetSaveToStorageCount(), 0);
+        // ACT: Initialize the cluster.
+        NL_TEST_ASSERT_SUCCESS(inSuite, cluster.Init(kExpectedEndpointId, storage, driver));
 
-    NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetEndpointId(), kInvalidEndpointId);
+        // ASSERT: Validate storage was loaded, endpoint correctly set, getting setting works.
+        NL_TEST_ASSERT_EQUALS(inSuite, storage.GetLoadFromStorageCount(), 1);
+        NL_TEST_ASSERT_EQUALS(inSuite, storage.GetSaveToStorageCount(), 0);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetEndpointId(), kExpectedEndpointId);
+        NL_TEST_ASSERT(inSuite, cluster.GetNameAttribute().empty());
 
-    NL_TEST_ASSERT_SUCCESS(inSuite, cluster.Init(kExpectedEndpointId, storage, driver));
+        // ACT AGAIN: Set an attribute that requires init.
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.SetNameAttribute("hello"_span), Status::Success);
 
-    NL_TEST_ASSERT_EQUALS(inSuite, storage.GetLoadFromStorageCount(), 1);
+        // ASSERT AGAIN: Check storage was attempted (due to NV attribute set).
+        NL_TEST_ASSERT_EQUALS(inSuite, storage.GetSaveToStorageCount(), 1);
+        NL_TEST_ASSERT(inSuite, cluster.GetNameAttribute().data_equal("hello"_span));
+
+        // ACT AGAIN: Deinit().
+        cluster.Deinit();
+
+        // ASSERT AGAIN: Endpoint returns to invalid, storage fails.
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetEndpointId(), kInvalidEndpointId);
+        NL_TEST_ASSERT(inSuite, cluster.SetNameAttribute("hello2"_span) != Status::Success);
+    }
+
+    // Init a second instance with same storage, ensure it gets loaded properly.
+    storage.ResetCounts();
+
+    {
+        DiscoBallClusterLogic cluster;
+        NL_TEST_ASSERT_EQUALS(inSuite, storage.GetLoadFromStorageCount(), 0);
+        NL_TEST_ASSERT_EQUALS(inSuite, storage.GetSaveToStorageCount(), 0);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetEndpointId(), kInvalidEndpointId);
+
+        // ACT: Initialize the cluster.
+        NL_TEST_ASSERT_SUCCESS(inSuite, cluster.Init(kExpectedEndpointId, storage, driver));
+
+        // ASSERT: Validate storage was loaded, endpoint correctly set, getting setting works.
+        NL_TEST_ASSERT_EQUALS(inSuite, storage.GetLoadFromStorageCount(), 1);
+        NL_TEST_ASSERT_EQUALS(inSuite, storage.GetSaveToStorageCount(), 0);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetEndpointId(), kExpectedEndpointId);
+        NL_TEST_ASSERT(inSuite, cluster.GetNameAttribute().data_equal("hello"_span));
+    }
 }
 
 void TestDiscoBallAttributeSetters(nlTestSuite * inSuite, void * inContext)

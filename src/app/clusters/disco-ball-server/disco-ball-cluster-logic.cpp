@@ -35,6 +35,7 @@ namespace chip {
 namespace app {
 
 using ::chip::Protocols::InteractionModel::Status;
+using ::chip::app::Clusters::DiscoBall::Feature;
 
 DiscoBallCapabilities::DiscoBallCapabilities() :
     supported_features(BitFlags<Clusters::DiscoBall::Feature>{0}),
@@ -192,7 +193,16 @@ uint8_t DiscoBallClusterLogic::GetAxisAttribute() const
 
 Status DiscoBallClusterLogic::SetAxisAttribute(uint8_t axis)
 {
-    return Status::UnsupportedAttribute;
+    VerifyOrReturnValue(mDriver != nullptr, Status::Failure);
+    VerifyOrReturnValue(mCapabilities.supported_features.Has(Feature::kAxis), Status::UnsupportedAttribute);
+    VerifyOrReturnValue(axis <= 90, Status::ConstraintError);
+    // TODO: Handle actually-supported axis values when spec updated
+
+    mClusterState.axis_attribute = axis;
+    mDriver->OnClusterStateChange(mEndpointId, mClusterState);
+
+    return Status::Success;
+
 }
 
 uint8_t DiscoBallClusterLogic::GetWobbleSpeedAttribute() const
@@ -249,7 +259,17 @@ CharSpan DiscoBallClusterLogic::GetNameAttribute() const
 
 Status DiscoBallClusterLogic::SetNameAttribute(CharSpan name)
 {
-    return Status::UnsupportedAttribute;
+    VerifyOrReturnValue(mDriver != nullptr, Status::Failure);
+    VerifyOrReturnValue(mClusterState.SetNameAttribute(name), Status::ConstraintError);
+
+    CHIP_ERROR storage_error = mClusterState.SaveToStorage();
+    if (storage_error != CHIP_NO_ERROR)
+    {
+        ChipLogError(Zcl, "Failed to store name to non-volatile storage: %" CHIP_ERROR_FORMAT, storage_error.Format());
+        return Status::ResourceExhausted;
+    }
+
+    return Status::Success;
 }
 
 BitFlags<Clusters::DiscoBall::WobbleBitmap> DiscoBallClusterLogic::GetWobbleSupportAttribute() const
@@ -264,7 +284,14 @@ BitFlags<Clusters::DiscoBall::WobbleBitmap> DiscoBallClusterLogic::GetWobbleSett
 
 Status DiscoBallClusterLogic::SetWobbleSettingAttribute(BitFlags<Clusters::DiscoBall::WobbleBitmap> wobble_setting)
 {
-    return Status::UnsupportedAttribute;
+    VerifyOrReturnValue(mDriver != nullptr, Status::Failure);
+    VerifyOrReturnValue(mCapabilities.supported_features.Has(Feature::kWobble), Status::UnsupportedAttribute);
+    // TODO: Need to return UNSUPPORTED_PATTERN status on failure to support the given wobble.
+
+    mClusterState.wobble_setting_attribute = wobble_setting;
+    mDriver->OnClusterStateChange(mEndpointId, mClusterState);
+
+    return Status::Success;
 }
 
 BitFlags<Clusters::DiscoBall::Feature> DiscoBallClusterLogic::GetSupportedFeatures() const

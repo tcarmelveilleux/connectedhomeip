@@ -184,7 +184,7 @@ public:
 
         virtual CHIP_ERROR OnStartRequest(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
         virtual CHIP_ERROR OnStopRequest(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
-        virtual CHIP_ERROR OnClusterStateChange(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
+        virtual void OnClusterStateChange(EndpointId endpoint_id, DiscoBallClusterState & cluster_state) = 0;
         virtual void StartPatternTimer(EndpointId endpoint_id, uint16_t num_seconds, DiscoBallTimerCallback timer_cb, void * ctx) = 0;
         virtual void CancelPatternTimer(EndpointId endpoint_id) = 0;
     };
