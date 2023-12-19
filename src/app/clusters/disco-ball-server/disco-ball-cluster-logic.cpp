@@ -154,6 +154,9 @@ CHIP_ERROR DiscoBallClusterLogic::Init(EndpointId endpoint_id, DiscoBallClusterS
     mClusterState.speed_attribute = mCapabilities.min_speed_value;
     mClusterState.axis_attribute = mCapabilities.min_axis_value;
     mClusterState.wobble_speed_attribute = mCapabilities.min_wobble_speed_value;
+
+    ChipLogProgress(Zcl, "DiscoBall cluster id 0x%04x initialized on Endpoint %u", static_cast<unsigned>(GetClusterId()), static_cast<unsigned>(GetEndpointId()));
+
     return CHIP_NO_ERROR;
 }
 

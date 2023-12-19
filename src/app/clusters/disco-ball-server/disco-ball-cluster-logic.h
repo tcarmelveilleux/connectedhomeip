@@ -63,9 +63,10 @@ struct DiscoBallClusterState
     public:
         virtual ~NonVolatileStorageInterface() = default;
 
-        // TODO: Add fabric removal and everything-removal.
         virtual CHIP_ERROR SaveToStorage(const DiscoBallClusterState & attributes) = 0;
         virtual CHIP_ERROR LoadFromStorage(DiscoBallClusterState & attributes) = 0;
+        virtual void RemoveDataForFabric(FabricIndex fabric_index) = 0;
+        virtual void RemoveDataForAllFabrics() = 0;
     };
 
     DiscoBallClusterState() = default;

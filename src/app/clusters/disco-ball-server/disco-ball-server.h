@@ -27,7 +27,7 @@
 #include <app/AttributeAccessInterface.h>
 #include <app/CommandHandlerInterface.h>
 
-#include <app/clusters/disco-ball-cluster-logic.h>
+#include "disco-ball-cluster-logic.h"
 
 namespace chip {
 namespace app {
@@ -35,9 +35,12 @@ namespace app {
 class DiscoBallServer : public CommandHandlerInterface, public AttributeAccessInterface
 {
 public:
-    // This is the disco ball command handler for all endpoints (endpoint ID is NullOptional)
-    DiscoBallServer() : CommandHandlerInterface(chip::NullOptional, Clusters::DiscoBall::Id), AttributeAccessInterface(chip::NullOptional, Clusters::DiscoBall::Id) {}
-    ~DiscoBallServer() = default;
+    explicit DiscoBallServer(ClusterId cluster_id);
+    virtual ~DiscoBallServer();
+
+    DiscoBallServer() = delete;
+    DiscoBallServer(DiscoBallServer const&) = delete;
+    DiscoBallServer& operator=(DiscoBallServer const&) = delete;
 
     // Inherited from CommandHandlerInterface
     void InvokeCommand(HandlerContext & handlerContext) override;

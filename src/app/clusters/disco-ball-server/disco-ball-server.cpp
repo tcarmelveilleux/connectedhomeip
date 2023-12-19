@@ -16,25 +16,50 @@
  */
 
 #include "disco-ball-server.h"
+#include "disco-ball-cluster-logic.h"
 
 #include <app-common/zap-generated/cluster-objects.h>
 #include <app/CommandHandler.h>
 #include <app/CommandHandlerInterface.h>
 #include <app/ConcreteCommandPath.h>
 #include <app/InteractionModelEngine.h>
-#include <app/clusters/disco-ball-server/disco-ball-cluster-logic.h>
-#include <app/server/Server.h>
-#include <app/util/af.h>
 #include <app/util/attribute-storage.h>
+#include <access/SubjectDescriptor.h>
+#include <lib/support/logging/CHIPLogging.h>
+
+#include <protocols/interaction_model/StatusCode.h>
 
 namespace chip {
 namespace app {
 
+using chip::Protocols::InteractionModel::Status;
+using chip::Access::SubjectDescriptor;
+
+// This is the disco ball command handler for all endpoints (endpoint ID is NullOptional)
+DiscoBallServer::DiscoBallServer(ClusterId cluster_id) : CommandHandlerInterface(chip::NullOptional, cluster_id), AttributeAccessInterface(chip::NullOptional, cluster_id)
+{
+  registerAttributeAccessOverride(this);
+  chip::app::InteractionModelEngine::GetInstance()->RegisterCommandHandler(this);
+}
+
+DiscoBallServer::~DiscoBallServer()
+{
+  unregisterAttributeAccessOverride(this);
+  chip::app::InteractionModelEngine::GetInstance()->UnregisterCommandHandler(this);
+}
+
 /* =========================== Start of DiscoBallServer =====================*/
 void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
 {
-    DiscoBallClusterLogic * cluster = FindEndpoint(aPath.mEndpointId);
-    VerifyOrReturnError(cluster != nullptr, CHIP_IM_GLOBAL_STATUS(InteractionModel::Status::UnsupportedEndpoint));
+    EndpointId endpoint_id = handlerContext.mRequestPath.mEndpointId;
+    DiscoBallClusterLogic * cluster = FindEndpoint(endpoint_id);
+    if (cluster == nullptr)
+    {
+        handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, Status::UnsupportedEndpoint);
+        return;
+    }
+
+    SubjectDescriptor subject_descriptor = handlerContext.mCommandHandler.GetSubjectDescriptor();
 
     /*
     | ID     | Name           | Direction        | Response^**^      | Access | Conformance
@@ -55,45 +80,45 @@ void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
         HandleCommand<Clusters::DiscoBall::Commands::StartRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
             ChipLogProgress(Zcl, "StartRequest received");
             // TODO: CHeck for timed request!
-            Protocols::InteractionModel::Status status = cluster->HandleStartRequest(payload);
+            Status status = cluster->HandleStartRequest(payload);
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
     case Clusters::DiscoBall::Commands::StopRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::StopRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
             ChipLogProgress(Zcl, "StopRequest received");
-            Protocols::InteractionModel::Status status = cluster->HandleStopRequest();
+            Status status = cluster->HandleStopRequest();
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
     case Clusters::DiscoBall::Commands::ReverseRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::ReverseRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
             ChipLogProgress(Zcl, "ReverseRequest received");
-            Protocols::InteractionModel::Status status = cluster->HandleReverseRequest();
+            Status status = cluster->HandleReverseRequest();
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
     case Clusters::DiscoBall::Commands::WobbleRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::WobbleRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
             ChipLogProgress(Zcl, "WobbleRequest received");
-            Protocols::InteractionModel::Status status = cluster->HandleWobbleRequest();
+            Status status = cluster->HandleWobbleRequest();
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
     case Clusters::DiscoBall::Commands::PatternRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::PatternRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
             ChipLogProgress(Zcl, "PatternRequest received");
-            FabricIndex fabric_index = handlerContext.GetSubjectDescriptor().fabricIndex;
+            FabricIndex fabric_index = subject_descriptor.fabricIndex;
 
             // Need a fabric to request pattern access, since fabric-scoped.
             if (fabric_index == kUndefinedFabricIndex)
             {
                 ChipLogError(Zcl, "PatternRequest requested with no accessing fabric!");
-                handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, Protocols::InteractionModel::Status::InvalidAccess);
+                handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, Status::UnsupportedAccess);
                 return;
             }
 
-            Protocols::InteractionModel::Status status = cluster->HandlePatternRequest(fabric_index, payload);
+            Status status = cluster->HandlePatternRequest(fabric_index, payload);
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
@@ -102,8 +127,8 @@ void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
             ChipLogProgress(Zcl, "StatsRequest received");
             Clusters::DiscoBall::Commands::StatsResponse::Type resp;
 
-            Protocols::InteractionModel::Status status = cluster->HandleStatsRequest(resp);
-            if (status != Protocols::InteractionModel::Status::Success)
+            Status status = cluster->HandleStatsRequest(resp);
+            if (status != Status::Success)
             {
                 handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
                 return;
@@ -112,7 +137,12 @@ void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
             handlerContext.mCommandHandler.AddResponseData(handlerContext.mRequestPath, resp);
         });
         break;
+    default:
+        break;
     }
+
+    handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, Status::UnsupportedCommand);
+    return;
 }
 
 /*
@@ -129,41 +159,41 @@ void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
 CHIP_ERROR DiscoBallServer::Read(const ConcreteReadAttributePath & aPath, AttributeValueEncoder & aEncoder)
 {
     DiscoBallClusterLogic * cluster = FindEndpoint(aPath.mEndpointId);
-    VerifyOrReturnError(cluster != nullptr, CHIP_IM_GLOBAL_STATUS(InteractionModel::Status::UnsupportedEndpoint));
-    DiscoBallClusterState & cluster_state = cluster->GetClusterState();
-    VerifyOrReturnError(cluster_state->IsInitialized(), CHIP_IM_GLOBAL_STATUS(InteractionModel::Status::Failure));
+    VerifyOrReturnError(cluster != nullptr, CHIP_IM_GLOBAL_STATUS(UnsupportedEndpoint));
 
     ChipLogProgress(Zcl, "Handle disco ball attribute read");
     switch (aPath.mAttributeId)
     {
     case Clusters::DiscoBall::Attributes::Run::Id:
         ChipLogProgress(Zcl, "Read Run attribute");
-        return aEncoder.Encode(cluster_state.GetRun());
+        return aEncoder.Encode(cluster->GetRunAttribute());
     case Clusters::DiscoBall::Attributes::Rotate::Id:
         ChipLogProgress(Zcl, "Read Rotate attribute");
-        return aEncoder.Encode(cluster_state.GetRotate());
+        return aEncoder.Encode(cluster->GetRotateAttribute());
     case Clusters::DiscoBall::Attributes::Speed::Id:
         ChipLogProgress(Zcl, "Read speed attribute");
-        return aEncoder.Encode(cluster_state.GetSpeed());
+        return aEncoder.Encode(cluster->GetSpeedAttribute());
     case Clusters::DiscoBall::Attributes::Axis::Id:
         ChipLogProgress(Zcl, "Read axis attribute");
-        return aEncoder.Encode(cluster_state.GetAxis());
+        return aEncoder.Encode(cluster->GetAxisAttribute());
     case Clusters::DiscoBall::Attributes::WobbleSpeed::Id:
         ChipLogProgress(Zcl, "Read wobble speed attribute");
-        return aEncoder.Encode(cluster_state.GetWobbleSpeed());
+        return aEncoder.Encode(cluster->GetWobbleSpeedAttribute());
     case Clusters::DiscoBall::Attributes::Pattern::Id:
         ChipLogProgress(Zcl, "Read pattern attribute");
         // TODO: Encode the list
         return aEncoder.EncodeEmptyList();
     case Clusters::DiscoBall::Attributes::Name::Id:
         ChipLogProgress(Zcl, "Read name attribute");
-        return aEncoder.Encode(cluster_state.GetName());
+        return aEncoder.Encode(cluster->GetNameAttribute());
     case Clusters::DiscoBall::Attributes::WobbleSupport::Id:
         ChipLogProgress(Zcl, "Read wobble support attribute");
-        return aEncoder.Encode(cluster_state.GetWobbleSupport().Raw());
+        return aEncoder.Encode(cluster->GetWobbleSupportAttribute().Raw());
     case Clusters::DiscoBall::Attributes::WobbleSetting::Id:
         ChipLogProgress(Zcl, "Read wobble setting attribute");
-        return aEncoder.Encode(cluster_state.GetWobbleSetting().Raw());
+        return aEncoder.Encode(cluster->GetWobbleSettingAttribute().Raw());
+    default:
+        break;
     }
     return CHIP_NO_ERROR;
 }
@@ -175,21 +205,23 @@ CHIP_ERROR DiscoBallServer::Write(const ConcreteDataAttributePath & aPath, Attri
     return CHIP_NO_ERROR;
 }
 
-CHIP_ERROR DiscoBallServer::RegisterEndpoint(EndpointId endpoint_id, DiscoBallClusterState::NonVolatileStorageInterface & storage, DiscoBallClusterState::NonVolatileStorageInterface & storage, DiscoBallClusterLogic::DriverInterface & driver)
+CHIP_ERROR DiscoBallServer::RegisterEndpoint(EndpointId endpoint_id, DiscoBallClusterState::NonVolatileStorageInterface & storage, DiscoBallClusterLogic::DriverInterface & driver)
 {
     VerifyOrReturnError(endpoint_id != kInvalidEndpointId, CHIP_ERROR_INVALID_ARGUMENT);
     VerifyOrReturnError(FindEndpoint(endpoint_id) == nullptr, CHIP_ERROR_INVALID_ARGUMENT);
 
     // Find a free registration slot.
     DiscoBallClusterLogic * endpoint_handler = nullptr;
-    for (DiscoBallClusterLogic * candidate : mEndpoints)
+    for (DiscoBallClusterLogic & candidate : mEndpoints)
     {
-        if (endpoint_handler->GetEndpointId() == kInvalidEndpointId)
+        if (candidate.GetEndpointId() == kInvalidEndpointId)
         {
-            endpoint_handler = candidate;
+            endpoint_handler = &candidate;
             break;
         }
     }
+
+    ChipLogError(Zcl, "Registered DiscoBall endpoint %u on slot: %p", static_cast<unsigned>(endpoint_id), endpoint_handler);
 
     if (endpoint_handler == nullptr)
     {
@@ -199,6 +231,7 @@ CHIP_ERROR DiscoBallServer::RegisterEndpoint(EndpointId endpoint_id, DiscoBallCl
     CHIP_ERROR err = endpoint_handler->Init(endpoint_id, storage, driver);
     if (err != CHIP_NO_ERROR)
     {
+        ChipLogError(Zcl, "Failed to init DiscoBall endpoint handler on endpoint %u: %" CHIP_ERROR_FORMAT, static_cast<unsigned>(endpoint_id), err.Format());
         endpoint_handler->Deinit();
         return err;
     }
@@ -208,30 +241,29 @@ CHIP_ERROR DiscoBallServer::RegisterEndpoint(EndpointId endpoint_id, DiscoBallCl
 
 void DiscoBallServer::UnregisterEndpoint(EndpointId endpoint_id)
 {
+    DiscoBallClusterLogic * endpoint_handler = FindEndpoint(endpoint_id);
+    if (endpoint_handler == nullptr)
+    {
+        return;
+    }
 
+    endpoint_handler->Deinit();
 }
 
 DiscoBallClusterLogic * DiscoBallServer::FindEndpoint(EndpointId endpoint_id)
 {
-    for (DiscoBallClusterLogic * endpoint_handler : mEndpoints)
+    for (DiscoBallClusterLogic & endpoint_handler : mEndpoints)
     {
-        if (endpoint_handler-> endpoint_handler->GetEndpointId() == endpoint_id)
+        if (endpoint_handler.GetEndpointId() == endpoint_id)
         {
-            return endpoint_handler;
+            return &endpoint_handler;
         }
     }
 
     return nullptr;
 }
 
-
 } // namespace app
 } // namespace chip
 
-void MatterDiscoBallPluginServerInitCallback()
-{
-    // TODO: Make application do the registration/init
-    ChipLogProgress(Zcl, "Registering Disco Ball overrides");
-    registerAttributeAccessOverride(&gAttributeAccess);
-    chip::app::InteractionModelEngine::GetInstance()->RegisterCommandHandler(&gCommandhandler);
-}
+void MatterDiscoBallPluginServerInitCallback() {}
