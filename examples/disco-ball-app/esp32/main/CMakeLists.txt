@@ -19,9 +19,11 @@
 get_filename_component(CHIP_ROOT ${CMAKE_SOURCE_DIR}/third_party/connectedhomeip REALPATH)
 
 set(PRIV_INCLUDE_DIRS_LIST
+                      "${APP_GEN_DIR}"
                       "${CMAKE_CURRENT_LIST_DIR}/include"
-                      "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/examples/platform/esp32"
                       "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/examples/providers"
+                      "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/examples/disco-ball-app/disco-ball-common/include"
+                      "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/examples/platform/esp32"
 )
 set(SRC_DIRS_LIST
                       "${CMAKE_CURRENT_LIST_DIR}"
@@ -36,11 +38,13 @@ set(SRC_DIRS_LIST
                       "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/bindings"
                       "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/descriptor"
                       "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/diagnostic-logs-server"
+                      "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/disco-ball-server"
                       "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/ethernet-network-diagnostics-server"
+                      "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/identify-server"
                       "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/localization-configuration-server"
-                      "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/time-format-localization-server" 
+                      "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/time-format-localization-server"
                       "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/fixed-label-server"
-                      "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/user-label-server"                      
+                      "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/user-label-server"
                       "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/thread-network-diagnostics-server"
                       "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/wifi-network-diagnostics-server"
                       "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/software-diagnostics-server"
@@ -53,9 +57,10 @@ set(SRC_DIRS_LIST
                       "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/src/app/clusters/ota-requestor"
                       "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/examples/platform/esp32/common"
                       "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/examples/providers"
+#                      "${CMAKE_SOURCE_DIR}/third_party/connectedhomeip/examples/disco-ball-app/disco-ball-common/src"
 )
 
-set(PRIV_REQUIRES_LIST chip QRCode bt nvs_flash)
+set(PRIV_REQUIRES_LIST chip QRCode bt app_update openthread driver nvs_flash spi_flash)
 
 if (CONFIG_ENABLE_PW_RPC)
 # Append additional directories for RPC build
@@ -85,8 +90,12 @@ idf_component_register(PRIV_INCLUDE_DIRS ${PRIV_INCLUDE_DIRS_LIST}
                        PRIV_REQUIRES ${PRIV_REQUIRES_LIST})
 
 include("${CHIP_ROOT}/build/chip/esp32/esp32_codegen.cmake")
-chip_app_component_codegen("${CHIP_ROOT}/examples/temperature-measurement-app/temperature-measurement-common/temperature-measurement.matter")
-chip_app_component_zapgen("${CHIP_ROOT}/examples/temperature-measurement-app/temperature-measurement-common/temperature-measurement.zap")
+chip_app_component_codegen("${CHIP_ROOT}/examples/disco-ball-app/disco-ball-common/disco-ball.matter")
+chip_app_component_zapgen("${CHIP_ROOT}/examples/disco-ball-app/disco-ball-common/disco-ball.zap")
+
+if (CONFIG_ENABLE_ESP_INSIGHTS_TRACE)
+    target_add_binary_data(${COMPONENT_TARGET} "insights_auth_key.txt" TEXT)
+endif()
 
 set_property(TARGET ${COMPONENT_LIB} PROPERTY CXX_STANDARD 17)
 target_compile_options(${COMPONENT_LIB} PRIVATE "-DCHIP_HAVE_CONFIG_H")
@@ -108,17 +117,6 @@ pw_proto_library(attributes_service
     ${CHIP_ROOT}/examples/common/pigweed/protos/attributes_service.options
   PREFIX
     attributes_service
-  STRIP_PREFIX
-    ${CHIP_ROOT}/examples/common/pigweed/protos
-  DEPS
-    pw_protobuf.common_proto
-)
-
-pw_proto_library(button_service
-  SOURCES
-    ${CHIP_ROOT}/examples/common/pigweed/protos/button_service.proto
-  PREFIX
-    button_service
   STRIP_PREFIX
     ${CHIP_ROOT}/examples/common/pigweed/protos
   DEPS
@@ -164,7 +162,6 @@ pw_proto_library(wifi_service
 
 target_link_libraries(${COMPONENT_LIB} PUBLIC
   attributes_service.nanopb_rpc
-  button_service.nanopb_rpc
   descriptor_service.nanopb_rpc
   device_service.nanopb_rpc
   wifi_service.nanopb_rpc
