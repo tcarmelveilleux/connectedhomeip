@@ -18,25 +18,62 @@
 
 #pragma once
 
-struct AppEvent;
-typedef void (*EventHandler)(AppEvent *);
+#include <stdint.h>
+
+#include <app-common/zap-generated/cluster-enums.h>
+#include <lib/core/DataModelTypes.h>
+#include <lib/support/BitFlags.h>
 
 struct AppEvent
 {
+    AppEvent() {};
+
+    typedef void (*EventHandler)(AppEvent *);
+
     enum AppEventTypes : uint16_t
     {
-        kEventType_Timer = 0,
+        kTimer = 0,
+        kSetMotorDirectionSpeed,
+        kStopMotor,
+        kSetLightState,
+        kUpdateWobble,
     };
 
-    uint16_t Type;
+    AppEventTypes event_type;
 
     union
     {
         struct
         {
-            void * Context;
-        } TimerEvent;
+            void * context;
+        } timer_event;
+
+        struct
+        {
+            chip::EndpointId endpoint_id;
+            bool is_clockwise;
+            uint8_t speed_rpm;
+        } set_motor_direction_speed_event;
+
+        struct
+        {
+            chip::EndpointId endpoint_id;
+        } stop_motor_event;
+
+        struct
+        {
+            chip::EndpointId endpoint_id;
+            bool enabled;
+        } set_light_state_event;
+
+        struct
+        {
+            chip::EndpointId endpoint_id;
+            chip::BitFlags<chip::app::Clusters::DiscoBall::WobbleBitmap> wobble_setting;
+            uint8_t speed;
+        } update_wobble_event;
     };
 
-    EventHandler mHandler;
+    EventHandler handler;
+    void * context;
 };

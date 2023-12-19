@@ -86,6 +86,7 @@ void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
         HandleCommand<Clusters::DiscoBall::Commands::StopRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
             ChipLogProgress(Zcl, "DiscoBall StopRequest received");
             Status status = cluster->HandleStopRequest();
+            ChipLogError(Zcl, "Status: %d", static_cast<int>(status));
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
@@ -136,11 +137,9 @@ void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
         });
         break;
     default:
+        handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, Status::UnsupportedCommand);
         break;
     }
-
-    handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, Status::UnsupportedCommand);
-    return;
 }
 
 /*
