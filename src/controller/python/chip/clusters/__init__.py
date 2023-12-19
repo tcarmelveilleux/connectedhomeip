@@ -46,7 +46,7 @@ from .Objects import (AccessControl, AccountLogin, Actions, ActivatedCarbonFilte
 
 __all__ = [Attribute, CHIPClusters, Command, AccessControl, AccountLogin, Actions, ActivatedCarbonFilterMonitoring, AdministratorCommissioning, AirQuality,
            ApplicationBasic, ApplicationLauncher, AudioOutput, BallastConfiguration, BarrierControl, BasicInformation,
-           BinaryInputBasic, Binding, BooleanSensorConfiguration, BooleanState, BridgedDeviceBasicInformation, CarbonDioxideConcentrationMeasurement,
+           BinaryInputBasic, Binding, BooleanStateConfiguration, BooleanState, BridgedDeviceBasicInformation, CarbonDioxideConcentrationMeasurement,
            CarbonMonoxideConcentrationMeasurement, Channel,
            ColorControl, ContentLauncher, Descriptor, DiagnosticLogs, DiscoBall, DishwasherAlarm, DishwasherMode,
            DoorLock, ElectricalMeasurement,  EnergyEvse, EthernetNetworkDiagnostics, FanControl, FaultInjection, FixedLabel, FlowMeasurement,
