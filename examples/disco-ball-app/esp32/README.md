@@ -21,7 +21,7 @@ guides to get started.
 
 ```bash
 Usage:
-  ./out/debug/chip-tool discoball startrequest true <NODE ID> 1
+  ./out/debug/chip-tool discoball start-request 100 ${NODE_ID} 1 --timedInteractioTimeoutMs 5000
 ```
 
 ## Optimization
