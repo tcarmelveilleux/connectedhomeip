@@ -1,4 +1,4 @@
-# Matter ESP32 Temperature Sensor Example
+# Matter ESP32 DiscoBall Example
 
 This example is meant to represent a minimal-sized application.
 
@@ -17,16 +17,16 @@ guides to get started.
 
 ### Cluster control
 
-#### temperaturemeasurement
+#### discoball
 
 ```bash
 Usage:
-  ./out/debug/chip-tool temperaturemeasurement read measured-value <NODE ID> 1
+  ./out/debug/chip-tool discoball startrequest true <NODE ID> 1
 ```
 
 ## Optimization
 
-Optimization related to WiFi, BLuetooth, Asserts etc are the part of this
+Optimization related to WiFi, Bluetooth, asserts, etc, are the part of this
 example by default. To enable this option set is_debug=false from command-line.
 
 ```
