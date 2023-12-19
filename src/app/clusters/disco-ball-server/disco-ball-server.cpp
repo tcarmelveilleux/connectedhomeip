@@ -71,43 +71,41 @@ void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
     | 0x05  s| StatsRequest   | client => server | StatsResponse^**^ | O      | STA
     | 0x06  s| StatsResponse  | client <= server | N                 | O      | STA
     */
-    ChipLogProgress(Zcl, "Handle disco ball command --------------------");
     // TODO: implement this for real.
     // TODO: check constraints, add in attribute change reporting as appropriate once this is all tied together
     switch (handlerContext.mRequestPath.mCommandId)
     {
     case Clusters::DiscoBall::Commands::StartRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::StartRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
-            ChipLogProgress(Zcl, "StartRequest received");
-            // TODO: CHeck for timed request!
+            ChipLogProgress(Zcl, "DiscoBall StartRequest received");
             Status status = cluster->HandleStartRequest(payload);
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
     case Clusters::DiscoBall::Commands::StopRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::StopRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
-            ChipLogProgress(Zcl, "StopRequest received");
+            ChipLogProgress(Zcl, "DiscoBall StopRequest received");
             Status status = cluster->HandleStopRequest();
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
     case Clusters::DiscoBall::Commands::ReverseRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::ReverseRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
-            ChipLogProgress(Zcl, "ReverseRequest received");
+            ChipLogProgress(Zcl, "DiscoBall ReverseRequest received");
             Status status = cluster->HandleReverseRequest();
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
     case Clusters::DiscoBall::Commands::WobbleRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::WobbleRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
-            ChipLogProgress(Zcl, "WobbleRequest received");
+            ChipLogProgress(Zcl, "DiscoBall WobbleRequest received");
             Status status = cluster->HandleWobbleRequest();
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
     case Clusters::DiscoBall::Commands::PatternRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::PatternRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
-            ChipLogProgress(Zcl, "PatternRequest received");
+            ChipLogProgress(Zcl, "DiscoBall PatternRequest received");
             FabricIndex fabric_index = subject_descriptor.fabricIndex;
 
             // Need a fabric to request pattern access, since fabric-scoped.
@@ -124,7 +122,7 @@ void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
         break;
     case Clusters::DiscoBall::Commands::StatsRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::StatsRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
-            ChipLogProgress(Zcl, "StatsRequest received");
+            ChipLogProgress(Zcl, "DiscoBall StatsRequest received");
             Clusters::DiscoBall::Commands::StatsResponse::Type resp;
 
             Status status = cluster->HandleStatsRequest(resp);
@@ -161,7 +159,6 @@ CHIP_ERROR DiscoBallServer::Read(const ConcreteReadAttributePath & aPath, Attrib
     DiscoBallClusterLogic * cluster = FindEndpoint(aPath.mEndpointId);
     VerifyOrReturnError(cluster != nullptr, CHIP_IM_GLOBAL_STATUS(UnsupportedEndpoint));
 
-    ChipLogProgress(Zcl, "Handle disco ball attribute read");
     switch (aPath.mAttributeId)
     {
     case Clusters::DiscoBall::Attributes::Run::Id:
