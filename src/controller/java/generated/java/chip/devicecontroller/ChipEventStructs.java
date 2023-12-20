@@ -5653,6 +5653,62 @@ public static class ContentControlClusterRemainingScreenTimeExpiredEvent {
     return output.toString();
   }
 }
+public static class DiscoBallClusterStartedEvent {
+
+  public DiscoBallClusterStartedEvent(
+  ) {
+  }
+
+  public StructType encodeTlv() {
+    ArrayList<StructElement> values = new ArrayList<>();
+
+    return new StructType(values);
+  }
+
+  public static DiscoBallClusterStartedEvent decodeTlv(BaseTLVType tlvValue) {
+    if (tlvValue == null || tlvValue.type() != TLVType.Struct) {
+      return null;
+    }
+    return new DiscoBallClusterStartedEvent(
+    );
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("DiscoBallClusterStartedEvent {\n");
+    output.append("}\n");
+    return output.toString();
+  }
+}
+public static class DiscoBallClusterStoppedEvent {
+
+  public DiscoBallClusterStoppedEvent(
+  ) {
+  }
+
+  public StructType encodeTlv() {
+    ArrayList<StructElement> values = new ArrayList<>();
+
+    return new StructType(values);
+  }
+
+  public static DiscoBallClusterStoppedEvent decodeTlv(BaseTLVType tlvValue) {
+    if (tlvValue == null || tlvValue.type() != TLVType.Struct) {
+      return null;
+    }
+    return new DiscoBallClusterStoppedEvent(
+    );
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("DiscoBallClusterStoppedEvent {\n");
+    output.append("}\n");
+    return output.toString();
+  }
+}
 public static class UnitTestingClusterTestEventEvent {
   public Integer arg1;
   public Integer arg2;
