@@ -28537,7 +28537,7 @@ bool CommandNeedsTimedInvoke(ClusterId aCluster, CommandId aCommand)
     case Clusters::DiscoBall::Id: {
         switch (aCommand)
         {
-        case Clusters::DiscoBall::Commands::StartRequest::Id:
+        case Clusters::DiscoBall::Commands::PatternRequest::Id:
             return true;
         default:
             return false;

@@ -44806,10 +44806,6 @@ class DiscoBall(Cluster):
                         ClusterObjectFieldDescriptor(Label="rotate", Tag=1, Type=typing.Optional[DiscoBall.Enums.RotateEnum]),
                     ])
 
-            @ChipUtility.classproperty
-            def must_use_timed_invoke(cls) -> bool:
-                return True
-
             speed: 'uint' = 0
             rotate: 'typing.Optional[DiscoBall.Enums.RotateEnum]' = None
 
@@ -44865,6 +44861,10 @@ class DiscoBall(Cluster):
                     Fields=[
                         ClusterObjectFieldDescriptor(Label="passcode", Tag=0, Type=str),
                     ])
+
+            @ChipUtility.classproperty
+            def must_use_timed_invoke(cls) -> bool:
+                return True
 
             passcode: 'str' = ""
 

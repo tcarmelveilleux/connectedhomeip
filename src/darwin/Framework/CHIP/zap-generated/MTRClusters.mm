@@ -19292,9 +19292,6 @@ using chip::System::Clock::Timeout;
     };
 
     auto * timedInvokeTimeoutMs = params.timedInvokeTimeoutMs;
-    if (timedInvokeTimeoutMs == nil) {
-        timedInvokeTimeoutMs = @(MTR_DEFAULT_TIMED_INTERACTION_TIMEOUT_MS);
-    }
 
     using RequestType = DiscoBall::Commands::StartRequest::Type;
     [self.device _invokeKnownCommandWithEndpointID:@(self.endpoint)
@@ -19415,6 +19412,9 @@ using chip::System::Clock::Timeout;
     };
 
     auto * timedInvokeTimeoutMs = params.timedInvokeTimeoutMs;
+    if (timedInvokeTimeoutMs == nil) {
+        timedInvokeTimeoutMs = @(MTR_DEFAULT_TIMED_INTERACTION_TIMEOUT_MS);
+    }
 
     using RequestType = DiscoBall::Commands::PatternRequest::Type;
     [self.device _invokeKnownCommandWithEndpointID:@(self.endpoint)

@@ -25875,7 +25875,7 @@ public class ClusterInfoMapping {
         , (Integer)
         commandArguments.get("speed")
         , (Optional<Integer>)
-        commandArguments.get("rotate"), 10000
+        commandArguments.get("rotate")
         );
       },
       () -> new DelegatedDefaultClusterCallback(),
@@ -25928,7 +25928,7 @@ public class ClusterInfoMapping {
         ((ChipClusters.DiscoBallCluster) cluster)
         .patternRequest((DefaultClusterCallback) callback
         , (String)
-        commandArguments.get("passcode")
+        commandArguments.get("passcode"), 10000
         );
       },
       () -> new DelegatedDefaultClusterCallback(),

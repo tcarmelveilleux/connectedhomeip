@@ -5916,7 +5916,7 @@ provisional cluster DiscoBall = 13398 {
   }
 
   /** Upon receipt, this SHALL start the disco ball rotating using the data as follows: */
-  timed command StartRequest(StartRequestRequest): DefaultSuccess = 0;
+  command StartRequest(StartRequestRequest): DefaultSuccess = 0;
   /** Upon receipt, this SHALL stop the disco ball rotating, and SHALL set the Run, Speed and Rotate attributes to 0. */
   command StopRequest(): DefaultSuccess = 1;
   /** Upon receipt, this SHALL reverse the direction of the disco ball rotation. This command MAY generate an error response of UNSUPPORTED_PATTERN. */
@@ -5924,7 +5924,7 @@ provisional cluster DiscoBall = 13398 {
   /** Upon receipt, this SHALL wobble the disco ball on its axis at the speed in the WobbleSpeed attribute. This command MAY generate an error response of UNSUPPORTED_PATTERN. */
   command WobbleRequest(): DefaultSuccess = 3;
   /** ID */
-  command access(invoke: manage) PatternRequest(PatternRequestRequest): DefaultSuccess = 4;
+  timed command access(invoke: manage) PatternRequest(PatternRequestRequest): DefaultSuccess = 4;
   /** Upon receipt, this SHALL generate a StatsResponse command. */
   command StatsRequest(): StatsResponse = 5;
 }

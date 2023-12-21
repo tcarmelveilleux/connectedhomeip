@@ -57472,6 +57472,9 @@ public class ChipClusters {
       return 0L;
     }
 
+    public void startRequest(DefaultClusterCallback callback, Integer speed, Optional<Integer> rotate) {
+      startRequest(callback, speed, rotate, 0);
+    }
 
     public void startRequest(DefaultClusterCallback callback, Integer speed, Optional<Integer> rotate, int timedInvokeTimeoutMs) {
       final long commandId = 0L;
@@ -57541,9 +57544,6 @@ public class ChipClusters {
         }}, commandId, value, timedInvokeTimeoutMs);
     }
 
-    public void patternRequest(DefaultClusterCallback callback, String passcode) {
-      patternRequest(callback, passcode, 0);
-    }
 
     public void patternRequest(DefaultClusterCallback callback, String passcode, int timedInvokeTimeoutMs) {
       final long commandId = 4L;

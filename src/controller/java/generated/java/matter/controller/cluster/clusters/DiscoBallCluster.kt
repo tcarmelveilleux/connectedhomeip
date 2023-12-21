@@ -99,7 +99,7 @@ class DiscoBallCluster(private val controller: MatterController, private val end
     object SubscriptionEstablished : AttributeListAttributeSubscriptionState()
   }
 
-  suspend fun startRequest(speed: UByte, rotate: UByte?, timedInvokeTimeout: Duration) {
+  suspend fun startRequest(speed: UByte, rotate: UByte?, timedInvokeTimeout: Duration? = null) {
     val commandId: UInt = 0u
 
     val tlvWriter = TlvWriter()
@@ -177,7 +177,7 @@ class DiscoBallCluster(private val controller: MatterController, private val end
     logger.log(Level.FINE, "Invoke command succeeded: ${response}")
   }
 
-  suspend fun patternRequest(passcode: String, timedInvokeTimeout: Duration? = null) {
+  suspend fun patternRequest(passcode: String, timedInvokeTimeout: Duration) {
     val commandId: UInt = 4u
 
     val tlvWriter = TlvWriter()
