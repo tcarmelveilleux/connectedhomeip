@@ -70,19 +70,29 @@ const char * StatusName(Status status);
 class ClusterStatusCode
 {
 public:
-    explicit ClusterStatusCode(Status status) : mStatus(status) {}
+    /*explicit */ClusterStatusCode(Status status) : mStatus(status) {}
 
     // We only have simple copyable members, so we should be trivially copyable.
     ClusterStatusCode(const ClusterStatusCode & other)             = default;
     ClusterStatusCode & operator=(const ClusterStatusCode & other) = default;
 
-    bool operator==(const ClusterStatusCode & other)
+    bool operator==(const ClusterStatusCode & other) const
     {
         return (this->mStatus == other.mStatus) && (this->HasClusterSpecificCode() == other.HasClusterSpecificCode()) &&
             (this->GetClusterSpecificCode() == other.GetClusterSpecificCode());
     }
 
-    bool operator!=(const ClusterStatusCode & other) { return !(*this == other); }
+    bool operator!=(const ClusterStatusCode & other) const { return !(*this == other); }
+
+    bool operator==(const Status & other) const
+    {
+        return (this->mStatus == other);
+    }
+
+    bool operator!=(const Status & other) const
+    {
+        return !(*this == other);
+    }
 
     ClusterStatusCode & operator=(const Status & status)
     {

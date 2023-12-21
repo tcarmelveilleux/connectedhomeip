@@ -38,6 +38,12 @@ void TestStatusBasicValues(nlTestSuite * inSuite, void * inContext)
     NL_TEST_ASSERT_EQUALS(inSuite, static_cast<int>(Status::InvalidInState), 0xcb);
 }
 
+// If this builds, automatic conversions work.
+ClusterStatusCode FromStatus(Status status)
+{
+    return status;
+}
+
 void TestClusterStatusCode(nlTestSuite * inSuite, void * inContext)
 {
     // Basic usage as a Status.
@@ -66,6 +72,8 @@ void TestClusterStatusCode(nlTestSuite * inSuite, void * inContext)
         NL_TEST_ASSERT_EQUALS(inSuite, status_code_invalid_in_state.GetStatus(), Status::InvalidInState);
         NL_TEST_ASSERT(inSuite, !status_code_invalid_in_state.HasClusterSpecificCode());
         NL_TEST_ASSERT(inSuite, !status_code_invalid_in_state.IsSuccess());
+
+        NL_TEST_ASSERT_EQUALS(inSuite, FromStatus(Status::InvalidCommand), Status::InvalidCommand);
     }
 
     enum RobotoClusterStatus : uint8_t
