@@ -84,7 +84,7 @@ limitations under the License.
       <description>WobbleSetting</description>
       <access op="write" privilege="manage"/>
     </attribute>
-    <command source="client" code="0x00" name="StartRequest" optional="false" mustUseTimedInvoke="true">
+    <command source="client" code="0x00" name="StartRequest" optional="false">
       <arg name="Speed" type="int8u" max="200"/>
       <arg name="Rotate" type="RotateEnum" min="0x0" max="0x2" optional="true" default="1"/>
       <description>Upon receipt, this SHALL start the disco ball rotating using the data as follows:</description>
@@ -98,7 +98,7 @@ limitations under the License.
     <command source="client" code="0x03" name="WobbleRequest" optional="true">
       <description>Upon receipt, this SHALL wobble the disco ball on its axis at the speed in the WobbleSpeed attribute. This command MAY generate an error response of UNSUPPORTED_PATTERN.</description>
     </command>
-    <command source="client" code="0x04" name="PatternRequest" optional="true">
+    <command source="client" code="0x04" name="PatternRequest" optional="true" mustUseTimedInvoke="true">
       <access op="invoke" privilege="manage"/>
       <arg name="Passcode" type="char_string" length="6" default=""/>
       <description>ID</description>
