@@ -442,6 +442,116 @@ void TestDiscoBallRunning(nlTestSuite * inSuite, void * inContext)
     }
 }
 
+void TestDiscoBallReverseRequestWhileRunningSucceeds(nlTestSuite * inSuite, void * inContext)
+{
+    // ARRANGE: Get the fresh-from-init context.
+    DiscoBallTestContext * context = static_cast<DiscoBallTestContext*>(inContext);
+    DiscoBallClusterLogic & cluster = context->cluster();
+    FakeDiscoBallDriver & driver = context->driver();
+
+    // Step 1: Start counter-clockwise.
+    {
+        // ACT + ASSERT: Start running counter-clockwise, check running.
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRunAttribute(), false);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetSpeedAttribute(), 0);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRotateAttribute(), Clusters::DiscoBall::RotateEnum::kClockwise);
+
+        Clusters::DiscoBall::Commands::StartRequest::DecodableType start_args;
+        start_args.speed = 100;
+        start_args.rotate = chip::MakeOptional(Clusters::DiscoBall::RotateEnum::kCounterClockwise);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.HandleStartRequest(start_args), Status::Success);
+
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRunAttribute(), true);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetSpeedAttribute(), 100);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRotateAttribute(), Clusters::DiscoBall::RotateEnum::kCounterClockwise);
+
+        // ASSERT: Validate that driver was correctly called and only changed attributes marked dirty.
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetStartRequestCount(), 1);
+
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetStopRequestCount(), 0);
+        NL_TEST_ASSERT(inSuite, driver.HasDirtyPath(kRunAttributePath));
+        NL_TEST_ASSERT(inSuite, driver.HasDirtyPath(kSpeedAttributePath));
+        NL_TEST_ASSERT(inSuite, driver.HasDirtyPath(kRotateAttributePath));
+    }
+
+    driver.ResetCounts();
+    driver.ClearDirtyPaths();
+
+
+    // Step 2: Reverse, check now clockwise.
+    {
+        // ACT: Reverse.
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.HandleReverseRequest(), Status::Success);
+
+        // ASSERT: Validate we are now reversed (clockwise) and still running.
+
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRunAttribute(), true);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetSpeedAttribute(), 100);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRotateAttribute(), Clusters::DiscoBall::RotateEnum::kClockwise);
+
+        // ASSERT: Validate that driver was correctly called and only changed attributes marked dirty.
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetClusterStateChangeCount(), 1);
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetStartRequestCount(), 0);
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetStopRequestCount(), 0);
+        NL_TEST_ASSERT(inSuite, !driver.HasDirtyPath(kRunAttributePath));
+        NL_TEST_ASSERT(inSuite, !driver.HasDirtyPath(kSpeedAttributePath));
+        NL_TEST_ASSERT(inSuite, driver.HasDirtyPath(kRotateAttributePath));
+    }
+
+    driver.ResetCounts();
+    driver.ClearDirtyPaths();
+
+    // Step 3: Reverse, check now counter-clockwise.
+    {
+        // ACT: Reverse.
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.HandleReverseRequest(), Status::Success);
+
+        // ASSERT: Validate we are now reversed (counter-clockwise) and still running.
+
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRunAttribute(), true);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetSpeedAttribute(), 100);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRotateAttribute(), Clusters::DiscoBall::RotateEnum::kCounterClockwise);
+
+        // ASSERT: Validate that driver was correctly called and only changed attributes marked dirty.
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetClusterStateChangeCount(), 1);
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetStartRequestCount(), 0);
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetStopRequestCount(), 0);
+        NL_TEST_ASSERT(inSuite, !driver.HasDirtyPath(kRunAttributePath));
+        NL_TEST_ASSERT(inSuite, !driver.HasDirtyPath(kSpeedAttributePath));
+        NL_TEST_ASSERT(inSuite, driver.HasDirtyPath(kRotateAttributePath));
+    }
+}
+
+void TestDiscoBallReverseRequestWhileStoppedFails(nlTestSuite * inSuite, void * inContext)
+{
+    // ARRANGE: Get the fresh-from-init context.
+    DiscoBallTestContext * context = static_cast<DiscoBallTestContext*>(inContext);
+    DiscoBallClusterLogic & cluster = context->cluster();
+    FakeDiscoBallDriver & driver = context->driver();
+
+    NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRunAttribute(), false);
+    NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetSpeedAttribute(), 0);
+    NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRotateAttribute(), Clusters::DiscoBall::RotateEnum::kClockwise);
+
+    {
+        // ACT: Try to reverse while stopped.
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.HandleReverseRequest(), Status::InvalidInState);
+
+        // ASSERT: Validates it didn't change state, and nothing dirty.
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRunAttribute(), false);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetSpeedAttribute(), 0);
+        NL_TEST_ASSERT_EQUALS(inSuite, cluster.GetRotateAttribute(), Clusters::DiscoBall::RotateEnum::kClockwise);
+
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetStartRequestCount(), 0);
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetStopRequestCount(), 0);
+        NL_TEST_ASSERT_EQUALS(inSuite, driver.GetClusterStateChangeCount(), 0);
+
+        NL_TEST_ASSERT(inSuite, !driver.HasDirtyPath(kRunAttributePath));
+        NL_TEST_ASSERT(inSuite, !driver.HasDirtyPath(kSpeedAttributePath));
+        NL_TEST_ASSERT(inSuite, !driver.HasDirtyPath(kRotateAttributePath));
+    }
+}
+
 const nlTest sLifecyleTests[] = {
     NL_TEST_DEF("Test Disco Ball initialization error handling", TestDiscoBallInitialization),
     NL_TEST_SENTINEL()
@@ -449,6 +559,8 @@ const nlTest sLifecyleTests[] = {
 
 const nlTest sLogicTests[] = {
     NL_TEST_DEF("Test Disco Ball start/stop", TestDiscoBallRunning),
+    NL_TEST_DEF("Test ReverseRequest while running", TestDiscoBallReverseRequestWhileRunningSucceeds),
+    NL_TEST_DEF("Test ReverseRequest while stopped", TestDiscoBallReverseRequestWhileStoppedFails),
     NL_TEST_SENTINEL()
 };
 

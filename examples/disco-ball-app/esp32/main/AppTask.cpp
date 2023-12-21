@@ -231,9 +231,13 @@ class SampleDiscoBallDriver : public chip::app::DiscoBallClusterLogic::DriverInt
 
         DiscoBallCapabilities capabilities;
 
-        capabilities.supported_features.Set(Clusters::DiscoBall::Feature::kWobble);
         capabilities.supported_features.Set(Clusters::DiscoBall::Feature::kReverse);
+
+        // TODO: Enable the following when supported.
+#if 0
+        capabilities.supported_features.Set(Clusters::DiscoBall::Feature::kWobble);
         capabilities.supported_features.Set(Clusters::DiscoBall::Feature::kStatistics);
+#endif
 
         capabilities.min_speed_value = 0;
         capabilities.max_speed_value = 200;

@@ -188,6 +188,8 @@ CHIP_ERROR DiscoBallServer::Read(const ConcreteReadAttributePath & aPath, Attrib
     case Clusters::DiscoBall::Attributes::WobbleSetting::Id:
         ChipLogProgress(Zcl, "Read wobble setting attribute");
         return aEncoder.Encode(cluster->GetWobbleSettingAttribute().Raw());
+    case Clusters::DiscoBall::Attributes::FeatureMap::Id:
+        return aEncoder.Encode(cluster->GetSupportedFeatures());
     default:
         break;
     }

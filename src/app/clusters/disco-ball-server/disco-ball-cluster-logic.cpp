@@ -196,7 +196,16 @@ Clusters::DiscoBall::RotateEnum DiscoBallClusterLogic::GetRotateAttribute() cons
 ClusterStatusCode DiscoBallClusterLogic::SetRotateAttribute(Clusters::DiscoBall::RotateEnum rotate_state)
 {
     VerifyOrReturnValue(mDriver != nullptr, Status::Failure);
-    VerifyOrReturnValue(rotate_state != Clusters::DiscoBall::RotateEnum::kUnknownEnumValue, Status::Failure);
+    const auto kUnsupportedPattern = ClusterStatusCode::ClusterSpecificFailure(Clusters::DiscoBall::StatusCode::kUnsupportedPattern);
+    VerifyOrReturnValue(rotate_state != Clusters::DiscoBall::RotateEnum::kUnknownEnumValue, kUnsupportedPattern);
+
+    if (!mCapabilities.supported_features.Has(Clusters::DiscoBall::Feature::kReverse))
+    {
+        if (rotate_state == Clusters::DiscoBall::RotateEnum::kCounterClockwise)
+        {
+            return kUnsupportedPattern;
+        }
+    }
 
     bool changed = (rotate_state != mClusterState.rotate_attribute);
     if (!changed)
@@ -375,12 +384,20 @@ ClusterStatusCode DiscoBallClusterLogic::HandleStartRequest(const Clusters::Disc
     VerifyOrReturnValue(args.speed <= mCapabilities.max_speed_value, Status::InvalidCommand);
     if (args.rotate.HasValue())
     {
-        VerifyOrReturnValue(args.rotate.Value() != Clusters::DiscoBall::RotateEnum::kUnknownEnumValue, Status::InvalidCommand);
-        VerifyOrReturnValue(SetRotateAttribute(args.rotate.Value()) == Status::Success, Status::InvalidCommand);
+        if (!mCapabilities.supported_features.Has(Clusters::DiscoBall::Feature::kReverse))
+        {
+            return ClusterStatusCode::ClusterSpecificFailure(Clusters::DiscoBall::StatusCode::kUnsupportedPattern);
+        }
+        ClusterStatusCode status = SetRotateAttribute(args.rotate.Value());
+        VerifyOrReturnValue(status.IsSuccess(), status);
+    }
+    else
+    {
+        VerifyOrReturnValue(SetRotateAttribute(Clusters::DiscoBall::RotateEnum::kClockwise).IsSuccess(), Status::Failure);
     }
 
-    VerifyOrReturnValue(SetSpeedAttribute(args.speed) == Status::Success, Status::InvalidCommand);
-    VerifyOrReturnValue(SetRunAttribute(true) == Status::Success, Status::InvalidCommand);
+    VerifyOrReturnValue(SetSpeedAttribute(args.speed).IsSuccess(), Status::InvalidCommand);
+    VerifyOrReturnValue(SetRunAttribute(true).IsSuccess(), Status::InvalidCommand);
 
     return Status::Success;
 }
@@ -390,15 +407,27 @@ ClusterStatusCode DiscoBallClusterLogic::HandleStopRequest()
     // TODO: Set rotate attribute to off.
     bool success = true;
 
-    success = success && (SetSpeedAttribute(0) == Status::Success);
-    success = success && (SetRunAttribute(false) == Status::Success);
+    success = success && SetRunAttribute(false).IsSuccess();
+    success = success && SetSpeedAttribute(0).IsSuccess();
 
     return success ? Status::Success : Status::Failure;
 }
 
 ClusterStatusCode DiscoBallClusterLogic::HandleReverseRequest()
 {
-    return Status::UnsupportedCommand;
+    VerifyOrReturnValue(mCapabilities.supported_features.Has(Clusters::DiscoBall::Feature::kReverse), Status::UnsupportedCommand);
+    VerifyOrReturnValue(mClusterState.run_attribute == true, Status::InvalidInState);
+
+    auto current_rotation = mClusterState.rotate_attribute;
+    switch (current_rotation)
+    {
+        case Clusters::DiscoBall::RotateEnum::kClockwise:
+            return SetRotateAttribute(Clusters::DiscoBall::RotateEnum::kCounterClockwise);
+        case Clusters::DiscoBall::RotateEnum::kCounterClockwise:
+            return SetRotateAttribute(Clusters::DiscoBall::RotateEnum::kClockwise);
+        default:
+            return Status::Failure;
+    }
 }
 
 ClusterStatusCode DiscoBallClusterLogic::HandleWobbleRequest()
