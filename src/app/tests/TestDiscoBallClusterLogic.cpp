@@ -44,6 +44,7 @@
 using namespace chip;
 using namespace chip::app;
 
+using ::chip::Protocols::InteractionModel::ClusterStatusCode;
 using ::chip::Protocols::InteractionModel::Status;
 
 namespace {
@@ -211,6 +212,9 @@ class FakeDiscoBallStorage : public DiscoBallClusterState::NonVolatileStorageInt
         ChipLogProgress(Zcl, "Loaded %d patterns", static_cast<int>(mClusterState.num_patterns));
         return CHIP_NO_ERROR;
     }
+
+    void RemoveDataForFabric(FabricIndex fabric_index) override { mClusterState = DiscoBallClusterState{}; }
+    void RemoveDataForAllFabrics() override {  mClusterState = DiscoBallClusterState{}; }
 
   private:
     int mLoadFromStorageCount = 0;

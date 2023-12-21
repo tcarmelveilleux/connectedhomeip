@@ -32,6 +32,7 @@
 namespace chip {
 namespace app {
 
+using chip::Protocols::InteractionModel::ClusterStatusCode;
 using chip::Protocols::InteractionModel::Status;
 using chip::Access::SubjectDescriptor;
 
@@ -78,29 +79,28 @@ void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
     case Clusters::DiscoBall::Commands::StartRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::StartRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
             ChipLogProgress(Zcl, "DiscoBall StartRequest received");
-            Status status = cluster->HandleStartRequest(payload);
+            ClusterStatusCode status = cluster->HandleStartRequest(payload);
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
     case Clusters::DiscoBall::Commands::StopRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::StopRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
             ChipLogProgress(Zcl, "DiscoBall StopRequest received");
-            Status status = cluster->HandleStopRequest();
-            ChipLogError(Zcl, "Status: %d", static_cast<int>(status));
+            ClusterStatusCode status = cluster->HandleStopRequest();
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
     case Clusters::DiscoBall::Commands::ReverseRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::ReverseRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
             ChipLogProgress(Zcl, "DiscoBall ReverseRequest received");
-            Status status = cluster->HandleReverseRequest();
+            ClusterStatusCode status = cluster->HandleReverseRequest();
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
     case Clusters::DiscoBall::Commands::WobbleRequest::Id:
         HandleCommand<Clusters::DiscoBall::Commands::WobbleRequest::DecodableType>(handlerContext, [&](auto & _u, auto & payload) {
             ChipLogProgress(Zcl, "DiscoBall WobbleRequest received");
-            Status status = cluster->HandleWobbleRequest();
+            ClusterStatusCode status = cluster->HandleWobbleRequest();
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
@@ -117,7 +117,7 @@ void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
                 return;
             }
 
-            Status status = cluster->HandlePatternRequest(fabric_index, payload);
+            ClusterStatusCode status = cluster->HandlePatternRequest(fabric_index, payload);
             handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
         });
         break;
@@ -126,7 +126,7 @@ void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
             ChipLogProgress(Zcl, "DiscoBall StatsRequest received");
             Clusters::DiscoBall::Commands::StatsResponse::Type resp;
 
-            Status status = cluster->HandleStatsRequest(resp);
+            ClusterStatusCode status = cluster->HandleStatsRequest(resp);
             if (status != Status::Success)
             {
                 handlerContext.mCommandHandler.AddStatus(handlerContext.mRequestPath, status);
@@ -146,7 +146,7 @@ void DiscoBallServer::InvokeCommand(HandlerContext & handlerContext)
 | 0x0000  s| Run           | bool                        | all^*^         |         | 0       | R V T^*^ | M
 | 0x0001  s| Rotate        | <<ref_RotateEnum>>          | all            |         | 0       | R V      | M
 | 0x0002  s| Speed         | uint8                       | 0 to 200^*^    |         | 0       | R V      | M
-| 0x0003  s| Axis          | uint8                       | 0 to 90        |         | 0       | RW VO    | AX \| WBL
+| 0x0003  s| Axis          | uint8                       | 0 to 90            |         | 0       | RW VO    | AX \| WBL
 | 0x0004  s| WobbleSpeed   | uint8                       | 0 to 200       |         | 0       | RW VO    | WBL
 | 0x0005  s| Pattern       | list[<<ref_PatternStruct>>] | max 16^*^      | N       | 0       | RW VM    | PAT
 | 0x0006  s| Name          | string                      | max 16         | N^*^    | 0       | RW VM    | P, O

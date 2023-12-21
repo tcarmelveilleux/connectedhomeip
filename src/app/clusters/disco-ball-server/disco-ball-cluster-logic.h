@@ -229,32 +229,32 @@ public:
 
     // Attribute reads and writes are indirected to the DiscoBallClusterState by the DiscoBallClusterLogic.
     bool GetRunAttribute() const;
-    Protocols::InteractionModel::Status SetRunAttribute(bool run_state);
+    Protocols::InteractionModel::ClusterStatusCode SetRunAttribute(bool run_state);
 
     Clusters::DiscoBall::RotateEnum GetRotateAttribute() const;
-    Protocols::InteractionModel::Status SetRotateAttribute(Clusters::DiscoBall::RotateEnum rotate_state);
+    Protocols::InteractionModel::ClusterStatusCode SetRotateAttribute(Clusters::DiscoBall::RotateEnum rotate_state);
 
     uint8_t GetSpeedAttribute() const;
-    Protocols::InteractionModel::Status SetSpeedAttribute(uint8_t speed);
+    Protocols::InteractionModel::ClusterStatusCode SetSpeedAttribute(uint8_t speed);
 
     uint8_t GetAxisAttribute() const;
-    Protocols::InteractionModel::Status SetAxisAttribute(uint8_t axis);
+    Protocols::InteractionModel::ClusterStatusCode SetAxisAttribute(uint8_t axis);
 
     uint8_t GetWobbleSpeedAttribute() const;
-    Protocols::InteractionModel::Status SetWobbleSpeedAttribute(uint8_t wobble_speed);
+    Protocols::InteractionModel::ClusterStatusCode SetWobbleSpeedAttribute(uint8_t wobble_speed);
 
     size_t GetNumPatterns(FabricIndex fabric_idx) const;
     chip::Optional<DiscoBallPatternStructBacking> GetPatternAttributeEntry(FabricIndex fabric_idx, size_t pattern_idx) const;
     CHIP_ERROR ClearPattern(FabricIndex fabric_idx, size_t pattern_idx);
-    Protocols::InteractionModel::Status SetPattern(FabricIndex fabric_idx, const Clusters::DiscoBall::Structs::PatternStruct::Type & pattern);
+    Protocols::InteractionModel::ClusterStatusCode SetPattern(FabricIndex fabric_idx, const Clusters::DiscoBall::Structs::PatternStruct::Type & pattern);
 
     CharSpan GetNameAttribute() const;
-    Protocols::InteractionModel::Status SetNameAttribute(CharSpan name);
+    Protocols::InteractionModel::ClusterStatusCode SetNameAttribute(CharSpan name);
 
     BitFlags<Clusters::DiscoBall::WobbleBitmap> GetWobbleSupportAttribute() const;
 
     BitFlags<Clusters::DiscoBall::WobbleBitmap> GetWobbleSettingAttribute() const;
-    Protocols::InteractionModel::Status SetWobbleSettingAttribute(BitFlags<Clusters::DiscoBall::WobbleBitmap> wobble_setting);
+    Protocols::InteractionModel::ClusterStatusCode SetWobbleSettingAttribute(BitFlags<Clusters::DiscoBall::WobbleBitmap> wobble_setting);
 
     BitFlags<Clusters::DiscoBall::Feature> GetSupportedFeatures() const;
 
@@ -265,12 +265,12 @@ public:
     // 0x04  s| PatternRequest | client => server | Y                 | M      | PAT
     // 0x05  s| StatsRequest   | client => server | StatsResponse^**^ | O      | STA
     // 0x06  s| StatsResponse  | client <= server | N                 | O      | STA
-    Protocols::InteractionModel::Status HandleStartRequest(const Clusters::DiscoBall::Commands::StartRequest::DecodableType & args);
-    Protocols::InteractionModel::Status HandleStopRequest();
-    Protocols::InteractionModel::Status HandleReverseRequest();
-    Protocols::InteractionModel::Status HandleWobbleRequest();
-    Protocols::InteractionModel::Status HandlePatternRequest(FabricIndex fabric_index, const Clusters::DiscoBall::Commands::PatternRequest::DecodableType & args);
-    Protocols::InteractionModel::Status HandleStatsRequest(Clusters::DiscoBall::Commands::StatsResponse::Type & out_stats_response);
+    Protocols::InteractionModel::ClusterStatusCode HandleStartRequest(const Clusters::DiscoBall::Commands::StartRequest::DecodableType & args);
+    Protocols::InteractionModel::ClusterStatusCode HandleStopRequest();
+    Protocols::InteractionModel::ClusterStatusCode HandleReverseRequest();
+    Protocols::InteractionModel::ClusterStatusCode HandleWobbleRequest();
+    Protocols::InteractionModel::ClusterStatusCode HandlePatternRequest(FabricIndex fabric_index, const Clusters::DiscoBall::Commands::PatternRequest::DecodableType & args);
+    Protocols::InteractionModel::ClusterStatusCode HandleStatsRequest(Clusters::DiscoBall::Commands::StatsResponse::Type & out_stats_response);
 
 private:
     EndpointId mEndpointId = kInvalidEndpointId;
