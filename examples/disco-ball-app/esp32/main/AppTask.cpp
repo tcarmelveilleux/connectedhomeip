@@ -29,6 +29,7 @@
 #include <app/clusters/disco-ball-server/disco-ball-server.h>
 
 #include <app/reporting/reporting.h>
+#include <app/server/Server.h>
 #include <lib/core/DataModelTypes.h>
 #include <lib/support/CodeUtils.h>
 #include <protocols/interaction_model/StatusCode.h>
@@ -77,6 +78,7 @@ class ESP32S3DevKitCDiscoBallHardware : public DiscoBallHardware
     static constexpr gpio_num_t kLedControlPin = GPIO_NUM_5;
     static constexpr gpio_num_t kMotorPwm1Pin = GPIO_NUM_6;
     static constexpr gpio_num_t kMotorPwm2Pin = GPIO_NUM_7;
+    static constexpr gpio_num_t kFactoryResetButton = GPIO_NUM_8;
 
     void Init();
 
@@ -87,6 +89,11 @@ class ESP32S3DevKitCDiscoBallHardware : public DiscoBallHardware
     void SetWobbleSpeed(uint8_t normalized_speed) override;
     void StopWobble() override;
     void SetAxis(uint8_t axis) override {}
+
+    bool IsFactoryResetButtonPressed() const
+    {
+        return gpio_get_level(kFactoryResetButton) == 0;
+    }
 
   private:
     bool mIsWobbleRunning = false;
@@ -121,6 +128,14 @@ void ESP32S3DevKitCDiscoBallHardware::Init()
     io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
     gpio_config(&io_conf);
 
+    // Init factory-reset button.
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    io_conf.mode = GPIO_MODE_INPUT;
+    io_conf.pin_bit_mask = (1ULL << kFactoryResetButton);
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
+    gpio_config(&io_conf);
+
     // TODO: Configure motor controller PWM.
 }
 
@@ -143,8 +158,6 @@ void ESP32S3DevKitCDiscoBallHardware::StopMotor()
 {
     gpio_set_level(kMotorPwm1Pin, 0);
     gpio_set_level(kMotorPwm2Pin, 0);
-    gpio_set_level(kNotSleepPin, 0);
-
 }
 
 void ESP32S3DevKitCDiscoBallHardware::SetLightEnable(bool enabled)
@@ -434,6 +447,25 @@ CHIP_ERROR AppTask::Init()
     ReturnErrorOnFailure(gDiscoBallServer->RegisterEndpoint(kDiscoBallEndpoint, gDiscoBallStorage, gDiscoBallDriver));
 
     chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+
+    // Check for factory reset, only at init, via button pressed.
+    if (gDiscoBallHardware.IsFactoryResetButtonPressed())
+    {
+        // Debounce by 50ms
+        vTaskDelay(50 / portTICK_PERIOD_MS);
+        if (gDiscoBallHardware.IsFactoryResetButtonPressed())
+        {
+            ESP_LOGE(TAG, "Factory reset button pressed!");
+            while (gDiscoBallHardware.IsFactoryResetButtonPressed())
+            {
+                vTaskDelay(10 / portTICK_PERIOD_MS);
+            }
+            ESP_LOGE(TAG, "Factory reset button released, triggering factory reset.");
+            chip::DeviceLayer::PlatformMgr().LockChipStack();
+            Server::GetInstance().ScheduleFactoryReset();
+            chip::DeviceLayer::PlatformMgr().UnlockChipStack();
+        }
+    }
 
     return err;
 }
