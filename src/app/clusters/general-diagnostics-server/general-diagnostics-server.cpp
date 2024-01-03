@@ -17,8 +17,13 @@
 
 #include "general-diagnostics-server.h"
 
-#ifdef TIME_SYNCHRONIZATION_CLUSTER_INCLUDED
-#include "app/clusters/time-synchronization-server/time-synchronization-server.h"
+#if TIME_SYNCHRONIZATION_CLUSTER_INCLUDED
+// nogncheck because gn dependency checking does not understand conditional
+// includes and claims that time-synchronization-server.h is not in any
+// dependency in situations where TIME_SYNCHRONIZATION_CLUSTER_INCLUDED is
+// false.
+#include "app/clusters/time-synchronization-server/time-synchronization-server.h" // nogncheck
+
 #endif // TIME_SYNCHRONIZATION_CLUSTER_INCLUDED
 
 #include "app/server/Server.h"
@@ -398,7 +403,7 @@ bool emberAfGeneralDiagnosticsClusterTimeSnapshotCallback(CommandHandler * comma
 
     System::Clock::Microseconds64 posix_time_us{ 0 };
 
-#ifdef TIME_SYNCHRONIZATION_CLUSTER_INCLUDED
+#if TIME_SYNCHRONIZATION_CLUSTER_INCLUDED
 #ifdef ZCL_USING_TIME_SYNCHRONIZATION_CLUSTER_SERVER
     bool time_is_synced = false;
     using Clusters::TimeSynchronization::GranularityEnum;

@@ -212,6 +212,8 @@ template("chip_data_model") {
       defines = []
     }
 
+    time_synchronization_cluster_included = false
+
     foreach(cluster, _cluster_sources) {
       if (cluster == "door-lock-server") {
         sources += [
@@ -272,10 +274,9 @@ template("chip_data_model") {
           "${_app_root}/clusters/${cluster}/DefaultTimeSyncDelegate.cpp",
           "${_app_root}/clusters/${cluster}/TimeSyncDataProvider.cpp",
         ]
-        defines += [
-          "TIME_SYNC_ENABLE_TSC_FEATURE=${time_sync_enable_tsc_feature}",
-          "TIME_SYNCHRONIZATION_CLUSTER_INCLUDED=1",
-        ]
+        defines +=
+            [ "TIME_SYNC_ENABLE_TSC_FEATURE=${time_sync_enable_tsc_feature}" ]
+        time_synchronization_cluster_included = true
       } else if (cluster == "scenes-server") {
         sources += [
           "${_app_root}/clusters/${cluster}/${cluster}.cpp",
@@ -335,6 +336,8 @@ template("chip_data_model") {
         sources += [ "${_app_root}/clusters/${cluster}/${cluster}.cpp" ]
       }
     }
+
+    defines += [ "TIME_SYNCHRONIZATION_CLUSTER_INCLUDED=${time_synchronization_cluster_included}" ]
 
     if (!defined(public_deps)) {
       public_deps = []
