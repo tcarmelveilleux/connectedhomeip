@@ -193,6 +193,7 @@ public:
     {
     public:
         virtual ~DriverInterface() = default;
+        virtual void Init() {}
         virtual DiscoBallCapabilities GetCapabilities(EndpointId endpoint_id) const = 0;
 
         virtual Protocols::InteractionModel::Status OnClusterStateChange(EndpointId endpoint_id, BitFlags<DiscoBallFunction> changes, DiscoBallClusterLogic & cluster) = 0;

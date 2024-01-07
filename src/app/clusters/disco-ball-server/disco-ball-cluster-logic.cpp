@@ -142,6 +142,7 @@ CHIP_ERROR DiscoBallClusterLogic::Init(EndpointId endpoint_id, DiscoBallClusterS
     mEndpointId = endpoint_id;
 
     mDriver = &driver;
+    mDriver->Init();
     mCapabilities = mDriver->GetCapabilities(mEndpointId);
 
     CHIP_ERROR err = mClusterState.Init(endpoint_id, storage);
