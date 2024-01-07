@@ -34,6 +34,10 @@ config("includes") {
   ]
 }
 
+declare_args() {
+  pi_disco_ball = 1
+}
+
 executable("disco-ball-app") {
   sources = [
     "include/CHIPProjectAppConfig.h",
@@ -48,6 +52,10 @@ executable("disco-ball-app") {
   ]
 
   include_dirs = [ "include" ]
+  if (pi_disco_ball == 1) {
+    libs = [ "pigpiod_if2" ]
+  }
+  defines = [ "PI_DISCO_BALL=${pi_disco_ball}" ]
 
   # The system_rpc_server.cc file is in pigweed and doesn't compile with
   # -Wconversion, remove check for RPC build only.
