@@ -356,6 +356,7 @@ void Instance::OnNetworkingStatusChange(Status aCommissioningError, Optional<Byt
 void Instance::HandleScanNetworks(HandlerContext & ctx, const Commands::ScanNetworks::DecodableType & req)
 {
     MATTER_TRACE_SCOPE("HandleScanNetwork", "NetworkCommissioning");
+#if (CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION || CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
     if (mFeatureFlags.Has(Feature::kWiFiNetworkInterface))
     {
         ByteSpan ssid;
@@ -382,18 +383,23 @@ void Instance::HandleScanNetworks(HandlerContext & ctx, const Commands::ScanNetw
         mAsyncCommandHandle         = CommandHandler::Handle(&ctx.mCommandHandler);
         ctx.mCommandHandler.FlushAcksRightAwayOnSlowCommand();
         mpDriver.Get<WiFiDriver *>()->ScanNetworks(ssid, this);
+        return;
     }
-    else if (mFeatureFlags.Has(Feature::kThreadNetworkInterface))
+#endif // (CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION || CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
+
+#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
+    if (mFeatureFlags.Has(Feature::kThreadNetworkInterface))
     {
         mCurrentOperationBreadcrumb = req.breadcrumb;
         mAsyncCommandHandle         = CommandHandler::Handle(&ctx.mCommandHandler);
         ctx.mCommandHandler.FlushAcksRightAwayOnSlowCommand();
         mpDriver.Get<ThreadDriver *>()->ScanNetworks(this);
+        return;
     }
-    else
-    {
-        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::UnsupportedCommand);
-    }
+#endif // CHIP_DEVICE_CONFIG_ENABLE_THREAD
+
+    // We fell through here: ScanNetworks should have never bee3n called.
+    ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::UnsupportedCommand);
 }
 
 namespace {
@@ -834,6 +840,7 @@ void Instance::OnResult(Status commissioningError, CharSpan debugText, int32_t i
     }
 }
 
+#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
 void Instance::OnFinished(Status status, CharSpan debugText, ThreadScanResponseIterator * networks)
 {
     CHIP_ERROR err        = CHIP_NO_ERROR;
@@ -949,7 +956,9 @@ exit:
     }
     networks->Release();
 }
+#endif // CHIP_DEVICE_CONFIG_ENABLE_THREAD
 
+#if (CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION || CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
 void Instance::OnFinished(Status status, CharSpan debugText, WiFiScanResponseIterator * networks)
 {
     CHIP_ERROR err        = CHIP_NO_ERROR;
@@ -1015,6 +1024,7 @@ exit:
         networks->Release();
     }
 }
+#endif //(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION || CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
 
 void Instance::OnPlatformEventHandler(const DeviceLayer::ChipDeviceEvent * event, intptr_t arg)
 {

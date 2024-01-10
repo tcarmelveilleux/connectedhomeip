@@ -33,13 +33,16 @@ namespace app {
 namespace Clusters {
 namespace NetworkCommissioning {
 
-// TODO: Use macro to disable some wifi or thread
 class Instance : public CommandHandlerInterface,
                  public AttributeAccessInterface,
-                 public DeviceLayer::NetworkCommissioning::Internal::BaseDriver::NetworkStatusChangeCallback,
-                 public DeviceLayer::NetworkCommissioning::Internal::WirelessDriver::ConnectCallback,
+#if (CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION || CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
                  public DeviceLayer::NetworkCommissioning::WiFiDriver::ScanCallback,
-                 public DeviceLayer::NetworkCommissioning::ThreadDriver::ScanCallback
+#endif // (CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION || CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
+#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
+                 public DeviceLayer::NetworkCommissioning::ThreadDriver::ScanCallback,
+#endif // CHIP_DEVICE_CONFIG_ENABLE_THREAD
+                 public DeviceLayer::NetworkCommissioning::Internal::BaseDriver::NetworkStatusChangeCallback,
+                 public DeviceLayer::NetworkCommissioning::Internal::WirelessDriver::ConnectCallback
 {
 public:
     /**
@@ -65,13 +68,17 @@ public:
     void OnResult(DeviceLayer::NetworkCommissioning::Status commissioningError, CharSpan errorText,
                   int32_t interfaceStatus) override;
 
+#if (CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION || CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
     // WiFiDriver::ScanCallback
     void OnFinished(DeviceLayer::NetworkCommissioning::Status err, CharSpan debugText,
                     DeviceLayer::NetworkCommissioning::WiFiScanResponseIterator * networks) override;
+#endif //(CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION || CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP)
 
+#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
     // ThreadDriver::ScanCallback
     void OnFinished(DeviceLayer::NetworkCommissioning::Status err, CharSpan debugText,
                     DeviceLayer::NetworkCommissioning::ThreadScanResponseIterator * networks) override;
+#endif // CHIP_DEVICE_CONFIG_ENABLE_THREAD
 
 private:
     static void OnPlatformEventHandler(const DeviceLayer::ChipDeviceEvent * event, intptr_t arg);
