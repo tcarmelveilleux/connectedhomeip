@@ -1411,6 +1411,14 @@ EmberAfGenericClusterFunction emberAfFindClusterFunction(const EmberAfCluster * 
     return cluster->functions[functionIndex];
 }
 
+namespace {
+
+// Cache the last one found so that look-ups are faster.
+AttributeAccessInterface * gLastAttributeAccessInterfaceFound = nullptr;
+
+} // namespace
+
+
 bool registerAttributeAccessOverride(AttributeAccessInterface * attrOverride)
 {
     for (auto * cur = gAttributeAccessOverrides; cur; cur = cur->GetNext())
@@ -1428,6 +1436,9 @@ bool registerAttributeAccessOverride(AttributeAccessInterface * attrOverride)
 
 void unregisterAttributeAccessOverride(AttributeAccessInterface * attrOverride)
 {
+    // Invalidate cache immediately on changes
+
+XXXXXXXXXXX
     UnregisterMatchingAttributeAccessInterfaces([attrOverride](AttributeAccessInterface * entry) { return entry == attrOverride; });
 }
 

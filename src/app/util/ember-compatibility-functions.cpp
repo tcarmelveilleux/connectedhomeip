@@ -598,7 +598,11 @@ bool ConcreteAttributePathExists(const ConcreteAttributePath & aPath)
         }
     }
 
-    return (emberAfLocateAttributeMetadata(aPath.mEndpointId, aPath.mClusterId, aPath.mAttributeId) != nullptr);
+XXXXXXXXXXXXX Attribute Access Interface Header
+
+    // Determine from static Ember code generated getters, which is a fallback for AttributeAccessInterface-dynamic
+    // attributes support determination.
+    return (emberAfLocateAttributeMetadata(aPath.mEndpointId, aPath.mClusterId, aPath.mAttributeId) != nullptr)
 }
 
 CHIP_ERROR ReadSingleClusterData(const SubjectDescriptor & aSubjectDescriptor, bool aIsFabricFiltered,
