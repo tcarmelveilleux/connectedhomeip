@@ -82,6 +82,7 @@ static_library("app") {
 
   sources = [
     "AttributeAccessInterface.cpp",
+    "AttributeAccessInterface.h",
     "AttributePathExpandIterator.cpp",
     "AttributePathExpandIterator.h",
     "AttributePathParams.h",

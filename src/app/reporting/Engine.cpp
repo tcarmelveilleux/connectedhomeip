@@ -96,6 +96,7 @@ CHIP_ERROR Engine::BuildSingleReportDataAttributeReportIBs(ReportDataMessage::Bu
     CHIP_ERROR err            = CHIP_NO_ERROR;
     bool attributeDataWritten = false;
     bool hasMoreChunks        = true;
+    bool isSusbscription      = apReadHandler->IsType(ReadHandler::InteractionType::Subscribe);
     TLV::TLVWriter backup;
     const uint32_t kReservedSizeEndOfReportIBs = 1;
     bool reservedEndOfReportIBs                = false;
@@ -188,7 +189,15 @@ CHIP_ERROR Engine::BuildSingleReportDataAttributeReportIBs(ReportDataMessage::Bu
             AttributeValueEncoder::AttributeEncodeState encodeState = apReadHandler->GetAttributeEncodeState();
             err = RetrieveClusterData(apReadHandler->GetSubjectDescriptor(), apReadHandler->IsFabricFiltered(), attributeReportIBs,
                                       pathForRetrieval, &encodeState);
-            if (err != CHIP_NO_ERROR)
+
+            // TODO(#31405): Instead of dealing with the unsupported attributes after trying to read, check in wildcard expansion.
+            if (isSubscription && (err == CHIP_IM_GLOBAL_STATUS(UnsupportedAttribute)))
+            {
+                // We dynamically determined that the attribute was actually not supported, so we should not try to encode
+                // an error here. In cases of explicit reads, we would return an error, but during priming, we merely skip.
+                continue;
+            }
+            else if (err != CHIP_NO_ERROR)
             {
                 ChipLogError(DataManagement,
                              "Error retrieving data from clusterId: " ChipLogFormatMEI ", err = %" CHIP_ERROR_FORMAT,

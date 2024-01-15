@@ -39,5 +39,19 @@ constexpr AttributeId GlobalAttributesNotInMetadata[] = {
 
 static_assert(ArrayIsSorted(GlobalAttributesNotInMetadata), "Array of global attribute ids must be sorted");
 
+inline bool IndexOfGlobalAttributesNotInMetadata(AttributeId attribute, size_t & out_index)
+{
+    for (size_t attrib_idx = 0; attrib_idx < ArraySize(GlobalAttributesNotInMetadata); ++attrib_idx)
+    {
+        if (GlobalAttributesNotInMetadata[attrib_idx] == attribute)
+        {
+            out_index = attrib_idx;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 } // namespace app
 } // namespace chip

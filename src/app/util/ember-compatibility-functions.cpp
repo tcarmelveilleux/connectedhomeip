@@ -41,6 +41,7 @@
 #include <app/util/util.h>
 #include <lib/core/CHIPCore.h>
 #include <lib/core/TLV.h>
+#include <lib/support/BitSet.h>
 #include <lib/support/CodeUtils.h>
 #include <lib/support/SafeInt.h>
 #include <lib/support/TypeTraits.h>
@@ -337,41 +338,7 @@ CHIP_ERROR GlobalAttributeReader::Read(const ConcreteReadAttributePath & aPath, 
     switch (aPath.mAttributeId)
     {
     case AttributeList::Id:
-        return aEncoder.EncodeList([this](const auto & encoder) {
-            const size_t count     = mCluster->attributeCount;
-            bool addedExtraGlobals = false;
-            for (size_t i = 0; i < count; ++i)
-            {
-                AttributeId id              = mCluster->attributes[i].attributeId;
-                constexpr auto lastGlobalId = GlobalAttributesNotInMetadata[ArraySize(GlobalAttributesNotInMetadata) - 1];
-#if CHIP_CONFIG_ENABLE_EVENTLIST_ATTRIBUTE
-                // The GlobalAttributesNotInMetadata shouldn't have any gaps in their ids here.
-                static_assert(lastGlobalId - GlobalAttributesNotInMetadata[0] == ArraySize(GlobalAttributesNotInMetadata) - 1,
-                              "Ids in GlobalAttributesNotInMetadata not consecutive");
-#else
-                // If EventList is not supported. The GlobalAttributesNotInMetadata is missing one id here.
-                static_assert(lastGlobalId - GlobalAttributesNotInMetadata[0] == ArraySize(GlobalAttributesNotInMetadata),
-                              "Ids in GlobalAttributesNotInMetadata not consecutive (except EventList)");
-#endif // CHIP_CONFIG_ENABLE_EVENTLIST_ATTRIBUTE
-                if (!addedExtraGlobals && id > lastGlobalId)
-                {
-                    for (const auto & globalId : GlobalAttributesNotInMetadata)
-                    {
-                        ReturnErrorOnFailure(encoder.Encode(globalId));
-                    }
-                    addedExtraGlobals = true;
-                }
-                ReturnErrorOnFailure(encoder.Encode(id));
-            }
-            if (!addedExtraGlobals)
-            {
-                for (const auto & globalId : GlobalAttributesNotInMetadata)
-                {
-                    ReturnErrorOnFailure(encoder.Encode(globalId));
-                }
-            }
-            return CHIP_NO_ERROR;
-        });
+        return EncodeAttributeList(aPath, aEncoder);
 #if CHIP_CONFIG_ENABLE_EVENTLIST_ATTRIBUTE
     case EventList::Id:
         return aEncoder.EncodeList([this](const auto & encoder) {
@@ -438,6 +405,122 @@ CHIP_ERROR GlobalAttributeReader::EncodeCommandList(const ConcreteClusterPath & 
         }
         return CHIP_NO_ERROR;
     });
+}
+
+class GlobalAttributeNotInMetadataTracker
+{
+  public:
+    GlobalAttributeNotInMetadataTracker() = default;
+
+    void MarkAttributeRecordedIfNeeded(AttributeId attribute)
+    {
+        // We only care about global attributes not in metadata, so for sure any "low"
+        // attribute ID can early bail-out so we don't search the list of global attributes
+        // not in metadata.
+        if (attribute < GlobalAttributesNotInMetadata[0])
+        {
+            return;
+        }
+
+        size_t index_in_set = 0;
+        bool found = IndexOfGlobalAttributesNotInMetadata(attribute, index_in_set);
+
+        if (found)
+        {
+            m_tracked_attributes.Set(index_in_set);
+        }
+    }
+
+    bool IsAttributeRecorded(AttributeId attribute) const
+    {
+        size_t index_in_set = 0;
+        bool found = IndexOfGlobalAttributesNotInMetadata(attribute, index_in_set);
+
+        if (found)
+        {
+            return m_tracked_attributes.Has(index_in_set);
+        }
+
+        return false;
+    }
+  private:
+    BitSet<ArraySize(GlobalAttributesNotInMetadata)> m_tracked_attributes{};
+};
+
+CHIP_ERROR GlobalAttributeReader::EncodeAttributeList(const ConcreteClusterPath & aClusterPath, AttributeValueEncoder & aEncoder)
+{
+    return aEncoder.EncodeList([this](const auto & encoder) {
+            GlobalAttributeNotInMetadataTracker globalAttributeNotInMetadataTracker;
+
+            AttributeAccessInterface * attributeOverride = GetAttributeAccessOverride(aClusterPath.mEndpointId, aClusterPath.mClusterId);
+            bool encodedFromAttributeAccess = false;
+
+            if (attributeOverride != nullptr)
+            {
+                struct Context
+                {
+                    decltype(encoder) & attributeIdEncoder;
+                    GlobalAttributeNotInMetadataTracker & globalAttributeNotInMetadataTracker
+                    CHIP_ERROR err;
+                } context{ encoder, globalAttributeNotInMetadataTracker, CHIP_NO_ERROR };
+
+                CHIP_ERROR err = (attributeOverride->EnumerateSupportedAttributes_DO_NOT_USE_YET_UNLESS_YOU_TALK_TO_SDK_TEAM)(
+                    aClusterPath,
+                    [](AttributeId attribute, void * closure) -> Loop {
+                        auto * ctx = static_cast<Context *>(closure);
+                        ctx->err   = ctx->attributeIdEncoder.Encode(attribute);
+                        if (ctx->err != CHIP_NO_ERROR)
+                        {
+                            return Loop::Break;
+                        }
+                        ctx->globalAttributeNotInMetadataTracker.MarkAttributeRecordedIfNeeded(attribute);
+                        return Loop::Continue;
+                    },
+                    &context);
+
+                encodedFromAttributeAccess = (err == CHIP_NO_ERROR);
+                if (err != CHIP_ERROR_NOT_IMPLEMENTED)
+                {
+                    return context.err;
+                }
+            }
+
+            // Use global attribute metadata tables to give list of attributes if it was not obtained dynamically.
+            if (!encodedFromAttributeAccess)
+            {
+                const size_t count     = mCluster->attributeCount;
+
+                for (size_t i = 0; i < count; ++i)
+                {
+                    AttributeId id              = mCluster->attributes[i].attributeId;
+                    constexpr auto lastGlobalId = GlobalAttributesNotInMetadata[ArraySize(GlobalAttributesNotInMetadata) - 1];
+#if CHIP_CONFIG_ENABLE_EVENTLIST_ATTRIBUTE
+                    // The GlobalAttributesNotInMetadata shouldn't have any gaps in their ids here.
+                    static_assert(lastGlobalId - GlobalAttributesNotInMetadata[0] == ArraySize(GlobalAttributesNotInMetadata) - 1,
+                                "Ids in GlobalAttributesNotInMetadata not consecutive");
+#else
+                    // If EventList is not supported. The GlobalAttributesNotInMetadata is missing one id here.
+                    static_assert(lastGlobalId - GlobalAttributesNotInMetadata[0] == ArraySize(GlobalAttributesNotInMetadata),
+                                "Ids in GlobalAttributesNotInMetadata not consecutive (except EventList)");
+#endif // CHIP_CONFIG_ENABLE_EVENTLIST_ATTRIBUTE
+                    globalAttributeNotInMetadataTracker.MarkAttributeRecordedIfNeeded(id);
+                    ReturnErrorOnFailure(encoder.Encode(id));
+                }
+            }
+
+            // Record all needed "global attributes not in metadata" that were not yet recorded by either method.
+            for (const auto & globalId : GlobalAttributesNotInMetadata)
+            {
+                // Skip already recorded IDs.
+                if (globalAttributeNotInMetadataTracker.IsAttributeRecorded(globalId))
+                {
+                    continue;
+                }
+                ReturnErrorOnFailure(encoder.Encode(globalId));
+            }
+
+            return CHIP_NO_ERROR;
+        });
 }
 
 // Helper function for trying to read an attribute value via an
@@ -514,6 +597,7 @@ bool ConcreteAttributePathExists(const ConcreteAttributePath & aPath)
             return (emberAfFindServerCluster(aPath.mEndpointId, aPath.mClusterId) != nullptr);
         }
     }
+
     return (emberAfLocateAttributeMetadata(aPath.mEndpointId, aPath.mClusterId, aPath.mAttributeId) != nullptr);
 }
 
@@ -544,6 +628,7 @@ CHIP_ERROR ReadSingleClusterData(const SubjectDescriptor & aSubjectDescriptor, b
 
     if (!isGlobalAttributeNotInMetadata)
     {
+        // TODO(#31405): Allow missing attribute metadata for code-backed cluster by asking AccessAttributeInterface for data.
         attributeMetadata = emberAfLocateAttributeMetadata(aPath.mEndpointId, aPath.mClusterId, aPath.mAttributeId);
     }
 

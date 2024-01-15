@@ -443,6 +443,49 @@ public:
      */
     virtual CHIP_ERROR Write(const ConcreteDataAttributePath & aPath, AttributeValueDecoder & aDecoder) { return CHIP_NO_ERROR; }
 
+    typedef Loop (*AttributeIdCallback)(AttributeId id, void * context);
+
+    /**
+     * Function that may be implemented to enumerate supported attributes
+     * for the given cluster.
+     *
+     * If method `SupportsAttributeEnumeration_DO_NOT_USE_YET_UNLESS_YOU_TALK_TO_SDK_TEAM()`
+     * return false, this function must return CHIP_ERROR_NOT_IMPLEMENTED, and the list of
+     * accepted commands will come from the endpoint metadata for the cluster.
+     *
+     * NOTE that if CHIP_ERROR_NOT_IMPLEMENTED is not returned, then it means
+     * this method is the ONLY WAY to report the set of supported attributes
+     * and the endpoint metadata (Ember legacy ZAP-generated metadata) will NOT
+     * be looked-up for the given path.
+     *
+     * If this function returns any other error, that will be treated as an
+     * error condition by the caller, and handling will depend on the caller.
+     *
+     * Otherwise the list of supported attributes will be the list of values passed
+     * to the provided callback.
+     *
+     * The implementation _must_ pass the provided context to the callback, which
+     * is how the caller can incrementally keep track of where it is.
+     *
+     * If the callback returns Loop::Break, there must be no more calls to it.
+     * This is used by callbacks that just look for a particular value in the
+     * list.
+     */
+    virtual CHIP_ERROR EnumerateSupportedAttributes_DO_NOT_USE_YET_UNLESS_YOU_TALK_TO_SDK_TEAM(const ConcreteClusterPath & cluster, AttributeIdCallback callback, void * context) const
+    {
+        return CHIP_ERROR_NOT_IMPLEMENTED;
+    }
+
+    virtual bool SupportsAttributeEnumeration_DO_NOT_USE_YET_UNLESS_YOU_TALK_TO_SDK_TEAM() const
+    {
+        return false;
+    }
+
+    virtual bool SupportsAttribute_DO_NOT_USE_YET_UNLESS_YOU_TALK_TO_SDK_TEAM(const ConcreteAttributePath & attribute) const
+    {
+        return false;
+    }
+
     /**
      * Indicates the start of a series of list operations. This function will be called before the first Write operation of a series
      * of consequence attribute data of the same attribute.
