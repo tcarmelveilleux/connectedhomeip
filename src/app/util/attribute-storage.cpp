@@ -1413,14 +1413,36 @@ EmberAfGenericClusterFunction emberAfFindClusterFunction(const EmberAfCluster * 
 
 namespace {
 
-// Cache the last one found so that look-ups are faster.
-AttributeAccessInterface * gLastAttributeAccessInterfaceFound = nullptr;
+// Cache the last AttributeAccessInterface instance used so that look-ups are faster.
+chip::app::AttributeAccessInterface * gLastAttributeAccessInterfaceUsed = nullptr;
+
+void InvalidateAttributeAccessInterfaceCache()
+{
+    gLastAttributeAccessInterfaceUsed = nullptr;
+}
+
+void MarkUsedInAttributeAccessInterfaceCache(chip::app::AttributeAccessInterface *attrInterface)
+{
+    gLastAttributeAccessInterfaceUsed = attrInterface
+}
+
+chip::app::AttributeAccessInterface * GetFromAttributeInterfaceCache(EndpointId endpointId, ClusterId clusterId)
+{
+    if (gLastAttributeAccessInterfaceUsed == nullptr)
+    {
+        return nullptr;
+    }
+    XXXXXXXXXXXXXXx
+    if ()
+}
 
 } // namespace
 
 
 bool registerAttributeAccessOverride(AttributeAccessInterface * attrOverride)
 {
+    InvalidateAttributeAccessInterfaceCache();
+
     for (auto * cur = gAttributeAccessOverrides; cur; cur = cur->GetNext())
     {
         if (cur->Matches(*attrOverride))
@@ -1436,9 +1458,7 @@ bool registerAttributeAccessOverride(AttributeAccessInterface * attrOverride)
 
 void unregisterAttributeAccessOverride(AttributeAccessInterface * attrOverride)
 {
-    // Invalidate cache immediately on changes
-
-XXXXXXXXXXX
+    InvalidateAttributeAccessInterfaceCache();
     UnregisterMatchingAttributeAccessInterfaces([attrOverride](AttributeAccessInterface * entry) { return entry == attrOverride; });
 }
 
@@ -1446,10 +1466,12 @@ namespace chip {
 namespace app {
 app::AttributeAccessInterface * GetAttributeAccessOverride(EndpointId endpointId, ClusterId clusterId)
 {
+
     for (app::AttributeAccessInterface * cur = gAttributeAccessOverrides; cur; cur = cur->GetNext())
     {
         if (cur->Matches(endpointId, clusterId))
         {
+            MarkUsedInAttributeAccessInterfaceCache(cur);
             return cur;
         }
     }
