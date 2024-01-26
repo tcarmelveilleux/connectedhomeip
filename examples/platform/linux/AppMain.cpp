@@ -328,34 +328,13 @@ static bool EnsureWiFiIsStarted()
 }
 #endif
 
-class SampleTestEventTriggerDelegate : public TestEventTriggerDelegate
+class SampleTestEventTriggerHandler : public TestEventTriggerHandler
 {
-public:
-    /// NOTE: If you copy this, please use the reserved range FFFF_FFFF_<VID_HEX>_xxxx for your trigger codes.
+    /// NOTE: If you copy this for NON-STANDARD CLUSTERS OR USAGES, please use the reserved range FFFF_FFFF_<VID_HEX>_xxxx for your trigger codes.
+    /// NOTE: Standard codes are <CLUSTER_ID_HEX>_xxxx_xxxx_xxxx.
     static constexpr uint64_t kSampleTestEventTriggerAlwaysSuccess = static_cast<uint64_t>(0xFFFF'FFFF'FFF1'0000ull);
 
-    SampleTestEventTriggerDelegate() { memset(&mEnableKey[0], 0, sizeof(mEnableKey)); }
-
-    /**
-     * @brief Initialize the delegate with a key and an optional other handler
-     *
-     * The `otherDelegate` will be called if there is no match of the eventTrigger
-     * when HandleEventTrigger is called, if it is non-null.
-     *
-     * @param enableKey - EnableKey to use for this instance.
-     * @param otherDelegate - Other delegate (e.g. OTA delegate) where defer trigger. Can be nullptr
-     * @return CHIP_NO_ERROR on success, CHIP_ERROR_INVALID_ARGUMENT if enableKey is wrong size.
-     */
-    CHIP_ERROR Init(ByteSpan enableKey, TestEventTriggerDelegate * otherDelegate)
-    {
-        VerifyOrReturnError(enableKey.size() == sizeof(mEnableKey), CHIP_ERROR_INVALID_ARGUMENT);
-        mOtherDelegate = otherDelegate;
-        MutableByteSpan ourEnableKeySpan(mEnableKey);
-        return CopySpanToMutableSpan(enableKey, ourEnableKeySpan);
-    }
-
-    bool DoesEnableKeyMatch(const ByteSpan & enableKey) const override { return enableKey.data_equal(ByteSpan(mEnableKey)); }
-
+public:
     CHIP_ERROR HandleEventTrigger(uint64_t eventTrigger) override
     {
         ChipLogProgress(Support, "Saw TestEventTrigger: " ChipLogFormatX64, ChipLogValueX64(eventTrigger));
@@ -367,12 +346,32 @@ public:
             return CHIP_NO_ERROR;
         }
 
-        return (mOtherDelegate != nullptr) ? mOtherDelegate->HandleEventTrigger(eventTrigger) : CHIP_ERROR_INVALID_ARGUMENT;
+        return CHIP_ERROR_INVALID_ARGUMENT;
+    }
+}
+
+class SampleTestEventTriggerDelegate : public TestEventTriggerDelegate
+{
+public:
+    SampleTestEventTriggerDelegate() { memset(&mEnableKey[0], 0, sizeof(mEnableKey)); }
+
+    /**
+     * @brief Initialize the delegate with a key
+     *
+     * @param enableKey - EnableKey to use for this instance.
+     * @return CHIP_NO_ERROR on success, CHIP_ERROR_INVALID_ARGUMENT if enableKey is wrong size.
+     */
+    CHIP_ERROR Init(ByteSpan enableKey, TestEventTriggerDelegate * otherDelegate)
+    {
+        VerifyOrReturnError(enableKey.size() == sizeof(mEnableKey), CHIP_ERROR_INVALID_ARGUMENT);
+        mOtherDelegate = otherDelegate;
+        MutableByteSpan ourEnableKeySpan(mEnableKey);
+        return CopySpanToMutableSpan(enableKey, ourEnableKeySpan);
     }
 
+    bool DoesEnableKeyMatch(const ByteSpan & enableKey) const override { return enableKey.data_equal(ByteSpan(mEnableKey)); }
 private:
     uint8_t mEnableKey[TestEventTriggerDelegate::kEnableKeyLength];
-    TestEventTriggerDelegate * mOtherDelegate = nullptr;
 };
 
 int ChipLinuxAppInit(int argc, char * const argv[], OptionSet * customOptions,
