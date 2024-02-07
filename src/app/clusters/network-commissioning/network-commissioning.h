@@ -99,8 +99,8 @@ private:
     uint8_t mConnectingNetworkIDLen = 0;
     uint8_t mLastNetworkID[DeviceLayer::NetworkCommissioning::kMaxNetworkIDLen];
     uint8_t mLastNetworkIDLen = 0;
-
     Optional<uint64_t> mCurrentOperationBreadcrumb;
+    bool mScanningWasDirected = false;
 
     // Commits the breadcrumb value saved in mCurrentOperationBreadcrumb to the breadcrumb attribute in GeneralCommissioning
     // cluster. Will set mCurrentOperationBreadcrumb to NullOptional.

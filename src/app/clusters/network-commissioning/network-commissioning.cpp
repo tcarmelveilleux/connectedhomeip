@@ -413,6 +413,8 @@ void Instance::HandleScanNetworks(HandlerContext & ctx, const Commands::ScanNetw
             ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::InvalidCommand);
             return;
         }
+
+        mScanningWasDirected = !ssid.empty();
         mCurrentOperationBreadcrumb = req.breadcrumb;
         mAsyncCommandHandle         = CommandHandler::Handle(&ctx.mCommandHandler);
         ctx.mCommandHandler.FlushAcksRightAwayOnSlowCommand();
@@ -881,6 +883,12 @@ void Instance::OnFinished(Status status, CharSpan debugText, ThreadScanResponseI
         return;
     }
 
+    // If drivers are failing to respond NetworkNotFound on empty results, force it for them.
+    if ((status == Status::kSuccess) && mScanningWasDirected && networks && (networks->Count() == 0))
+    {
+        status = Status::kNetworkNotFound;
+    }
+
     mLastNetworkingStatusValue.SetNonNull(status);
     mLastConnectErrorValue.SetNull();
     mLastNetworkIDLen = 0;
@@ -997,6 +1005,12 @@ void Instance::OnFinished(Status status, CharSpan debugText, WiFiScanResponseIte
         return;
     }
 
+    // If drivers are failing to respond NetworkNotFound on empty results, force it for them.
+    if ((status == Status::kSuccess) && mScanningWasDirected && networks && (networks->Count() == 0))
+    {
+        status = Status::kNetworkNotFound;
+    }
+
     mLastNetworkingStatusValue.SetNonNull(status);
     mLastConnectErrorValue.SetNull();
     mLastNetworkIDLen = 0;
@@ -1021,16 +1035,20 @@ void Instance::OnFinished(Status status, CharSpan debugText, WiFiScanResponseIte
     SuccessOrExit(err = writer->StartContainer(TLV::ContextTag(Commands::ScanNetworksResponse::Fields::kWiFiScanResults),
                                                TLV::TLVType::kTLVType_Array, listContainerType));
 
-    for (; networks != nullptr && networks->Next(scanResponse) && networksEncoded < kMaxNetworksInScanResponse; networksEncoded++)
+    // Only encode results on success.
+    if (status == status::kSuccess)
     {
-        Structs::WiFiInterfaceScanResultStruct::Type result;
-        result.security = scanResponse.security;
-        result.ssid     = ByteSpan(scanResponse.ssid, scanResponse.ssidLen);
-        result.bssid    = ByteSpan(scanResponse.bssid, sizeof(scanResponse.bssid));
-        result.channel  = scanResponse.channel;
-        result.wiFiBand = scanResponse.wiFiBand;
-        result.rssi     = scanResponse.rssi;
-        SuccessOrExit(err = DataModel::Encode(*writer, TLV::AnonymousTag(), result));
+        for (; networks != nullptr && networks->Next(scanResponse) && networksEncoded < kMaxNetworksInScanResponse; networksEncoded++)
+        {
+            Structs::WiFiInterfaceScanResultStruct::Type result;
+            result.security = scanResponse.security;
+            result.ssid     = ByteSpan(scanResponse.ssid, scanResponse.ssidLen);
+            result.bssid    = ByteSpan(scanResponse.bssid, sizeof(scanResponse.bssid));
+            result.channel  = scanResponse.channel;
+            result.wiFiBand = scanResponse.wiFiBand;
+            result.rssi     = scanResponse.rssi;
+            SuccessOrExit(err = DataModel::Encode(*writer, TLV::AnonymousTag(), result));
+        }
     }
 
     SuccessOrExit(err = writer->EndContainer(listContainerType));
