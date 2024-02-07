@@ -26,6 +26,10 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from cryptography.x509 import AuthorityKeyIdentifier, Certificate, SubjectKeyIdentifier, load_der_x509_certificate
+from pyasn1_alt_modules import rfc5280
+from pkilint import loader, document, util, validation, pkix, report
+from pkilint.pkix import certificate, name, extension, algorithm
+from pkilint.pkix.certificate import certificate_extension, certificate_key
 from matter_testing_support import MatterBaseTest, async_test_body, bytes_from_hex, default_matter_test_main, hex_from_bytes
 from mobly import asserts
 
@@ -76,6 +80,92 @@ def extract_akid(cert: Certificate) -> Optional[bytes]:
             return extension.value.key_identifier
     else:
         return None
+
+
+def create_decoder_validation_container() -> validation.ValidatorContainer:
+    decoders = [
+        pkix.create_attribute_decoder(name.ATTRIBUTE_TYPE_MAPPINGS),
+        pkix.create_extension_decoder(extension.EXTENSION_MAPPINGS),
+        pkix.create_signature_algorithm_identifier_decoder(
+            algorithm.SIGNATURE_ALGORITHM_IDENTIFIER_MAPPINGS,
+            path='certificate.tbsCertificate.signature'
+        ),
+        certificate.create_spki_decoder(
+            certificate_key.SUBJECT_PUBLIC_KEY_ALGORITHM_IDENTIFIER_MAPPINGS,
+            certificate_key.SUBJECT_KEY_PARAMETER_ALGORITHM_IDENTIFIER_MAPPINGS
+        ),
+    ]
+
+    return validation.ValidatorContainer(
+        validators=decoders, path='certificate'
+    )
+
+
+def create_issuer_validation_container() -> validation.ValidatorContainer:
+    validators = [
+        name.IssuerSubjectNameBinaryEqualValidator(
+            path='certificate.tbsCertificate.subject',
+            subject_document_issuer_dn_path='subject:certificate.tbsCertificate.issuer'
+        ),
+        extension.IssuerSubjectKeyIdentifierBinaryEqualValidator(
+            subject_auth_key_id_retriever=(
+                lambda n: document.get_document_by_name(n, 'subject').get_extension_by_oid(
+                    rfc5280.id_ce_authorityKeyIdentifier
+                )
+            )
+        ),
+        certificate_extension.IssuerSubjectPolicyChainValidator(),
+    ]
+
+    return validation.ValidatorContainer(
+        validators=validators
+    )
+
+
+def create_subject_validation_container() -> validation.ValidatorContainer:
+    validators = [
+        certificate_key.SubjectSignatureVerificationValidator(
+            tbs_node_retriever=lambda n: n.navigate('^.tbsCertificate'),
+            path='certificate.signature'
+        )
+    ]
+
+    return validation.ValidatorContainer(
+        validators=validators
+    )
+
+
+def validate_issuer_subject_match(issuer_cert: bytes, issuer_desc: str, subject_cert: bytes, subject_desc: str) -> bool:
+    # Prepare validator context for the specific lint (see https://github.com/digicert/pkilint/blob/main/pkilint/bin/lint_pkix_signer_signee_cert_chain.py)
+    decoding_validation_container = create_decoder_validation_container()
+    issuer_validation_container = create_issuer_validation_container()
+    subject_validation_container = create_subject_validation_container()
+
+    doc_collection = {}
+
+    issuer = loader.load_certificate(issuer_cert, issuer_desc, 'issuer',
+                                     doc_collection
+                                     )
+    doc_collection['issuer'] = issuer
+
+    subject = loader.load_certificate(subject_cert, subject_desc, 'subject',
+                                      doc_collection
+                                      )
+    doc_collection['subject'] = subject
+
+    results = decoding_validation_container.validate(issuer.root)
+    results += decoding_validation_container.validate(subject.root)
+    results += issuer_validation_container.validate(issuer.root)
+    results += subject_validation_container.validate(subject.root)
+
+    print(f"Results of validating {subject_desc} against {issuer_desc}:")
+    output = report.ReportGeneratorJson(results, validation.ValidationFindingSeverity.NOTICE)
+    print(output.generate())
+    for result in results:
+        print(result)
+        print("----")
+
+    return True
 
 
 class TC_DA_1_7(MatterBaseTest):
@@ -185,4 +275,10 @@ class TC_DA_1_7(MatterBaseTest):
 
 
 if __name__ == "__main__":
-    default_matter_test_main()
+    with open("midea_dac.der", "rb") as infile:
+        subject_cert = infile.read()
+    with open("midea_pai.der", "rb") as infile:
+        issuer_cert = infile.read()
+
+    validate_issuer_subject_match(issuer_cert, "PAI", subject_cert, "DAC")
+    # default_matter_test_main()
