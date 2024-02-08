@@ -101,21 +101,21 @@ BitFlags<Feature> WiFiFeatures(WiFiDriver * driver)
 
 Instance::Instance(EndpointId aEndpointId, WiFiDriver * apDelegate) :
     CommandHandlerInterface(Optional<EndpointId>(aEndpointId), Id), AttributeAccessInterface(Optional<EndpointId>(aEndpointId), Id),
-    mFeatureFlags(WiFiFeatures(apDelegate)), mpWirelessDriver(apDelegate), mpBaseDriver(apDelegate)
+    mEndpointId(aEndpointId), mFeatureFlags(WiFiFeatures(apDelegate)), mpWirelessDriver(apDelegate), mpBaseDriver(apDelegate)
 {
     mpDriver.Set<WiFiDriver *>(apDelegate);
 }
 
 Instance::Instance(EndpointId aEndpointId, ThreadDriver * apDelegate) :
     CommandHandlerInterface(Optional<EndpointId>(aEndpointId), Id), AttributeAccessInterface(Optional<EndpointId>(aEndpointId), Id),
-    mFeatureFlags(Feature::kThreadNetworkInterface), mpWirelessDriver(apDelegate), mpBaseDriver(apDelegate)
+    mEndpointId(aEndpointId), mFeatureFlags(Feature::kThreadNetworkInterface), mpWirelessDriver(apDelegate), mpBaseDriver(apDelegate)
 {
     mpDriver.Set<ThreadDriver *>(apDelegate);
 }
 
 Instance::Instance(EndpointId aEndpointId, EthernetDriver * apDelegate) :
     CommandHandlerInterface(Optional<EndpointId>(aEndpointId), Id), AttributeAccessInterface(Optional<EndpointId>(aEndpointId), Id),
-    mFeatureFlags(Feature::kEthernetNetworkInterface), mpWirelessDriver(nullptr), mpBaseDriver(apDelegate)
+    mEndpointId(aEndpointId), mFeatureFlags(Feature::kEthernetNetworkInterface), mpWirelessDriver(nullptr), mpBaseDriver(apDelegate)
 {}
 
 CHIP_ERROR Instance::Init()
@@ -361,6 +361,33 @@ CHIP_ERROR Instance::Write(const ConcreteDataAttributePath & aPath, AttributeVal
     }
 }
 
+void Instance::SetLastNetworkingStatusValue(DataModel::Nullable<NetworkCommissioningStatusEnum> networkingStatusValue)
+{
+    if (mLastNetworkingStatusValue.SetToMatch(networkingStatusValue))
+    {
+        MatterReportingAttributeChangeCallback(mEndpointId, Clusters::NetworkCommissioning::Id, Attributes::LastNetworkingStatus::TypeInfo.GetAttributeId());
+    }
+}
+
+void Instance::SetLastConnectErrorValue(DataModel::Nullable<Attributes::LastConnectErrorValue::TypeInfo::Type> connectErrorValue)
+{
+    if (mLastConnectErrorValue.SetToMatch(connectErrorValue))
+    {
+        MatterReportingAttributeChangeCallback(mEndpointId, Clusters::NetworkCommissioning::Id, Attributes::LastConnectErrorValue::TypeInfo.GetAttributeId());
+    }
+}
+
+void Instance::SetLastNetworkId(ByteSpan lastNetworkId)
+{
+    ByteSpan prevLastNetworkId{mLastNetworkID, mLastNetworkIDLen};
+    VerifyOrReturn(lastNetworkdId.size() <= DeviceLayer::NetworkCommissioning::kMaxNetworkIDLen);
+    VerifyOrReturn(!prevLastNetworkId.data_equal(lastNetworkId));
+
+    memcpy(mLastNetworkID, lastNetworkId.data(), lastNetworkId.size());
+    mLastNetworkIDLen = static_cast<uint8_t>(lastNetworkId.size());
+    MatterReportingAttributeChangeCallback(mEndpointId, Clusters::NetworkCommissioning::Id, Attributes::LastNetworkID::TypeInfo.GetAttributeId());
+}
+
 void Instance::OnNetworkingStatusChange(Status aCommissioningError, Optional<ByteSpan> aNetworkId, Optional<int32_t> aConnectStatus)
 {
     if (aNetworkId.HasValue() && aNetworkId.Value().size() > kMaxNetworkIDLen)
@@ -368,6 +395,7 @@ void Instance::OnNetworkingStatusChange(Status aCommissioningError, Optional<Byt
         ChipLogError(DeviceLayer, "Invalid network id received when calling OnNetworkingStatusChange");
         return;
     }
+XXXXXXXXXXX FIXME bad enum match
     mLastNetworkingStatusValue.SetNonNull(aCommissioningError);
     if (aNetworkId.HasValue())
     {
@@ -740,6 +768,18 @@ void Instance::HandleReorderNetwork(HandlerContext & ctx, const Commands::Reorde
     }
 }
 
+void SetLastNetworkingStatusValue(DataModel::Nullable<NetworkCommissioningStatusEnum> networkingStatusValue)
+{
+    if (mLastNetworkingStatusValue.SetToMatch(networkingStatusValue))
+    {
+        MatterReportingAttributeChangeCallback()
+    }
+
+}
+
+void SetLastConnectErrorValue(Attributes::LastConnectErrorValue::TypeInfo::Type connectErrorValue);
+void SetLastNetworkId(ByteSpan lastNetworkId);
+
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFI_PDC
 void Instance::HandleQueryIdentity(HandlerContext & ctx, const Commands::QueryIdentity::DecodableType & req)
 {
@@ -916,7 +956,7 @@ void Instance::OnFinished(Status status, CharSpan debugText, ThreadScanResponseI
                                                TLV::TLVType::kTLVType_Array, listContainerType));
 
     // If no network was found, we encode an empty list, don't call a zero-sized alloc.
-    if (networks->Count() > 0)
+    if ((status == Status::kSuccess) && (networks->Count() > 0))
     {
         VerifyOrExit(scanResponseArray.Alloc(chip::min(networks->Count(), kMaxNetworksInScanResponse)), err = CHIP_ERROR_NO_MEMORY);
         for (; networks != nullptr && networks->Next(scanResponse);)
@@ -1011,6 +1051,9 @@ void Instance::OnFinished(Status status, CharSpan debugText, WiFiScanResponseIte
         status = Status::kNetworkNotFound;
     }
 
+    bool networkingStatusChanged = !mLastNetworkingStatusValue.IsNull() || (mLastNetworkingStatusValue.Value() != status);
+    bool connectErrorChanged = !mLastConnectErrorValue.IsNull();
+
     mLastNetworkingStatusValue.SetNonNull(status);
     mLastConnectErrorValue.SetNull();
     mLastNetworkIDLen = 0;
@@ -1035,8 +1078,8 @@ void Instance::OnFinished(Status status, CharSpan debugText, WiFiScanResponseIte
     SuccessOrExit(err = writer->StartContainer(TLV::ContextTag(Commands::ScanNetworksResponse::Fields::kWiFiScanResults),
                                                TLV::TLVType::kTLVType_Array, listContainerType));
 
-    // Only encode results on success.
-    if (status == status::kSuccess)
+    // Only encode results on success, to avoid stale contents on partial failure.
+    if (status == Status::kSuccess)
     {
         for (; networks != nullptr && networks->Next(scanResponse) && networksEncoded < kMaxNetworksInScanResponse; networksEncoded++)
         {
@@ -1053,7 +1096,6 @@ void Instance::OnFinished(Status status, CharSpan debugText, WiFiScanResponseIte
 
     SuccessOrExit(err = writer->EndContainer(listContainerType));
     SuccessOrExit(err = commandHandle->FinishCommand());
-
 exit:
     if (err != CHIP_NO_ERROR)
     {

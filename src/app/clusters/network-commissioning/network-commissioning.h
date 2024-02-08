@@ -78,6 +78,7 @@ private:
     void OnCommissioningComplete();
     void OnFailSafeTimerExpired();
 
+    EndpointId mEndpointId;
     const BitFlags<Feature> mFeatureFlags;
 
     DeviceLayer::NetworkCommissioning::Internal::WirelessDriver * const mpWirelessDriver;
@@ -101,6 +102,10 @@ private:
     uint8_t mLastNetworkIDLen = 0;
     Optional<uint64_t> mCurrentOperationBreadcrumb;
     bool mScanningWasDirected = false;
+
+    void SetLastNetworkingStatusValue(DataModel::Nullable<NetworkCommissioningStatusEnum> networkingStatusValue);
+    void SetLastConnectErrorValue(Attributes::LastConnectErrorValue::TypeInfo::Type connectErrorValue);
+    void SetLastNetworkId(ByteSpan lastNetworkId);
 
     // Commits the breadcrumb value saved in mCurrentOperationBreadcrumb to the breadcrumb attribute in GeneralCommissioning
     // cluster. Will set mCurrentOperationBreadcrumb to NullOptional.
