@@ -380,7 +380,7 @@ void Instance::SetLastConnectErrorValue(DataModel::Nullable<Attributes::LastConn
 void Instance::SetLastNetworkId(ByteSpan lastNetworkId)
 {
     ByteSpan prevLastNetworkId{mLastNetworkID, mLastNetworkIDLen};
-    VerifyOrReturn(lastNetworkdId.size() <= DeviceLayer::NetworkCommissioning::kMaxNetworkIDLen);
+    VerifyOrReturn(lastNetworkdId.size() <= kMaxNetworkIDLen);
     VerifyOrReturn(!prevLastNetworkId.data_equal(lastNetworkId));
 
     memcpy(mLastNetworkID, lastNetworkId.data(), lastNetworkId.size());
@@ -390,35 +390,34 @@ void Instance::SetLastNetworkId(ByteSpan lastNetworkId)
 
 void Instance::OnNetworkingStatusChange(Status aCommissioningError, Optional<ByteSpan> aNetworkId, Optional<int32_t> aConnectStatus)
 {
-    if (aNetworkId.HasValue() && aNetworkId.Value().size() > kMaxNetworkIDLen)
-    {
-        ChipLogError(DeviceLayer, "Invalid network id received when calling OnNetworkingStatusChange");
-        return;
-    }
-XXXXXXXXXXX FIXME bad enum match
-    mLastNetworkingStatusValue.SetNonNull(aCommissioningError);
     if (aNetworkId.HasValue())
     {
-        memcpy(mLastNetworkID, aNetworkId.Value().data(), aNetworkId.Value().size());
-        mLastNetworkIDLen = static_cast<uint8_t>(aNetworkId.Value().size());
+        if (aNetworkId.Value().size() > kMaxNetworkIDLen)
+        {
+            ChipLogError(DeviceLayer, "Invalid network id received when calling OnNetworkingStatusChange");
+        }
+        else
+        {
+            SetLastNetworkId(aNetworkId);
+        }
     }
-    else
-    {
-        mLastNetworkIDLen = 0;
-    }
+
+    SetLastNetworkingStatusValue(aCommissioningError);
     if (aConnectStatus.HasValue())
     {
-        mLastConnectErrorValue.SetNonNull(aConnectStatus.Value());
+        SetLastConnectErrorValue(MakeNullable<Attributes::LastConnectErrorValue::TypeInfo::Type>(aConnectStatus.Value()));
     }
     else
     {
-        mLastConnectErrorValue.SetNull();
+        SetLastConnectErrorValue(MakeNullable<Attributes::LastConnectErrorValue::TypeInfo::Type>());
     }
 }
 
 void Instance::HandleScanNetworks(HandlerContext & ctx, const Commands::ScanNetworks::DecodableType & req)
 {
     MATTER_TRACE_SCOPE("HandleScanNetwork", "NetworkCommissioning");
+
+    mScanningWasDirected = false;
     if (mFeatureFlags.Has(Feature::kWiFiNetworkInterface))
     {
         ByteSpan ssid;
@@ -438,7 +437,10 @@ void Instance::HandleScanNetworks(HandlerContext & ctx, const Commands::ScanNetw
         }
         if (ssid.size() > DeviceLayer::Internal::kMaxWiFiSSIDLength)
         {
+            // This should not happen, it means it's a broken driver.
+            // TODO(#32018): This should be a constraint error.
             ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::InvalidCommand);
+            SetLastNetworkStatusValue(Status::kUnknownError);
             return;
         }
 
@@ -450,6 +452,16 @@ void Instance::HandleScanNetworks(HandlerContext & ctx, const Commands::ScanNetw
     }
     else if (mFeatureFlags.Has(Feature::kThreadNetworkInterface))
     {
+        // Not allowed to populate SSID for Thread.
+        // TODO(#32019): Need to introduce this fix, but not enabling just yet.
+#if 0
+        if (!req.ssid.empty())
+        {
+            ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::ConstraintError);
+            return;
+        }
+#endif // 0
+
         mCurrentOperationBreadcrumb = req.breadcrumb;
         mAsyncCommandHandle         = CommandHandler::Handle(&ctx.mCommandHandler);
         ctx.mCommandHandler.FlushAcksRightAwayOnSlowCommand();
@@ -497,6 +509,7 @@ void Instance::HandleAddOrUpdateWiFiNetwork(HandlerContext & ctx, const Commands
 
     if (req.ssid.empty() || req.ssid.size() > DeviceLayer::Internal::kMaxWiFiSSIDLength)
     {
+        // TODO(#32018): This should be a constraint error.
         ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::InvalidCommand, "ssid");
         return;
     }
@@ -511,6 +524,7 @@ void Instance::HandleAddOrUpdateWiFiNetwork(HandlerContext & ctx, const Commands
             return;
         }
 #endif // CHIP_DEVICE_CONFIG_ENABLE_WIFI_PDC
+        // TODO(#32018): This should be a constraint error.
         ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::InvalidCommand);
         return;
     }
@@ -538,6 +552,7 @@ void Instance::HandleAddOrUpdateWiFiNetwork(HandlerContext & ctx, const Commands
         {
             if (!isxdigit(req.credentials.data()[d]))
             {
+                // TODO(#32018): This should be a constraint error.
                 ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::InvalidCommand);
                 return;
             }
@@ -546,6 +561,7 @@ void Instance::HandleAddOrUpdateWiFiNetwork(HandlerContext & ctx, const Commands
     else
     {
         // Invalid length
+        // TODO(#32018): This should be a constraint error.
         ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::InvalidCommand);
         return;
     }
@@ -571,6 +587,7 @@ void Instance::HandleAddOrUpdateWiFiNetworkWithPDC(HandlerContext & ctx,
     // Credentials must be empty when configuring for PDC, it's only present to keep the command shape compatible.
     if (!req.credentials.empty())
     {
+        // TODO(#32018): This should be a constraint error.
         ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::InvalidCommand, "credentials");
         return;
     }
@@ -579,12 +596,14 @@ void Instance::HandleAddOrUpdateWiFiNetworkWithPDC(HandlerContext & ctx,
     if (networkIdentity.size() > kMaxCHIPCompactNetworkIdentityLength ||
         Credentials::ValidateChipNetworkIdentity(networkIdentity) != CHIP_NO_ERROR)
     {
+        // TODO(#32018): This should be a constraint error.
         ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::InvalidCommand, "networkIdentity");
         return;
     }
 
     if (req.clientIdentifier.HasValue() && req.clientIdentifier.Value().size() != CertificateKeyId::size())
     {
+        // TODO(#32018): This should be a constraint error.
         ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::InvalidCommand, "clientIdentifier");
         return;
     }
@@ -592,6 +611,7 @@ void Instance::HandleAddOrUpdateWiFiNetworkWithPDC(HandlerContext & ctx,
     bool provePossession = req.possessionNonce.HasValue();
     if (provePossession && req.possessionNonce.Value().size() != kPossessionNonceSize)
     {
+        // TODO(#32018): This should be a constraint error.
         ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::InvalidCommand, "possessionNonce");
         return;
     }
@@ -727,7 +747,7 @@ void Instance::HandleConnectNetwork(HandlerContext & ctx, const Commands::Connec
     MATTER_TRACE_SCOPE("HandleConnectNetwork", "NetworkCommissioning");
     if (req.networkID.size() > kMaxNetworkIDLen)
     {
-        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::InvalidValue);
+        ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::ConstraintError);
         return;
     }
 
@@ -768,18 +788,6 @@ void Instance::HandleReorderNetwork(HandlerContext & ctx, const Commands::Reorde
     }
 }
 
-void SetLastNetworkingStatusValue(DataModel::Nullable<NetworkCommissioningStatusEnum> networkingStatusValue)
-{
-    if (mLastNetworkingStatusValue.SetToMatch(networkingStatusValue))
-    {
-        MatterReportingAttributeChangeCallback()
-    }
-
-}
-
-void SetLastConnectErrorValue(Attributes::LastConnectErrorValue::TypeInfo::Type connectErrorValue);
-void SetLastNetworkId(ByteSpan lastNetworkId);
-
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFI_PDC
 void Instance::HandleQueryIdentity(HandlerContext & ctx, const Commands::QueryIdentity::DecodableType & req)
 {
@@ -787,6 +795,7 @@ void Instance::HandleQueryIdentity(HandlerContext & ctx, const Commands::QueryId
 
     if (req.keyIdentifier.size() != CertificateKeyId::size())
     {
+        // TODO(#32018): This should be a constraint error.
         ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::InvalidCommand, "keyIdentifier");
         return;
     }
@@ -795,6 +804,7 @@ void Instance::HandleQueryIdentity(HandlerContext & ctx, const Commands::QueryId
     bool provePossession = req.possessionNonce.HasValue();
     if (provePossession && req.possessionNonce.Value().size() != kPossessionNonceSize)
     {
+        // TODO(#32018): This should be a constraint error.
         ctx.mCommandHandler.AddStatus(ctx.mRequestPath, Protocols::InteractionModel::Status::InvalidCommand, "possessionNonce");
         return;
     }
@@ -865,6 +875,7 @@ exit:
 }
 #endif // CHIP_DEVICE_CONFIG_ENABLE_WIFI_PDC
 
+// TODO(#32024): Make sure to report all attribute changes.
 void Instance::OnResult(Status commissioningError, CharSpan debugText, int32_t interfaceStatus)
 {
     auto commandHandleRef = std::move(mAsyncCommandHandle);
@@ -886,22 +897,25 @@ void Instance::OnResult(Status commissioningError, CharSpan debugText, int32_t i
     {
         DeviceLayer::DeviceControlServer::DeviceControlSvr().PostConnectedToOperationalNetworkEvent(
             ByteSpan(mLastNetworkID, mLastNetworkIDLen));
-        mLastConnectErrorValue.SetNull();
+        SetLastConnectErrorValue(MakeNullable<Attributes::LastConnectErrorValue::TypeInfo::Type>());
+        SetLastNetworkingStatusValue(MakeNullable<NetworkCommissioningStatusEnum>());
     }
     else
     {
         response.errorValue.SetNonNull(interfaceStatus);
-        mLastConnectErrorValue.SetNonNull(interfaceStatus);
+        SetLastConnectErrorValue(MakeNullable<Attributes::LastConnectErrorValue::TypeInfo::Type>(interfaceStatus));
+        SetLastNetworkingStatusValue(MakeNullable<NetworkCommissioningStatusEnum>(commissioningError));
     }
 
-    mLastNetworkIDLen = mConnectingNetworkIDLen;
-    memcpy(mLastNetworkID, mConnectingNetworkID, mLastNetworkIDLen);
-    mLastNetworkingStatusValue.SetNonNull(commissioningError);
+    SetLastNetworkId(mConnectingNetworkID);
+
+    SetLastNetworkingStatusValue(MakeNullable<NetworkCommissioningStatusEnum>(commissioningError));
 
 #if CONFIG_NETWORK_LAYER_BLE && !CHIP_DEVICE_CONFIG_SUPPORTS_CONCURRENT_CONNECTION
     ChipLogProgress(NetworkProvisioning, "Non-concurrent mode, ConnectNetworkResponse will NOT be sent");
     // Do not send the ConnectNetworkResponse if in non-concurrent mode
-    // Issue #30576 raised to modify CommandHandler to notify it if no response required
+    // TODO(#30576) raised to modify CommandHandler to notify it if no response required
+    // -----> Is this required here: commandHandle->FinishCommand();
 #else
     commandHandle->AddResponse(mPath, response);
 #endif
@@ -923,15 +937,14 @@ void Instance::OnFinished(Status status, CharSpan debugText, ThreadScanResponseI
         return;
     }
 
-    // If drivers are failing to respond NetworkNotFound on empty results, force it for them.
-    if ((status == Status::kSuccess) && mScanningWasDirected && networks && (networks->Count() == 0))
+    if (status != Status::kSuccess)
     {
-        status = Status::kNetworkNotFound;
+        SetLastNetworkingStatusValue(Nullable::MakeOptional<Status>(status));
     }
-
-    mLastNetworkingStatusValue.SetNonNull(status);
-    mLastConnectErrorValue.SetNull();
-    mLastNetworkIDLen = 0;
+    else
+    {
+        SetLastNetworkingStatusValue(Nullable::MakeOptional<Status>());
+    }
 
     TLV::TLVWriter * writer;
     TLV::TLVType listContainerType;
@@ -1051,12 +1064,14 @@ void Instance::OnFinished(Status status, CharSpan debugText, WiFiScanResponseIte
         status = Status::kNetworkNotFound;
     }
 
-    bool networkingStatusChanged = !mLastNetworkingStatusValue.IsNull() || (mLastNetworkingStatusValue.Value() != status);
-    bool connectErrorChanged = !mLastConnectErrorValue.IsNull();
-
-    mLastNetworkingStatusValue.SetNonNull(status);
-    mLastConnectErrorValue.SetNull();
-    mLastNetworkIDLen = 0;
+    if (status != Status::kSuccess)
+    {
+        SetLastNetworkingStatusValue(Nullable::MakeOptional<Status>(status));
+    }
+    else
+    {
+        SetLastNetworkingStatusValue(Nullable::MakeOptional<Status>());
+    }
 
     TLV::TLVWriter * writer;
     TLV::TLVType listContainerType;
