@@ -94,7 +94,7 @@ private:
     // Setting these values don't have to care about parallel requests, since we will reject other requests when there is another
     // request ongoing.
     // These values can be updated via OnNetworkingStatusChange callback, ScanCallback::OnFinished and ConnectCallback::OnResult.
-    DataModel::Nullable<NetworkCommissioningStatusEnum> mLastNetworkingStatusValue;
+    Attributes::LastNetworkingStatus::TypeInfo::Type mLastNetworkingStatusValue;
     Attributes::LastConnectErrorValue::TypeInfo::Type mLastConnectErrorValue;
     uint8_t mConnectingNetworkID[DeviceLayer::NetworkCommissioning::kMaxNetworkIDLen];
     uint8_t mConnectingNetworkIDLen = 0;
@@ -103,7 +103,8 @@ private:
     Optional<uint64_t> mCurrentOperationBreadcrumb;
     bool mScanningWasDirected = false;
 
-    void SetLastNetworkingStatusValue(DataModel::Nullable<NetworkCommissioningStatusEnum> networkingStatusValue);
+
+    void SetLastNetworkingStatusValue(Attributes::LastNetworkingStatus::TypeInfo::Type networkingStatusValue);
     void SetLastConnectErrorValue(Attributes::LastConnectErrorValue::TypeInfo::Type connectErrorValue);
     void SetLastNetworkId(ByteSpan lastNetworkId);
 

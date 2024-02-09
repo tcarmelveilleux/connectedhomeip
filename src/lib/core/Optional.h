@@ -97,7 +97,6 @@ public:
         }
     }
 
-#if 0
     constexpr Optional(Optional && other) : mHasValue(other.mHasValue)
     {
         if (mHasValue)
@@ -107,7 +106,6 @@ public:
             other.mHasValue = false;
         }
     }
-#endif
 
     constexpr Optional & operator=(const Optional & other)
     {
@@ -123,7 +121,6 @@ public:
         return *this;
     }
 
-#if 0
     constexpr Optional & operator=(Optional && other)
     {
         if (mHasValue)
@@ -139,7 +136,6 @@ public:
         }
         return *this;
     }
-#endif
 
     /// Constructs the contained value in-place
     template <class... Args>
@@ -165,7 +161,6 @@ public:
         new (&mValue.mData) T(value);
     }
 
-#if 0
     /** Make the optional contain a specific value */
     constexpr void SetValue(T && value)
     {
@@ -176,7 +171,6 @@ public:
         mHasValue = true;
         new (&mValue.mData) T(std::move(value));
     }
-#endif
 
     /** Invalidate the value inside the optional. Optional now has no value */
     constexpr void ClearValue()

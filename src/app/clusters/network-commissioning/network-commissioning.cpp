@@ -26,6 +26,7 @@
 #include <app/InteractionModelEngine.h>
 #include <app/clusters/general-commissioning-server/general-commissioning-server.h>
 #include <app/data-model/Nullable.h>
+#include <app/reporting/reporting.h>
 #include <app/server/Server.h>
 #include <app/util/attribute-storage.h>
 #include <credentials/CHIPCert.h>
@@ -361,31 +362,31 @@ CHIP_ERROR Instance::Write(const ConcreteDataAttributePath & aPath, AttributeVal
     }
 }
 
-void Instance::SetLastNetworkingStatusValue(DataModel::Nullable<NetworkCommissioningStatusEnum> networkingStatusValue)
+void Instance::SetLastNetworkingStatusValue(Attributes::LastNetworkingStatus::TypeInfo::Type networkingStatusValue)
 {
     if (mLastNetworkingStatusValue.SetToMatch(networkingStatusValue))
     {
-        MatterReportingAttributeChangeCallback(mEndpointId, Clusters::NetworkCommissioning::Id, Attributes::LastNetworkingStatus::TypeInfo.GetAttributeId());
+        MatterReportingAttributeChangeCallback(mEndpointId, Clusters::NetworkCommissioning::Id, Attributes::LastNetworkingStatus::TypeInfo::GetAttributeId());
     }
 }
 
-void Instance::SetLastConnectErrorValue(DataModel::Nullable<Attributes::LastConnectErrorValue::TypeInfo::Type> connectErrorValue)
+void Instance::SetLastConnectErrorValue(Attributes::LastConnectErrorValue::TypeInfo::Type connectErrorValue)
 {
     if (mLastConnectErrorValue.SetToMatch(connectErrorValue))
     {
-        MatterReportingAttributeChangeCallback(mEndpointId, Clusters::NetworkCommissioning::Id, Attributes::LastConnectErrorValue::TypeInfo.GetAttributeId());
+        MatterReportingAttributeChangeCallback(mEndpointId, Clusters::NetworkCommissioning::Id, Attributes::LastConnectErrorValue::TypeInfo::GetAttributeId());
     }
 }
 
 void Instance::SetLastNetworkId(ByteSpan lastNetworkId)
 {
     ByteSpan prevLastNetworkId{mLastNetworkID, mLastNetworkIDLen};
-    VerifyOrReturn(lastNetworkdId.size() <= kMaxNetworkIDLen);
+    VerifyOrReturn(lastNetworkId.size() <= kMaxNetworkIDLen);
     VerifyOrReturn(!prevLastNetworkId.data_equal(lastNetworkId));
 
     memcpy(mLastNetworkID, lastNetworkId.data(), lastNetworkId.size());
     mLastNetworkIDLen = static_cast<uint8_t>(lastNetworkId.size());
-    MatterReportingAttributeChangeCallback(mEndpointId, Clusters::NetworkCommissioning::Id, Attributes::LastNetworkID::TypeInfo.GetAttributeId());
+    MatterReportingAttributeChangeCallback(mEndpointId, Clusters::NetworkCommissioning::Id, Attributes::LastNetworkID::TypeInfo::GetAttributeId());
 }
 
 void Instance::OnNetworkingStatusChange(Status aCommissioningError, Optional<ByteSpan> aNetworkId, Optional<int32_t> aConnectStatus)
@@ -398,7 +399,7 @@ void Instance::OnNetworkingStatusChange(Status aCommissioningError, Optional<Byt
         }
         else
         {
-            SetLastNetworkId(aNetworkId);
+            SetLastNetworkId(aNetworkId.Value());
         }
     }
 
