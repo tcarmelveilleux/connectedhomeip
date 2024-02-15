@@ -192,9 +192,9 @@ static void TestConversion(nlTestSuite * inSuite, void * inContext)
     using WidgetView    = FixedSpan<const bool, 10>;
     using WidgetStorage = std::array<bool, 10>;
 
-    auto optStorage                   = MakeOptional<WidgetStorage>();
+    auto optStorage                   = MakeOptional<WidgetStorage>({});
     auto const & constOptStorage      = optStorage;
-    auto optOtherStorage              = MakeOptional<WidgetStorage>();
+    auto optOtherStorage              = MakeOptional<WidgetStorage>({});
     auto const & constOptOtherStorage = optOtherStorage;
 
     NL_TEST_ASSERT(inSuite, optStorage.HasValue());

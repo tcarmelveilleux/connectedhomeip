@@ -80,6 +80,16 @@ struct Nullable : protected Optional<T>
         return true;
     }
 
+    // Set the nullable to the `other` nullable, returning true if something actually changed.
+    // This can be used to determine if changes occurred on assignment, so that reporting can be triggered
+    // only on actual changes.
+    constexpr bool SetToMatch(const Nullable<T> & other)
+    {
+        bool changed = *this != other;
+        *this = other;
+        return changed;
+    }
+
     // The only fabric-scoped objects in the spec are commands, events and structs inside lists, and none of those can be nullable.
     static constexpr bool kIsFabricScoped = false;
 
@@ -104,3 +114,28 @@ constexpr Nullable<T> MakeNullable(Args &&... args)
 } // namespace DataModel
 } // namespace app
 } // namespace chip
+
+        // if (this->isNull() && other.IsNull())
+        // {
+        //     // No change, null->null.
+        //     return false
+        // }
+        // // Non-null to null --> definite change
+        // else if (this->isNull() && other.IsNull())
+        // {
+        //     (void)SetNonNull(other.Value());
+        //     return true;
+        // }
+        // // Null to non-null --> definite change
+        // else if (this->isNull() && other.IsNull())
+        // {
+        //     SetNull();
+        //     return true;
+        // }
+        // // Non-null to non-null --> change conditional on value being different.
+        // else
+        // {
+        //     bool changed = this->Value() != other.Value();
+        //     SetNonNull(other.Value());
+        //     return changed;
+        // }

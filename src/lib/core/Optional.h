@@ -205,7 +205,7 @@ public:
 
     bool operator==(const Optional & other) const
     {
-        return (mHasValue == other.mHasValue) && (!other.mHasValue || (mValue.mData == other.mValue.mData));
+        return (mHasValue == other.mHasValue) && (!other.mHasValue || (Value() == other.Value()));
     }
     bool operator!=(const Optional & other) const { return !(*this == other); }
     bool operator==(const T & other) const { return HasValue() && Value() == other; }
