@@ -29140,26 +29140,27 @@ namespace Attributes {
 
 namespace FeatureMap {
 
-EmberAfStatus Get(chip::EndpointId endpoint, uint32_t * value)
+Protocols::InteractionModel::Status Get(chip::EndpointId endpoint, uint32_t * value)
 {
     using Traits = NumericAttributeTraits<uint32_t>;
     Traits::StorageType temp;
-    uint8_t * readable   = Traits::ToAttributeStoreRepresentation(temp);
-    EmberAfStatus status = emberAfReadAttribute(endpoint, Clusters::DiscoBall::Id, Id, readable, sizeof(temp));
-    VerifyOrReturnError(EMBER_ZCL_STATUS_SUCCESS == status, status);
+    uint8_t * readable = Traits::ToAttributeStoreRepresentation(temp);
+    Protocols::InteractionModel::Status status =
+        emberAfReadAttribute(endpoint, Clusters::DiscoBall::Id, Id, readable, sizeof(temp));
+    VerifyOrReturnError(Protocols::InteractionModel::Status::Success == status, status);
     if (!Traits::CanRepresentValue(/* isNullable = */ false, temp))
     {
-        return EMBER_ZCL_STATUS_CONSTRAINT_ERROR;
+        return Protocols::InteractionModel::Status::ConstraintError;
     }
     *value = Traits::StorageToWorking(temp);
     return status;
 }
-EmberAfStatus Set(chip::EndpointId endpoint, uint32_t value)
+Protocols::InteractionModel::Status Set(chip::EndpointId endpoint, uint32_t value)
 {
     using Traits = NumericAttributeTraits<uint32_t>;
     if (!Traits::CanRepresentValue(/* isNullable = */ false, value))
     {
-        return EMBER_ZCL_STATUS_CONSTRAINT_ERROR;
+        return Protocols::InteractionModel::Status::ConstraintError;
     }
     Traits::StorageType storageValue;
     Traits::WorkingToStorage(value, storageValue);
@@ -29171,26 +29172,27 @@ EmberAfStatus Set(chip::EndpointId endpoint, uint32_t value)
 
 namespace ClusterRevision {
 
-EmberAfStatus Get(chip::EndpointId endpoint, uint16_t * value)
+Protocols::InteractionModel::Status Get(chip::EndpointId endpoint, uint16_t * value)
 {
     using Traits = NumericAttributeTraits<uint16_t>;
     Traits::StorageType temp;
-    uint8_t * readable   = Traits::ToAttributeStoreRepresentation(temp);
-    EmberAfStatus status = emberAfReadAttribute(endpoint, Clusters::DiscoBall::Id, Id, readable, sizeof(temp));
-    VerifyOrReturnError(EMBER_ZCL_STATUS_SUCCESS == status, status);
+    uint8_t * readable = Traits::ToAttributeStoreRepresentation(temp);
+    Protocols::InteractionModel::Status status =
+        emberAfReadAttribute(endpoint, Clusters::DiscoBall::Id, Id, readable, sizeof(temp));
+    VerifyOrReturnError(Protocols::InteractionModel::Status::Success == status, status);
     if (!Traits::CanRepresentValue(/* isNullable = */ false, temp))
     {
-        return EMBER_ZCL_STATUS_CONSTRAINT_ERROR;
+        return Protocols::InteractionModel::Status::ConstraintError;
     }
     *value = Traits::StorageToWorking(temp);
     return status;
 }
-EmberAfStatus Set(chip::EndpointId endpoint, uint16_t value)
+Protocols::InteractionModel::Status Set(chip::EndpointId endpoint, uint16_t value)
 {
     using Traits = NumericAttributeTraits<uint16_t>;
     if (!Traits::CanRepresentValue(/* isNullable = */ false, value))
     {
-        return EMBER_ZCL_STATUS_CONSTRAINT_ERROR;
+        return Protocols::InteractionModel::Status::ConstraintError;
     }
     Traits::StorageType storageValue;
     Traits::WorkingToStorage(value, storageValue);
