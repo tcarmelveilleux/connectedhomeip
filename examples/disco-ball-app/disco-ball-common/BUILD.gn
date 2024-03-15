@@ -19,7 +19,7 @@ import("${chip_root}/src/app/chip_data_model.gni")
 chip_data_model("disco-ball-common") {
   zap_file = "disco-ball.zap"
 
-  zap_pregenerated_dir =
-      "${chip_root}/zzz_generated/disco-ball/zap-generated"
+  #zap_pregenerated_dir =
+  #    "${chip_root}/zzz_generated/disco-ball/zap-generated"
   is_server = true
 }
