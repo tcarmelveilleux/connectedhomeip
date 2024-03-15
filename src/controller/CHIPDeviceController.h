@@ -55,7 +55,6 @@
 #include <lib/support/DLLUtil.h>
 #include <lib/support/Pool.h>
 #include <lib/support/SafeInt.h>
-#include <lib/support/SerializableIntegerSet.h>
 #include <lib/support/Span.h>
 #include <lib/support/ThreadOperationalDataset.h>
 #include <messaging/ExchangeMgr.h>
@@ -83,10 +82,6 @@ namespace Controller {
 using namespace chip::Protocols::UserDirectedCommissioning;
 
 inline constexpr uint16_t kNumMaxActiveDevices = CHIP_CONFIG_CONTROLLER_MAX_ACTIVE_DEVICES;
-
-// Raw functions for cluster callbacks
-void OnBasicFailure(void * context, CHIP_ERROR err);
-void OnBasicSuccess(void * context, const chip::app::DataModel::NullObjectType &);
 
 struct ControllerInitParams
 {
@@ -220,11 +215,11 @@ public:
      * This function finds the device corresponding to deviceId, and establishes
      * a CASE session with it.
      *
-     * Once the CASE session is successfully established the `onConnectedDevice`
+     * Once the CASE session is successfully established the `onConnection`
      * callback is called. This can happen before GetConnectedDevice returns if
      * there is an existing CASE session.
      *
-     * If a CASE sessions fails to be established, the `onError` callback will
+     * If a CASE sessions fails to be established, the `onFailure` callback will
      * be called.  This can also happen before GetConnectedDevice returns.
      *
      * An error return from this function means that neither callback has been
@@ -235,6 +230,30 @@ public:
     {
         VerifyOrReturnError(mState == State::Initialized, CHIP_ERROR_INCORRECT_STATE);
         mSystemState->CASESessionMgr()->FindOrEstablishSession(ScopedNodeId(peerNodeId, GetFabricIndex()), onConnection, onFailure);
+        return CHIP_NO_ERROR;
+    }
+
+    /**
+     * This function finds the device corresponding to deviceId, and establishes
+     * a CASE session with it.
+     *
+     * Once the CASE session is successfully established the `onConnection`
+     * callback is called. This can happen before GetConnectedDevice returns if
+     * there is an existing CASE session.
+     *
+     * If a CASE sessions fails to be established, the `onSetupFailure` callback will
+     * be called.  This can also happen before GetConnectedDevice returns.
+     *
+     * An error return from this function means that neither callback has been
+     * called yet, and neither callback will be called in the future.
+     */
+    CHIP_ERROR
+    GetConnectedDevice(NodeId peerNodeId, Callback::Callback<OnDeviceConnected> * onConnection,
+                       chip::Callback::Callback<OperationalSessionSetup::OnSetupFailure> * onSetupFailure)
+    {
+        VerifyOrReturnError(mState == State::Initialized, CHIP_ERROR_INCORRECT_STATE);
+        mSystemState->CASESessionMgr()->FindOrEstablishSession(ScopedNodeId(peerNodeId, GetFabricIndex()), onConnection,
+                                                               onSetupFailure);
         return CHIP_NO_ERROR;
     }
 
@@ -545,8 +564,12 @@ public:
 
     /**
      * @brief
-     *   This function stops a pairing process that's in progress. It does not delete the pairing of a previously
-     *   paired device.
+     *   This function stops a pairing or commissioning process that is in progress.
+     *   It does not delete the pairing of a previously paired device.
+     *
+     *   Note that cancelling an ongoing commissioning process is an asynchronous operation.
+     *   The pairing delegate (if any) will receive OnCommissioningComplete and OnCommissioningFailure
+     *   failure callbacks with a status code of CHIP_ERROR_CANCELLED once cancellation is complete.
      *
      * @param[in] remoteDeviceId        The remote device Id.
      *
@@ -742,16 +765,22 @@ public:
     // onSuccess nor onFailure will be called.
     bool ExtendArmFailSafe(DeviceProxy * proxy, CommissioningStage step, uint16_t armFailSafeTimeout,
                            Optional<System::Clock::Timeout> commandTimeout, OnExtendFailsafeSuccess onSuccess,
-                           OnExtendFailsafeFailure onFailure);
+                           OnExtendFailsafeFailure onFailure)
+    {
+        // If this method is called directly by a client, assume it's fire-and-forget (not a commissioning stage)
+        return ExtendArmFailSafeInternal(proxy, step, armFailSafeTimeout, commandTimeout, onSuccess, onFailure,
+                                         /* fireAndForget = */ true);
+    }
 
 private:
-    DevicePairingDelegate * mPairingDelegate;
+    DevicePairingDelegate * mPairingDelegate = nullptr;
 
     DeviceProxy * mDeviceBeingCommissioned               = nullptr;
     CommissioneeDeviceProxy * mDeviceInPASEEstablishment = nullptr;
 
     CommissioningStage mCommissioningStage = CommissioningStage::kSecurePairing;
     bool mRunCommissioningAfterConnection  = false;
+    Internal::InvokeCancelFn mInvokeCancelFn;
 
     ObjectPool<CommissioneeDeviceProxy, kNumMaxActiveDevices> mCommissioneeDevicePool;
 
@@ -769,6 +798,9 @@ private:
 #endif
 
     CHIP_ERROR LoadKeyId(PersistentStorageDelegate * delegate, uint16_t & out);
+
+    static void OnBasicFailure(void * context, CHIP_ERROR err);
+    static void OnBasicSuccess(void * context, const chip::app::DataModel::NullObjectType &);
 
     /* This function sends a Device Attestation Certificate chain request to the device.
        The function does not hold a reference to the device object.
@@ -881,7 +913,7 @@ private:
     static void OnDisarmFailsafe(void * context,
                                  const app::Clusters::GeneralCommissioning::Commands::ArmFailSafeResponse::DecodableType & data);
     static void OnDisarmFailsafeFailure(void * context, CHIP_ERROR error);
-    void DisarmDone();
+    void CleanupDoneAfterError();
     static void OnArmFailSafeExtendedForDeviceAttestation(
         void * context, const chip::app::Clusters::GeneralCommissioning::Commands::ArmFailSafeResponse::DecodableType & data);
     static void OnFailedToExtendedArmFailSafeDeviceAttestation(void * context, CHIP_ERROR error);
@@ -930,27 +962,20 @@ private:
     CommissioneeDeviceProxy * FindCommissioneeDevice(const Transport::PeerAddress & peerAddress);
     void ReleaseCommissioneeDevice(CommissioneeDeviceProxy * device);
 
-    template <typename RequestObjectT>
-    CHIP_ERROR SendCommand(DeviceProxy * device, const RequestObjectT & request,
-                           CommandResponseSuccessCallback<typename RequestObjectT::ResponseType> successCb,
-                           CommandResponseFailureCallback failureCb, Optional<System::Clock::Timeout> timeout)
-    {
-        return SendCommand(device, request, successCb, failureCb, 0, timeout);
-    }
+    bool ExtendArmFailSafeInternal(DeviceProxy * proxy, CommissioningStage step, uint16_t armFailSafeTimeout,
+                                   Optional<System::Clock::Timeout> commandTimeout, OnExtendFailsafeSuccess onSuccess,
+                                   OnExtendFailsafeFailure onFailure, bool fireAndForget);
 
     template <typename RequestObjectT>
-    CHIP_ERROR SendCommand(DeviceProxy * device, const RequestObjectT & request,
-                           CommandResponseSuccessCallback<typename RequestObjectT::ResponseType> successCb,
-                           CommandResponseFailureCallback failureCb, EndpointId endpoint, Optional<System::Clock::Timeout> timeout)
-    {
-        ClusterBase cluster(*device->GetExchangeManager(), device->GetSecureSession().Value(), endpoint);
-        cluster.SetCommandTimeout(timeout);
-
-        return cluster.InvokeCommand(request, this, successCb, failureCb);
-    }
-
+    CHIP_ERROR SendCommissioningCommand(DeviceProxy * device, const RequestObjectT & request,
+                                        CommandResponseSuccessCallback<typename RequestObjectT::ResponseType> successCb,
+                                        CommandResponseFailureCallback failureCb, EndpointId endpoint,
+                                        Optional<System::Clock::Timeout> timeout = NullOptional, bool fireAndForget = false);
     void SendCommissioningReadRequest(DeviceProxy * proxy, Optional<System::Clock::Timeout> timeout,
                                       app::AttributePathParams * readPaths, size_t readPathsSize);
+    void CancelCommissioningInteractions();
+    void CancelCASECallbacks();
+
 #if CHIP_CONFIG_ENABLE_READ_CLIENT
     void ParseCommissioningInfo();
     // Parsing attributes read in kReadCommissioningInfo stage.
@@ -1000,7 +1025,7 @@ private:
         nullptr; // Commissioning delegate to call when PairDevice / Commission functions are used
     CommissioningDelegate * mCommissioningDelegate =
         nullptr; // Commissioning delegate that issued the PerformCommissioningStep command
-    CompletionStatus commissioningCompletionStatus;
+    CompletionStatus mCommissioningCompletionStatus;
 
 #if CHIP_CONFIG_ENABLE_READ_CLIENT
     Platform::UniquePtr<app::ClusterStateCache> mAttributeCache;

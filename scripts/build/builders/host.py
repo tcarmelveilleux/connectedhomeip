@@ -78,6 +78,7 @@ class HostApp(Enum):
     AIR_QUALITY_SENSOR = auto()
     NETWORK_MANAGER = auto()
     DISCO_BALL = auto()
+    ENERGY_MANAGEMENT = auto()
 
     def ExamplePath(self):
         if self == HostApp.ALL_CLUSTERS:
@@ -142,6 +143,8 @@ class HostApp(Enum):
             return 'network-manager-app/linux'
         elif self == HostApp.DISCO_BALL:
             return 'disco-ball-app/linux'
+        elif self == HostApp.ENERGY_MANAGEMENT:
+            return 'energy-management-app/linux'
         else:
             raise Exception('Unknown app type: %r' % self)
 
@@ -228,14 +231,14 @@ class HostApp(Enum):
             yield 'dishwasher-app'
             yield 'dishwasher-app.map'
         elif self == HostApp.MICROWAVE_OVEN:
-            yield 'microwave-oven-app'
-            yield 'microwave-oven-app.map'
+            yield 'chip-microwave-oven-app'
+            yield 'chip-microwave-oven-app.map'
         elif self == HostApp.REFRIGERATOR:
             yield 'refrigerator-app'
             yield 'refrigerator-app.map'
         elif self == HostApp.RVC:
-            yield 'rvc-app'
-            yield 'rvc-app.map'
+            yield 'chip-rvc-app'
+            yield 'chip-rvc-app.map'
         elif self == HostApp.AIR_PURIFIER:
             yield 'air-purifier-app'
             yield 'air-purifier-app.map'
@@ -245,6 +248,9 @@ class HostApp(Enum):
         elif self == HostApp.DISCO_BALL:
             yield 'disco-ball-app'
             yield 'disco-ball-app.map'
+        elif self == HostApp.ENERGY_MANAGEMENT:
+            yield 'chip-energy-management-app'
+            yield 'chip-energy-management-app.map'
         else:
             raise Exception('Unknown app type: %r' % self)
 
@@ -295,9 +301,10 @@ class HostBuilder(GnBuilder):
                  enable_ipv4=True, enable_ble=True, enable_wifi=True,
                  enable_thread=True, use_tsan=False, use_asan=False, use_ubsan=False,
                  separate_event_loop=True, fuzzing_type: HostFuzzingType = HostFuzzingType.NONE, use_clang=False,
-                 interactive_mode=True, extra_tests=False, use_platform_mdns=False, enable_rpcs=False,
+                 interactive_mode=True, extra_tests=False, use_nl_fault_injection=False, use_platform_mdns=False, enable_rpcs=False,
                  use_coverage=False, use_dmalloc=False, minmdns_address_policy=None,
-                 minmdns_high_verbosity=False, imgui_ui=False, crypto_library: HostCryptoLibrary = None):
+                 minmdns_high_verbosity=False, imgui_ui=False, crypto_library: HostCryptoLibrary = None,
+                 enable_test_event_triggers=None):
         super(HostBuilder, self).__init__(
             root=os.path.join(root, 'examples', app.ExamplePath()),
             runner=runner)
@@ -367,6 +374,9 @@ class HostBuilder(GnBuilder):
                 # so setting clang is not correct
                 raise Exception('Fake host board is always gcc (not clang)')
 
+        if use_nl_fault_injection:
+            self.extra_gn_options.append('chip_with_nlfaultinjection=true')
+
         if minmdns_address_policy:
             if use_platform_mdns:
                 raise Exception('Address policy applies to minmdns only')
@@ -397,6 +407,10 @@ class HostBuilder(GnBuilder):
         # and mbedtls for android/freertos/zephyr/mbed/...)
         if crypto_library:
             self.extra_gn_options.append(crypto_library.gn_argument)
+
+        if enable_test_event_triggers is not None:
+            if 'EVSE' in enable_test_event_triggers:
+                self.extra_gn_options.append('chip_enable_energy_evse_trigger=true')
 
         if self.board == HostBoard.ARM64:
             if not use_clang:
