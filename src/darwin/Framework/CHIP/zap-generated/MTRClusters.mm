@@ -20105,7 +20105,7 @@ using chip::System::Clock::Timeout;
     auto * timedInvokeTimeoutMs = params.timedInvokeTimeoutMs;
 
     using RequestType = DiscoBall::Commands::StartRequest::Type;
-    [self.device _invokeKnownCommandWithEndpointID:self.endpointID
+    [self.device _invokeKnownCommandWithEndpointID:@(self.endpoint)
                                          clusterID:@(RequestType::GetClusterId())
                                          commandID:@(RequestType::GetCommandId())
                                     commandPayload:params
@@ -20136,7 +20136,7 @@ using chip::System::Clock::Timeout;
     auto * timedInvokeTimeoutMs = params.timedInvokeTimeoutMs;
 
     using RequestType = DiscoBall::Commands::StopRequest::Type;
-    [self.device _invokeKnownCommandWithEndpointID:self.endpointID
+    [self.device _invokeKnownCommandWithEndpointID:@(self.endpoint)
                                          clusterID:@(RequestType::GetClusterId())
                                          commandID:@(RequestType::GetCommandId())
                                     commandPayload:params
@@ -20167,7 +20167,7 @@ using chip::System::Clock::Timeout;
     auto * timedInvokeTimeoutMs = params.timedInvokeTimeoutMs;
 
     using RequestType = DiscoBall::Commands::ReverseRequest::Type;
-    [self.device _invokeKnownCommandWithEndpointID:self.endpointID
+    [self.device _invokeKnownCommandWithEndpointID:@(self.endpoint)
                                          clusterID:@(RequestType::GetClusterId())
                                          commandID:@(RequestType::GetCommandId())
                                     commandPayload:params
@@ -20198,7 +20198,7 @@ using chip::System::Clock::Timeout;
     auto * timedInvokeTimeoutMs = params.timedInvokeTimeoutMs;
 
     using RequestType = DiscoBall::Commands::WobbleRequest::Type;
-    [self.device _invokeKnownCommandWithEndpointID:self.endpointID
+    [self.device _invokeKnownCommandWithEndpointID:@(self.endpoint)
                                          clusterID:@(RequestType::GetClusterId())
                                          commandID:@(RequestType::GetCommandId())
                                     commandPayload:params
@@ -20228,7 +20228,7 @@ using chip::System::Clock::Timeout;
     }
 
     using RequestType = DiscoBall::Commands::PatternRequest::Type;
-    [self.device _invokeKnownCommandWithEndpointID:self.endpointID
+    [self.device _invokeKnownCommandWithEndpointID:@(self.endpoint)
                                          clusterID:@(RequestType::GetClusterId())
                                          commandID:@(RequestType::GetCommandId())
                                     commandPayload:params
@@ -20259,7 +20259,7 @@ using chip::System::Clock::Timeout;
     auto * timedInvokeTimeoutMs = params.timedInvokeTimeoutMs;
 
     using RequestType = DiscoBall::Commands::StatsRequest::Type;
-    [self.device _invokeKnownCommandWithEndpointID:self.endpointID
+    [self.device _invokeKnownCommandWithEndpointID:@(self.endpoint)
                                          clusterID:@(RequestType::GetClusterId())
                                          commandID:@(RequestType::GetCommandId())
                                     commandPayload:params
@@ -20274,22 +20274,22 @@ using chip::System::Clock::Timeout;
 
 - (NSDictionary<NSString *, id> * _Nullable)readAttributeRunWithParams:(MTRReadParams * _Nullable)params
 {
-    return [self.device readAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeRunID) params:params];
+    return [self.device readAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeRunID) params:params];
 }
 
 - (NSDictionary<NSString *, id> * _Nullable)readAttributeRotateWithParams:(MTRReadParams * _Nullable)params
 {
-    return [self.device readAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeRotateID) params:params];
+    return [self.device readAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeRotateID) params:params];
 }
 
 - (NSDictionary<NSString *, id> * _Nullable)readAttributeSpeedWithParams:(MTRReadParams * _Nullable)params
 {
-    return [self.device readAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeSpeedID) params:params];
+    return [self.device readAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeSpeedID) params:params];
 }
 
 - (NSDictionary<NSString *, id> * _Nullable)readAttributeAxisWithParams:(MTRReadParams * _Nullable)params
 {
-    return [self.device readAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeAxisID) params:params];
+    return [self.device readAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeAxisID) params:params];
 }
 
 - (void)writeAttributeAxisWithValue:(NSDictionary<NSString *, id> *)dataValueDictionary expectedValueInterval:(NSNumber *)expectedValueIntervalMs
@@ -20300,12 +20300,12 @@ using chip::System::Clock::Timeout;
 {
     NSNumber * timedWriteTimeout = params.timedWriteTimeout;
 
-    [self.device writeAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeAxisID) value:dataValueDictionary expectedValueInterval:expectedValueIntervalMs timedWriteTimeout:timedWriteTimeout];
+    [self.device writeAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeAxisID) value:dataValueDictionary expectedValueInterval:expectedValueIntervalMs timedWriteTimeout:timedWriteTimeout];
 }
 
 - (NSDictionary<NSString *, id> * _Nullable)readAttributeWobbleSpeedWithParams:(MTRReadParams * _Nullable)params
 {
-    return [self.device readAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeWobbleSpeedID) params:params];
+    return [self.device readAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeWobbleSpeedID) params:params];
 }
 
 - (void)writeAttributeWobbleSpeedWithValue:(NSDictionary<NSString *, id> *)dataValueDictionary expectedValueInterval:(NSNumber *)expectedValueIntervalMs
@@ -20316,12 +20316,12 @@ using chip::System::Clock::Timeout;
 {
     NSNumber * timedWriteTimeout = params.timedWriteTimeout;
 
-    [self.device writeAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeWobbleSpeedID) value:dataValueDictionary expectedValueInterval:expectedValueIntervalMs timedWriteTimeout:timedWriteTimeout];
+    [self.device writeAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeWobbleSpeedID) value:dataValueDictionary expectedValueInterval:expectedValueIntervalMs timedWriteTimeout:timedWriteTimeout];
 }
 
 - (NSDictionary<NSString *, id> * _Nullable)readAttributePatternWithParams:(MTRReadParams * _Nullable)params
 {
-    return [self.device readAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributePatternID) params:params];
+    return [self.device readAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributePatternID) params:params];
 }
 
 - (void)writeAttributePatternWithValue:(NSDictionary<NSString *, id> *)dataValueDictionary expectedValueInterval:(NSNumber *)expectedValueIntervalMs
@@ -20332,12 +20332,12 @@ using chip::System::Clock::Timeout;
 {
     NSNumber * timedWriteTimeout = params.timedWriteTimeout;
 
-    [self.device writeAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributePatternID) value:dataValueDictionary expectedValueInterval:expectedValueIntervalMs timedWriteTimeout:timedWriteTimeout];
+    [self.device writeAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributePatternID) value:dataValueDictionary expectedValueInterval:expectedValueIntervalMs timedWriteTimeout:timedWriteTimeout];
 }
 
 - (NSDictionary<NSString *, id> * _Nullable)readAttributeNameWithParams:(MTRReadParams * _Nullable)params
 {
-    return [self.device readAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeNameID) params:params];
+    return [self.device readAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeNameID) params:params];
 }
 
 - (void)writeAttributeNameWithValue:(NSDictionary<NSString *, id> *)dataValueDictionary expectedValueInterval:(NSNumber *)expectedValueIntervalMs
@@ -20348,17 +20348,17 @@ using chip::System::Clock::Timeout;
 {
     NSNumber * timedWriteTimeout = params.timedWriteTimeout;
 
-    [self.device writeAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeNameID) value:dataValueDictionary expectedValueInterval:expectedValueIntervalMs timedWriteTimeout:timedWriteTimeout];
+    [self.device writeAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeNameID) value:dataValueDictionary expectedValueInterval:expectedValueIntervalMs timedWriteTimeout:timedWriteTimeout];
 }
 
 - (NSDictionary<NSString *, id> * _Nullable)readAttributeWobbleSupportWithParams:(MTRReadParams * _Nullable)params
 {
-    return [self.device readAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeWobbleSupportID) params:params];
+    return [self.device readAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeWobbleSupportID) params:params];
 }
 
 - (NSDictionary<NSString *, id> * _Nullable)readAttributeWobbleSettingWithParams:(MTRReadParams * _Nullable)params
 {
-    return [self.device readAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeWobbleSettingID) params:params];
+    return [self.device readAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeWobbleSettingID) params:params];
 }
 
 - (void)writeAttributeWobbleSettingWithValue:(NSDictionary<NSString *, id> *)dataValueDictionary expectedValueInterval:(NSNumber *)expectedValueIntervalMs
@@ -20369,37 +20369,37 @@ using chip::System::Clock::Timeout;
 {
     NSNumber * timedWriteTimeout = params.timedWriteTimeout;
 
-    [self.device writeAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeWobbleSettingID) value:dataValueDictionary expectedValueInterval:expectedValueIntervalMs timedWriteTimeout:timedWriteTimeout];
+    [self.device writeAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeWobbleSettingID) value:dataValueDictionary expectedValueInterval:expectedValueIntervalMs timedWriteTimeout:timedWriteTimeout];
 }
 
 - (NSDictionary<NSString *, id> * _Nullable)readAttributeGeneratedCommandListWithParams:(MTRReadParams * _Nullable)params
 {
-    return [self.device readAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeGeneratedCommandListID) params:params];
+    return [self.device readAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeGeneratedCommandListID) params:params];
 }
 
 - (NSDictionary<NSString *, id> * _Nullable)readAttributeAcceptedCommandListWithParams:(MTRReadParams * _Nullable)params
 {
-    return [self.device readAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeAcceptedCommandListID) params:params];
+    return [self.device readAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeAcceptedCommandListID) params:params];
 }
 
 - (NSDictionary<NSString *, id> * _Nullable)readAttributeEventListWithParams:(MTRReadParams * _Nullable)params
 {
-    return [self.device readAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeEventListID) params:params];
+    return [self.device readAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeEventListID) params:params];
 }
 
 - (NSDictionary<NSString *, id> * _Nullable)readAttributeAttributeListWithParams:(MTRReadParams * _Nullable)params
 {
-    return [self.device readAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeAttributeListID) params:params];
+    return [self.device readAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeAttributeListID) params:params];
 }
 
 - (NSDictionary<NSString *, id> * _Nullable)readAttributeFeatureMapWithParams:(MTRReadParams * _Nullable)params
 {
-    return [self.device readAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeFeatureMapID) params:params];
+    return [self.device readAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeFeatureMapID) params:params];
 }
 
 - (NSDictionary<NSString *, id> * _Nullable)readAttributeClusterRevisionWithParams:(MTRReadParams * _Nullable)params
 {
-    return [self.device readAttributeWithEndpointID:self.endpointID clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeClusterRevisionID) params:params];
+    return [self.device readAttributeWithEndpointID:@(self.endpoint) clusterID:@(MTRClusterIDTypeDiscoBallID) attributeID:@(MTRAttributeIDTypeClusterDiscoBallAttributeClusterRevisionID) params:params];
 }
 
 @end

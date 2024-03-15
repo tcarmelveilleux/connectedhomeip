@@ -17,24 +17,22 @@
 package chip.devicecontroller.cluster.structs
 
 import chip.devicecontroller.cluster.*
-import matter.tlv.AnonymousTag
+import java.util.Optional
 import matter.tlv.ContextSpecificTag
 import matter.tlv.Tag
-import matter.tlv.TlvParsingException
 import matter.tlv.TlvReader
 import matter.tlv.TlvWriter
 
-import java.util.Optional
-
-class DiscoBallClusterPatternStruct (
-    val duration: UInt,
-    val rotate: UInt?,
-    val speed: UInt?,
-    val axis: Optional<UInt>?,
-    val wobbleSpeed: Optional<UInt>?,
-    val passcode: String?,
-    val fabricIndex: UInt) {
-  override fun toString(): String  = buildString {
+class DiscoBallClusterPatternStruct(
+  val duration: UInt,
+  val rotate: UInt?,
+  val speed: UInt?,
+  val axis: Optional<UInt>?,
+  val wobbleSpeed: Optional<UInt>?,
+  val passcode: String?,
+  val fabricIndex: UInt
+) {
+  override fun toString(): String = buildString {
     append("DiscoBallClusterPatternStruct {\n")
     append("\tduration : $duration\n")
     append("\trotate : $rotate\n")
@@ -51,36 +49,36 @@ class DiscoBallClusterPatternStruct (
       startStructure(tlvTag)
       put(ContextSpecificTag(TAG_DURATION), duration)
       if (rotate != null) {
-      put(ContextSpecificTag(TAG_ROTATE), rotate)
-    } else {
-      putNull(ContextSpecificTag(TAG_ROTATE))
-    }
+        put(ContextSpecificTag(TAG_ROTATE), rotate)
+      } else {
+        putNull(ContextSpecificTag(TAG_ROTATE))
+      }
       if (speed != null) {
-      put(ContextSpecificTag(TAG_SPEED), speed)
-    } else {
-      putNull(ContextSpecificTag(TAG_SPEED))
-    }
+        put(ContextSpecificTag(TAG_SPEED), speed)
+      } else {
+        putNull(ContextSpecificTag(TAG_SPEED))
+      }
       if (axis != null) {
-      if (axis.isPresent) {
-      val optaxis = axis.get()
-      put(ContextSpecificTag(TAG_AXIS), optaxis)
-    }
-    } else {
-      putNull(ContextSpecificTag(TAG_AXIS))
-    }
+        if (axis.isPresent) {
+          val optaxis = axis.get()
+          put(ContextSpecificTag(TAG_AXIS), optaxis)
+        }
+      } else {
+        putNull(ContextSpecificTag(TAG_AXIS))
+      }
       if (wobbleSpeed != null) {
-      if (wobbleSpeed.isPresent) {
-      val optwobbleSpeed = wobbleSpeed.get()
-      put(ContextSpecificTag(TAG_WOBBLE_SPEED), optwobbleSpeed)
-    }
-    } else {
-      putNull(ContextSpecificTag(TAG_WOBBLE_SPEED))
-    }
+        if (wobbleSpeed.isPresent) {
+          val optwobbleSpeed = wobbleSpeed.get()
+          put(ContextSpecificTag(TAG_WOBBLE_SPEED), optwobbleSpeed)
+        }
+      } else {
+        putNull(ContextSpecificTag(TAG_WOBBLE_SPEED))
+      }
       if (passcode != null) {
-      put(ContextSpecificTag(TAG_PASSCODE), passcode)
-    } else {
-      putNull(ContextSpecificTag(TAG_PASSCODE))
-    }
+        put(ContextSpecificTag(TAG_PASSCODE), passcode)
+      } else {
+        putNull(ContextSpecificTag(TAG_PASSCODE))
+      }
       put(ContextSpecificTag(TAG_FABRIC_INDEX), fabricIndex)
       endStructure()
     }
@@ -95,52 +93,65 @@ class DiscoBallClusterPatternStruct (
     private const val TAG_PASSCODE = 5
     private const val TAG_FABRIC_INDEX = 254
 
-    fun fromTlv(tlvTag: Tag, tlvReader: TlvReader) : DiscoBallClusterPatternStruct {
+    fun fromTlv(tlvTag: Tag, tlvReader: TlvReader): DiscoBallClusterPatternStruct {
       tlvReader.enterStructure(tlvTag)
       val duration = tlvReader.getUInt(ContextSpecificTag(TAG_DURATION))
-      val rotate = if (!tlvReader.isNull()) {
-      tlvReader.getUInt(ContextSpecificTag(TAG_ROTATE))
-    } else {
-      tlvReader.getNull(ContextSpecificTag(TAG_ROTATE))
-      null
-    }
-      val speed = if (!tlvReader.isNull()) {
-      tlvReader.getUInt(ContextSpecificTag(TAG_SPEED))
-    } else {
-      tlvReader.getNull(ContextSpecificTag(TAG_SPEED))
-      null
-    }
-      val axis = if (!tlvReader.isNull()) {
-      if (tlvReader.isNextTag(ContextSpecificTag(TAG_AXIS))) {
-      Optional.of(tlvReader.getUInt(ContextSpecificTag(TAG_AXIS)))
-    } else {
-      Optional.empty()
-    }
-    } else {
-      tlvReader.getNull(ContextSpecificTag(TAG_AXIS))
-      null
-    }
-      val wobbleSpeed = if (!tlvReader.isNull()) {
-      if (tlvReader.isNextTag(ContextSpecificTag(TAG_WOBBLE_SPEED))) {
-      Optional.of(tlvReader.getUInt(ContextSpecificTag(TAG_WOBBLE_SPEED)))
-    } else {
-      Optional.empty()
-    }
-    } else {
-      tlvReader.getNull(ContextSpecificTag(TAG_WOBBLE_SPEED))
-      null
-    }
-      val passcode = if (!tlvReader.isNull()) {
-      tlvReader.getString(ContextSpecificTag(TAG_PASSCODE))
-    } else {
-      tlvReader.getNull(ContextSpecificTag(TAG_PASSCODE))
-      null
-    }
+      val rotate =
+        if (!tlvReader.isNull()) {
+          tlvReader.getUInt(ContextSpecificTag(TAG_ROTATE))
+        } else {
+          tlvReader.getNull(ContextSpecificTag(TAG_ROTATE))
+          null
+        }
+      val speed =
+        if (!tlvReader.isNull()) {
+          tlvReader.getUInt(ContextSpecificTag(TAG_SPEED))
+        } else {
+          tlvReader.getNull(ContextSpecificTag(TAG_SPEED))
+          null
+        }
+      val axis =
+        if (!tlvReader.isNull()) {
+          if (tlvReader.isNextTag(ContextSpecificTag(TAG_AXIS))) {
+            Optional.of(tlvReader.getUInt(ContextSpecificTag(TAG_AXIS)))
+          } else {
+            Optional.empty()
+          }
+        } else {
+          tlvReader.getNull(ContextSpecificTag(TAG_AXIS))
+          null
+        }
+      val wobbleSpeed =
+        if (!tlvReader.isNull()) {
+          if (tlvReader.isNextTag(ContextSpecificTag(TAG_WOBBLE_SPEED))) {
+            Optional.of(tlvReader.getUInt(ContextSpecificTag(TAG_WOBBLE_SPEED)))
+          } else {
+            Optional.empty()
+          }
+        } else {
+          tlvReader.getNull(ContextSpecificTag(TAG_WOBBLE_SPEED))
+          null
+        }
+      val passcode =
+        if (!tlvReader.isNull()) {
+          tlvReader.getString(ContextSpecificTag(TAG_PASSCODE))
+        } else {
+          tlvReader.getNull(ContextSpecificTag(TAG_PASSCODE))
+          null
+        }
       val fabricIndex = tlvReader.getUInt(ContextSpecificTag(TAG_FABRIC_INDEX))
-      
+
       tlvReader.exitContainer()
 
-      return DiscoBallClusterPatternStruct(duration, rotate, speed, axis, wobbleSpeed, passcode, fabricIndex)
+      return DiscoBallClusterPatternStruct(
+        duration,
+        rotate,
+        speed,
+        axis,
+        wobbleSpeed,
+        passcode,
+        fabricIndex
+      )
     }
   }
 }

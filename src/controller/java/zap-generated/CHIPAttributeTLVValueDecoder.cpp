@@ -43205,21 +43205,18 @@ jobject DecodeAttributeValue(const app::ConcreteAttributePath & aPath, TLV::TLVR
                                                                            jninewElement_0_fabricIndex, newElement_0_fabricIndex);
 
                 jclass patternStructStructClass_1;
-                err = chip::JniReferences::GetInstance().GetLocalClassRef(
+                err = chip::JniReferences::GetInstance().GetClassRef(
                     env, "chip/devicecontroller/ChipStructs$DiscoBallClusterPatternStruct", patternStructStructClass_1);
                 if (err != CHIP_NO_ERROR)
                 {
                     ChipLogError(Zcl, "Could not find class ChipStructs$DiscoBallClusterPatternStruct");
                     return nullptr;
                 }
-
-                jmethodID patternStructStructCtor_1;
-                err = chip::JniReferences::GetInstance().FindMethod(
-                    env, patternStructStructClass_1, "<init>",
-                    "(Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/util/Optional;Ljava/util/Optional;Ljava/lang/"
-                    "String;Ljava/lang/Integer;)V",
-                    &patternStructStructCtor_1);
-                if (err != CHIP_NO_ERROR || patternStructStructCtor_1 == nullptr)
+                jmethodID patternStructStructCtor_1 =
+                    env->GetMethodID(patternStructStructClass_1, "<init>",
+                                     "(Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/util/Optional;Ljava/util/"
+                                     "Optional;Ljava/lang/String;Ljava/lang/Integer;)V");
+                if (patternStructStructCtor_1 == nullptr)
                 {
                     ChipLogError(Zcl, "Could not find ChipStructs$DiscoBallClusterPatternStruct constructor");
                     return nullptr;

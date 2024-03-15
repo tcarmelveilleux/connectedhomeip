@@ -7864,17 +7864,15 @@ jobject DecodeEventValue(const app::ConcreteEventPath & aPath, TLV::TLVReader & 
                 return nullptr;
             }
             jclass startedStructClass;
-            err = chip::JniReferences::GetInstance().GetLocalClassRef(
+            err = chip::JniReferences::GetInstance().GetClassRef(
                 env, "chip/devicecontroller/ChipEventStructs$DiscoBallClusterStartedEvent", startedStructClass);
             if (err != CHIP_NO_ERROR)
             {
                 ChipLogError(Zcl, "Could not find class ChipEventStructs$DiscoBallClusterStartedEvent");
                 return nullptr;
             }
-
-            jmethodID startedStructCtor;
-            err = chip::JniReferences::GetInstance().FindMethod(env, startedStructClass, "<init>", "()V", &startedStructCtor);
-            if (err != CHIP_NO_ERROR || startedStructCtor == nullptr)
+            jmethodID startedStructCtor = env->GetMethodID(startedStructClass, "<init>", "()V");
+            if (startedStructCtor == nullptr)
             {
                 ChipLogError(Zcl, "Could not find ChipEventStructs$DiscoBallClusterStartedEvent constructor");
                 return nullptr;
@@ -7892,17 +7890,15 @@ jobject DecodeEventValue(const app::ConcreteEventPath & aPath, TLV::TLVReader & 
                 return nullptr;
             }
             jclass stoppedStructClass;
-            err = chip::JniReferences::GetInstance().GetLocalClassRef(
+            err = chip::JniReferences::GetInstance().GetClassRef(
                 env, "chip/devicecontroller/ChipEventStructs$DiscoBallClusterStoppedEvent", stoppedStructClass);
             if (err != CHIP_NO_ERROR)
             {
                 ChipLogError(Zcl, "Could not find class ChipEventStructs$DiscoBallClusterStoppedEvent");
                 return nullptr;
             }
-
-            jmethodID stoppedStructCtor;
-            err = chip::JniReferences::GetInstance().FindMethod(env, stoppedStructClass, "<init>", "()V", &stoppedStructCtor);
-            if (err != CHIP_NO_ERROR || stoppedStructCtor == nullptr)
+            jmethodID stoppedStructCtor = env->GetMethodID(stoppedStructClass, "<init>", "()V");
+            if (stoppedStructCtor == nullptr)
             {
                 ChipLogError(Zcl, "Could not find ChipEventStructs$DiscoBallClusterStoppedEvent constructor");
                 return nullptr;
