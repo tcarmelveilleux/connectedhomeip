@@ -3103,7 +3103,7 @@ static auto __attribute__((unused)) EnsureKnownEnumValue(DiscoBall::RotateEnum v
     case EnumType::kCounterClockwise:
         return val;
     default:
-        return static_cast<EnumType>(0);
+        return EnumType::kUnknownEnumValue;
     }
 }
 static auto __attribute__((unused)) EnsureKnownEnumValue(DiscoBall::StatusCode val)
@@ -3114,7 +3114,7 @@ static auto __attribute__((unused)) EnsureKnownEnumValue(DiscoBall::StatusCode v
     case EnumType::kUnsupportedPattern:
         return val;
     default:
-        return static_cast<EnumType>(0);
+        return EnumType::kUnknownEnumValue;
     }
 }
 

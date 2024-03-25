@@ -363,6 +363,9 @@ NSString * MTRClusterNameForID(MTRClusterIDType clusterID)
     case MTRClusterIDTypeElectricalMeasurementID:
         result = @"ElectricalMeasurement";
         break;
+    case MTRClusterIDTypeDiscoBallID:
+        result = @"DiscoBall";
+        break;
     case MTRClusterIDTypeUnitTestingID:
         result = @"UnitTesting";
         break;
@@ -8394,6 +8397,76 @@ NSString * MTRAttributeNameForID(MTRClusterIDType clusterID, MTRAttributeIDType 
             break;
 
         case MTRAttributeIDTypeClusterElectricalMeasurementAttributeClusterRevisionID:
+            result = @"ClusterRevision";
+            break;
+
+        default:
+            result = [NSString stringWithFormat:@"<Unknown attributeID %d>", attributeID];
+            break;
+        }
+
+    case MTRClusterIDTypeDiscoBallID:
+
+        switch (attributeID) {
+
+            // Cluster DiscoBall attributes
+        case MTRAttributeIDTypeClusterDiscoBallAttributeRunID:
+            result = @"Run";
+            break;
+
+        case MTRAttributeIDTypeClusterDiscoBallAttributeRotateID:
+            result = @"Rotate";
+            break;
+
+        case MTRAttributeIDTypeClusterDiscoBallAttributeSpeedID:
+            result = @"Speed";
+            break;
+
+        case MTRAttributeIDTypeClusterDiscoBallAttributeAxisID:
+            result = @"Axis";
+            break;
+
+        case MTRAttributeIDTypeClusterDiscoBallAttributeWobbleSpeedID:
+            result = @"WobbleSpeed";
+            break;
+
+        case MTRAttributeIDTypeClusterDiscoBallAttributePatternID:
+            result = @"Pattern";
+            break;
+
+        case MTRAttributeIDTypeClusterDiscoBallAttributeNameID:
+            result = @"Name";
+            break;
+
+        case MTRAttributeIDTypeClusterDiscoBallAttributeWobbleSupportID:
+            result = @"WobbleSupport";
+            break;
+
+        case MTRAttributeIDTypeClusterDiscoBallAttributeWobbleSettingID:
+            result = @"WobbleSetting";
+            break;
+
+        case MTRAttributeIDTypeClusterDiscoBallAttributeGeneratedCommandListID:
+            result = @"GeneratedCommandList";
+            break;
+
+        case MTRAttributeIDTypeClusterDiscoBallAttributeAcceptedCommandListID:
+            result = @"AcceptedCommandList";
+            break;
+
+        case MTRAttributeIDTypeClusterDiscoBallAttributeEventListID:
+            result = @"EventList";
+            break;
+
+        case MTRAttributeIDTypeClusterDiscoBallAttributeAttributeListID:
+            result = @"AttributeList";
+            break;
+
+        case MTRAttributeIDTypeClusterDiscoBallAttributeFeatureMapID:
+            result = @"FeatureMap";
+            break;
+
+        case MTRAttributeIDTypeClusterDiscoBallAttributeClusterRevisionID:
             result = @"ClusterRevision";
             break;
 
