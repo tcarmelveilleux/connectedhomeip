@@ -46,6 +46,7 @@
 #import "MTRServerEndpoint_Internal.h"
 #import "MTRSetupPayload.h"
 #import "MTRTimeUtils.h"
+#import "MTRUnfairLock.h"
 #import "NSDataSpanConversion.h"
 #import "NSStringSpanConversion.h"
 #import <setup_payload/ManualSetupPayloadGenerator.h>
@@ -916,7 +917,7 @@ static inline void emitMetricForSetupPayload(MTRSetupPayload * payload)
 
 - (MTRDevice *)deviceForNodeID:(NSNumber *)nodeID
 {
-    os_unfair_lock_lock(&_deviceMapLock);
+    std::lock_guard lock(_deviceMapLock);
     MTRDevice * deviceToReturn = _nodeIDToDeviceMap[nodeID];
     if (!deviceToReturn) {
         deviceToReturn = [[MTRDevice alloc] initWithNodeID:nodeID controller:self];
@@ -934,15 +935,19 @@ static inline void emitMetricForSetupPayload(MTRSetupPayload * payload)
         if (attributesFromCache.count) {
             [deviceToReturn setAttributeValues:attributesFromCache reportChanges:NO];
         }
+        NSDictionary * clusterData = [_controllerDataStore getStoredClusterDataForNodeID:nodeID];
+        MTR_LOG_INFO("Loaded %lu cluster data from storage for %@", static_cast<unsigned long>(clusterData.count), deviceToReturn);
+        if (clusterData.count) {
+            [deviceToReturn setClusterData:clusterData];
+        }
     }
-    os_unfair_lock_unlock(&_deviceMapLock);
 
     return deviceToReturn;
 }
 
 - (void)removeDevice:(MTRDevice *)device
 {
-    os_unfair_lock_lock(&_deviceMapLock);
+    std::lock_guard lock(_deviceMapLock);
     auto * nodeID = device.nodeID;
     MTRDevice * deviceToRemove = _nodeIDToDeviceMap[nodeID];
     if (deviceToRemove == device) {
@@ -951,7 +956,6 @@ static inline void emitMetricForSetupPayload(MTRSetupPayload * payload)
     } else {
         MTR_LOG_ERROR("Error: Cannot remove device %p with nodeID %llu", device, nodeID.unsignedLongLongValue);
     }
-    os_unfair_lock_unlock(&_deviceMapLock);
 }
 
 - (void)setDeviceControllerDelegate:(id<MTRDeviceControllerDelegate>)delegate queue:(dispatch_queue_t)queue
