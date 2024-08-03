@@ -35,7 +35,6 @@ from threading import Condition, Lock
 import chip.native
 from chip.native import PyChipError
 
-from .ChipUtility import ChipUtility
 from .clusters import Attribute as ClusterAttribute
 from .clusters import Command as ClusterCommand
 from .exceptions import ChipStackError, ChipStackException, DeviceError
@@ -217,7 +216,7 @@ class ChipStack(object):
         '''
         return self.PostTaskOnChipThread(callFunct).Wait(timeoutMs)
 
-    async def CallAsync(self, callFunct, timeoutMs: int = None):
+    async def CallAsyncWithResult(self, callFunct, timeoutMs: int = None):
         '''Run a Python function on CHIP stack, and wait for the response.
         This function will post a task on CHIP mainloop and waits for the call response in a asyncio friendly manner.
         '''
@@ -233,6 +232,11 @@ class ChipStack(object):
 
         return await asyncio.wait_for(callObj.future, timeoutMs / 1000 if timeoutMs else None)
 
+    async def CallAsync(self, callFunct, timeoutMs: int = None) -> None:
+        '''Run a Python function on CHIP stack, and wait for the response.'''
+        res: PyChipError = await self.CallAsyncWithResult(callFunct, timeoutMs)
+        res.raise_on_error()
+
     def PostTaskOnChipThread(self, callFunct) -> AsyncCallableHandle:
         '''Run a Python function on CHIP stack, and wait for the response.
         This function will post a task on CHIP mainloop, and return an object with Wait() method for getting the result.
@@ -246,33 +250,6 @@ class ChipStack(object):
             pythonapi.Py_DecRef(py_object(callObj))
             raise res.to_exception()
         return callObj
-
-    def ErrorToException(self, err, devStatusPtr=None):
-        if err == 0x2C and devStatusPtr:
-            devStatus = devStatusPtr.contents
-            msg = ChipUtility.CStringToString(
-                (
-                    self._ChipStackLib.pychip_Stack_StatusReportToString(
-                        devStatus.ProfileId, devStatus.StatusCode
-                    )
-                )
-            )
-            sysErrorCode = (
-                devStatus.SysErrorCode if (
-                    devStatus.SysErrorCode != 0) else None
-            )
-            if sysErrorCode is not None:
-                msg = msg + " (system err %d)" % (sysErrorCode)
-            return DeviceError(
-                devStatus.ProfileId, devStatus.StatusCode, sysErrorCode, msg
-            )
-        else:
-            return ChipStackError(
-                err,
-                ChipUtility.CStringToString(
-                    (self._ChipStackLib.pychip_Stack_ErrorToString(err))
-                ),
-            )
 
     def LocateChipDLL(self):
         self._loadLib()
@@ -302,8 +279,6 @@ class ChipStack(object):
                 c_uint16,
             ]
             self._ChipStackLib.pychip_Stack_StatusReportToString.restype = c_char_p
-            self._ChipStackLib.pychip_Stack_ErrorToString.argtypes = [c_uint32]
-            self._ChipStackLib.pychip_Stack_ErrorToString.restype = c_char_p
 
             self._ChipStackLib.pychip_DeviceController_PostTaskOnChipThread.argtypes = [
                 _ChipThreadTaskRunnerFunct, py_object]

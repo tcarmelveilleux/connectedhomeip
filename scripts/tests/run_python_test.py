@@ -32,6 +32,7 @@ import typing
 import click
 import coloredlogs
 from colorama import Fore, Style
+from metadata_parser.metadata import Metadata, MetadataReader
 
 DEFAULT_CHIP_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -89,7 +90,38 @@ def DumpProgramOutputToQueue(thread_list: typing.List[threading.Thread], tag: st
 @click.option("--script-gdb", is_flag=True,
               help='Run script through gdb')
 @click.option("--quiet", is_flag=True, help="Do not print output from passing tests. Use this flag in CI to keep github log sizes manageable.")
-def main(app: str, factoryreset: bool, factoryreset_app_only: bool, app_args: str, script: str, script_args: str, script_gdb: bool, quiet: bool):
+@click.option("--load-from-env", default=None, help="YAML file that contains values for environment variables.")
+def main(app: str, factoryreset: bool, factoryreset_app_only: bool, app_args: str, script: str, script_args: str, script_gdb: bool, quiet: bool, load_from_env):
+    if load_from_env:
+        reader = MetadataReader(load_from_env)
+        runs = reader.parse_script(script)
+    else:
+        runs = [
+            Metadata(
+                py_script_path=script,
+                run="cmd-run",
+                app=app,
+                app_args=app_args,
+                script_args=script_args,
+                factoryreset=factoryreset,
+                factoryreset_app_only=factoryreset_app_only,
+                script_gdb=script_gdb,
+                quiet=quiet
+            )
+        ]
+
+    if not runs:
+        raise Exception(
+            "No valid runs were found. Make sure you add runs to your file, see https://github.com/project-chip/connectedhomeip/blob/master/docs/testing/python.md document for reference/example.")
+
+    for run in runs:
+        print(f"Executing {run.py_script_path.split('/')[-1]} {run.run}")
+        main_impl(run.app, run.factoryreset, run.factoryreset_app_only, run.app_args,
+                  run.py_script_path, run.script_args, run.script_gdb, run.quiet)
+
+
+def main_impl(app: str, factoryreset: bool, factoryreset_app_only: bool, app_args: str, script: str, script_args: str, script_gdb: bool, quiet: bool):
+
     app_args = app_args.replace('{SCRIPT_BASE_NAME}', os.path.splitext(os.path.basename(script))[0])
     script_args = script_args.replace('{SCRIPT_BASE_NAME}', os.path.splitext(os.path.basename(script))[0])
 
@@ -137,7 +169,8 @@ def main(app: str, factoryreset: bool, factoryreset_app_only: bool, app_args: st
         app_args = [app] + shlex.split(app_args)
         logging.info(f"Execute: {app_args}")
         app_process = subprocess.Popen(
-            app_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+            app_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, bufsize=0)
+        app_process.stdin.close()
         app_pid = app_process.pid
         DumpProgramOutputToQueue(
             log_cooking_threads, Fore.GREEN + "APP " + Style.RESET_ALL, app_process, stream_output, log_queue)
@@ -160,7 +193,8 @@ def main(app: str, factoryreset: bool, factoryreset_app_only: bool, app_args: st
 
     logging.info(f"Execute: {final_script_command}")
     test_script_process = subprocess.Popen(
-        final_script_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        final_script_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    test_script_process.stdin.close()
     DumpProgramOutputToQueue(log_cooking_threads, Fore.GREEN + "TEST" + Style.RESET_ALL,
                              test_script_process, stream_output, log_queue)
 
@@ -189,7 +223,8 @@ def main(app: str, factoryreset: bool, factoryreset_app_only: bool, app_args: st
         else:
             logging.info("Test completed successfully")
 
-    sys.exit(exit_code)
+    if exit_code != 0:
+        sys.exit(exit_code)
 
 
 if __name__ == '__main__':
