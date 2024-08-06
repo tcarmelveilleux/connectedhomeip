@@ -26,3 +26,5 @@
 #define APP_TASK_NAME "app_task"
 
 #define BLE_DEV_NAME "GMDEV"
+
+#define APP_EVENT_QUEUE_SIZE 30

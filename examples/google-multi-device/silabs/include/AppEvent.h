@@ -30,6 +30,10 @@ struct AppEvent
         kEventType_Timer,
         kEventType_Light,
         kEventType_Install,
+        kEventType_SwitchButtonPressed,
+        kEventType_SwitchButtonReleased,
+        kEventType_OccupancyDetected,
+        kEventType_OccupancyUndetected,
     };
 
     uint16_t Type;

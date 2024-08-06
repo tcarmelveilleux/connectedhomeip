@@ -33,6 +33,8 @@
 #include <lib/core/CHIPError.h>
 #include <platform/CHIPDeviceLayer.h>
 
+#include "MultiDeviceDriver.h"
+
 /**********************************************************
  * Defines
  *********************************************************/
@@ -76,6 +78,7 @@ public:
      */
     static void ButtonEventHandler(uint8_t button, uint8_t btnAction);
 
+    static void MultiDeviceDriverAppEventHandler(AppEvent * aEvent);
 private:
     static AppTask sAppTask;
 

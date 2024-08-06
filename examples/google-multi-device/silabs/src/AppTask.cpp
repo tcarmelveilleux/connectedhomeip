@@ -40,6 +40,8 @@
 
 #include "GoogleMultiDeviceCommon.h"
 
+#include "MultiDeviceDriver.h"
+
 #ifdef SL_CATALOG_SIMPLE_LED_LED1_PRESENT
 #define LIGHT_LED 1
 #else
@@ -51,11 +53,45 @@
 
 using namespace chip;
 using namespace chip::app;
+using namespace google::matter;
 using namespace ::chip::DeviceLayer;
 using namespace ::chip::DeviceLayer::Silabs;
 
 namespace {
 LEDWidget sLightLED;
+
+// WARNING: CALLED FROM ISR CONTEXT
+void MultiDeviceDriverEvent(HardwareEvent event)
+{
+    AppEvent app_event = {};
+    app_event.Handler = AppTask::MultiDeviceDriverAppEventHandler;
+
+    bool send_event = true;
+    switch (event)
+    {
+        case HardwareEvent::kSwitchButtonPressed:
+            app_event.Type = AppEvent::kEventType_SwitchButtonPressed;
+            break;
+        case HardwareEvent::kSwitchButtonReleased:
+            app_event.Type = AppEvent::kEventType_SwitchButtonReleased;
+            break;
+        case HardwareEvent::kOccupancyDetected:
+            app_event.Type = AppEvent::kEventType_OccupancyDetected;
+            break;
+        case HardwareEvent::kOccupancyUndetected:
+            app_event.Type = AppEvent::kEventType_OccupancyUndetected;
+            break;
+        default:
+            send_event = false;
+            break;
+    }
+
+    if (send_event)
+    {
+        AppTask::GetAppTask().PostEvent(&app_event);
+    }
+}
+
 }
 
 using namespace chip::TLV;
@@ -67,6 +103,9 @@ CHIP_ERROR AppTask::Init()
 {
     CHIP_ERROR err = CHIP_NO_ERROR;
     chip::DeviceLayer::Silabs::GetPlatform().SetButtonsCb(AppTask::ButtonEventHandler);
+
+    GmdSilabsDriver::GetInstance().Init();
+    GmdSilabsDriver::GetInstance().SetHardwareEventCallback(MultiDeviceDriverEvent);
 
     err = BaseApplication::Init();
     if (err != CHIP_NO_ERROR)
@@ -116,6 +155,29 @@ void AppTask::AppTaskMain(void * pvParameter)
             sAppTask.DispatchEvent(&event);
             eventReceived = osMessageQueueGet(sAppEventQueue, &event, NULL, 0);
         }
+    }
+}
+
+void AppTask::MultiDeviceDriverAppEventHandler(AppEvent * aEvent)
+{
+    auto driver = GmdSilabsDriver::GetInstance();
+
+    switch (aEvent->Type)
+    {
+        case AppEvent::kEventType_SwitchButtonPressed:
+            driver.SetLightLedEnabled(true);
+            break;
+        case AppEvent::kEventType_SwitchButtonReleased:
+            driver.SetLightLedEnabled(false);
+            break;
+        case AppEvent::kEventType_OccupancyDetected:
+            // driver.SetLightLedEnabled(true);
+            break;
+        case AppEvent::kEventType_OccupancyUndetected:
+            // driver.SetLightLedEnabled(false);
+            break;
+        default:
+            break;
     }
 }
 
