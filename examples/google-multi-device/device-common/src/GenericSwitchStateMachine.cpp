@@ -122,7 +122,6 @@ void GenericSwitchStateMachine::OnStateEnter(State newState)
     switch (mState)
     {
         case State::kIdleWaitFirstPress: {
-            mReachedMaxNeedIdle = false;
             mCurrentPressedPosition = 0;
             break;
         }

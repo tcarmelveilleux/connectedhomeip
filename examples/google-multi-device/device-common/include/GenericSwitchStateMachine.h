@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <stdbool.h>
 #include <stdint.h>
 #include <lib/core/DataModelTypes.h>
@@ -103,6 +104,25 @@ class GenericSwitchStateMachine
     GenericSwitchStateMachine() {}
 
     void SetDriver(GenericSwitchStateMachine::Driver *driver) { mDriver = driver; }
+
+    uint32_t GetLongPressThresholdMillis() const { return mLongPressThresholdMillis; }
+    uint32_t GetIdleThresholdMillis() const { return mIdleThresholdMillis; }
+    uint8_t GetMaxMultiPress() const { return mMaxMultiPress; }
+
+    void SetLongPressThresholdMillis(uint32_t longPressThresholdMillis)
+    {
+        mLongPressThresholdMillis = std::max(longPressThresholdMillis, static_cast<uint32_t>(1));
+    }
+    void SetIdleThresholdMillis(uint32_t idleThresholdMillis)
+    {
+        mIdleThresholdMillis = std::max(idleThresholdMillis, static_cast<uint32_t>(1));
+    }
+    void SetMaxMultiPress(uint8_t maxMultiPress)
+    {
+        mMaxMultiPress = std::max(maxMultiPress, static_cast<uint8_t>(1u));
+    }
+
+
     void HandleEvent(const Event &event);
 
   private:
@@ -113,11 +133,10 @@ class GenericSwitchStateMachine
     GenericSwitchStateMachine::Driver *mDriver = nullptr;
     State mState = State::kIdleWaitFirstPress;
     uint8_t mMultiPressCount = 0;
-    uint16_t mMaxMultiPress = UINT8_MAX;
     uint8_t mCurrentPressedPosition = 0;
+    uint16_t mMaxMultiPress = 5;
     uint32_t mLongPressThresholdMillis = 800u;
     uint32_t mIdleThresholdMillis = 400u;
-    bool mReachedMaxNeedIdle = false;
 };
 
 } // namespace app
