@@ -25,22 +25,36 @@ class GmdSilabsDriver
     void Init();
 
     void SetLightLedEnabled(bool enabled);
+    void SetDebugPin(bool high);
+    void EmitDebugCode(uint8_t code);
+
     bool IsSwitchButtonPressed() const;
     bool IsProximityDetected() const;
 
-    static void OnPinInterrupt(uint8_t intNum, void *ctx);
+    void HandleDebounceTimer();
 
     void SetHardwareEventCallback(HardwareEventCallback callback)
     {
         mHardwareCallback = callback;
     }
 
-    static void OnDebounceTimer(void *ctx);
+    void CallHardwareEventCallback(HardwareEvent event)
+    {
+        if (mHardwareCallback != nullptr)
+        {
+            mHardwareCallback(event);
+        }
+    }
 
-    static GmdSilabsDriver & GetInstance() { return sInstance; }
+    static GmdSilabsDriver & GetInstance() {
+      static GmdSilabsDriver sInstance;
+      return sInstance;
+    }
   private:
-    static GmdSilabsDriver sInstance;
     HardwareEventCallback mHardwareCallback = nullptr;
+    bool mIsButtonPressed = false;
+    bool mIsProxDetected = false;
+    bool mGotInitialDebounceState = false;
 };
 
 } // namespace matter

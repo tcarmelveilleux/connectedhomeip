@@ -39,6 +39,8 @@
 #include <platform/CHIPDeviceLayer.h>
 
 #include "GoogleMultiDeviceCommon.h"
+#include "GenericSwitchStateMachine.h"
+#include "DefaultGenericSwitchStateMachineDriver.h"
 
 #include "MultiDeviceDriver.h"
 
@@ -59,6 +61,8 @@ using namespace ::chip::DeviceLayer::Silabs;
 
 namespace {
 LEDWidget sLightLED;
+chip::app::DefaultGenericSwitchStateMachineDriver sGenericSwitchDriverEp2;
+chip::app::GenericSwitchStateMachine sGenericSwitchStateMachineEp2;
 
 // WARNING: CALLED FROM ISR CONTEXT
 void MultiDeviceDriverEvent(HardwareEvent event)
@@ -101,6 +105,9 @@ AppTask AppTask::sAppTask;
 
 CHIP_ERROR AppTask::Init()
 {
+    sGenericSwitchDriverEp2.SetEndpointId(2);
+    sGenericSwitchStateMachineEp2.SetDriver(&sGenericSwitchDriverEp2);
+
     CHIP_ERROR err = CHIP_NO_ERROR;
     chip::DeviceLayer::Silabs::GetPlatform().SetButtonsCb(AppTask::ButtonEventHandler);
 
@@ -165,10 +172,16 @@ void AppTask::MultiDeviceDriverAppEventHandler(AppEvent * aEvent)
     switch (aEvent->Type)
     {
         case AppEvent::kEventType_SwitchButtonPressed:
-            driver.SetLightLedEnabled(true);
+            driver.EmitDebugCode(40);
+            chip::DeviceLayer::SystemLayer().ScheduleLambda([](){
+                sGenericSwitchStateMachineEp2.HandleEvent(GenericSwitchStateMachine::Event::MakeButtonPressEvent(1));
+            });
             break;
         case AppEvent::kEventType_SwitchButtonReleased:
-            driver.SetLightLedEnabled(false);
+            driver.EmitDebugCode(41);
+            chip::DeviceLayer::SystemLayer().ScheduleLambda([](){
+                sGenericSwitchStateMachineEp2.HandleEvent(GenericSwitchStateMachine::Event::MakeButtonReleaseEvent(1));
+            });
             break;
         case AppEvent::kEventType_OccupancyDetected:
             // driver.SetLightLedEnabled(true);

@@ -13,6 +13,9 @@
 #include "em_cmu.h"
 #include "em_gpio.h"
 
+#include "FreeRTOS.h"
+#include "timers.h"
+
 #include <lib/support/CodeUtils.h>
 
 // ========= Pin definitions (local) =======
@@ -28,6 +31,9 @@
 #define PROX_IN_PORT                             gpioPortD
 #define PROX_IN_PIN                              4
 
+#define DEBUG_OUT_PORT                           gpioPortC
+#define DEBUG_OUT_PIN                            8
+
 // ============ Start of driver code =============
 
 namespace google {
@@ -35,56 +41,63 @@ namespace matter {
 
 namespace {
 
-uint32_t MillisToTicks(uint32_t millis)
-{
-    uint32_t millisPerTick = (1000u / osKernelGetTickFreq());
-    return std::max(millis / millisPerTick, static_cast<uint32_t>(1u));
-}
-
-osTimerId_t sSwitchDebounceTimer = nullptr;
-bool sButtonSwitchStateToCheck = false;
-unsigned int sIntForButton = 0;
-unsigned int sIntForProx = 0;
+TimerHandle_t sDebounceTimer = nullptr;
 
 constexpr unsigned int kDebounceTimeMillis = 10u;
+
+void ManchesterOut(GmdSilabsDriver & driver, const uint8_t *data, size_t size)
+{
+    // ADAPT kSpeedFactor to whatever speed sets the right rate on the target...
+    const int kSpeedFactor = 5;
+    while (size > 0) {
+        uint16_t encoded = 0;
+        for (int i = 0; i < 16; i++) {
+            if ((i & 0x1) == 0) {
+                if (*data & (1 << (i >> 1))) {
+                    encoded |= 1 << i;
+                } else {
+                    encoded |= 1 << (i + 1);
+                }
+            }
+
+            bool bitVal = (encoded & (1 << i)) != 0;
+            for (int speedIdx = 0; speedIdx < kSpeedFactor; ++speedIdx)
+            {
+                driver.SetDebugPin(bitVal);
+            }
+        }
+
+        // Bring back to idle
+        for (int speedIdx = 0; speedIdx < (4 * kSpeedFactor); ++speedIdx)
+        {
+            driver.SetDebugPin(false);
+        }
+
+        data++;
+        size--;
+    }
+}
+
+uint32_t MillisToTicks(uint32_t millis)
+{
+    return std::max(pdMS_TO_TICKS(millis), static_cast<uint32_t>(1u));
+}
+
+void OnDebounceTimer( TimerHandle_t pxTimer )
+{
+    auto & driver = GmdSilabsDriver::GetInstance();
+    driver.HandleDebounceTimer();
+}
+
 
 } // namespace
 
 // Singleton instance.
-GmdSilabsDriver GmdSilabsDriver::sInstance;
-
-
-#if 0
-
-/// \return timer ID for reference by other functions or NULL in case of error.
-osTimerId_t osTimerNew (osTimerFunc_t func, osTimerType_t type, void *argument, const osTimerAttr_t *attr);
-
-/// Get name of a timer.
-/// \param[in]     timer_id      timer ID obtained by \ref osTimerNew.
-/// \return name as NULL terminated string.
-const char *osTimerGetName (osTimerId_t timer_id);
-
-/// Start or restart a timer.
-/// \param[in]     timer_id      timer ID obtained by \ref osTimerNew.
-/// \param[in]     ticks         \ref CMSIS_RTOS_TimeOutValue "time ticks" value of the timer.
-/// \return status code that indicates the execution status of the function.
-osStatus_t osTimerStart (osTimerId_t timer_id, uint32_t ticks);
-
-/// Stop a timer.
-/// \param[in]     timer_id      timer ID obtained by \ref osTimerNew.
-/// \return status code that indicates the execution status of the function.
-osStatus_t osTimerStop (osTimerId_t timer_id);
-
-#endif
-
 
 void GmdSilabsDriver::Init()
 {
   /* Enable GPIO in CMU */
   CMU_ClockEnable(cmuClock_GPIO, true);
-
-  sSwitchDebounceTimer = osTimerNew(GmdSilabsDriver::OnDebounceTimer, osTimerOnce, reinterpret_cast<void*>(BUTTON_IN_PIN), nullptr);
-  VerifyOrDie(sSwitchDebounceTimer != nullptr);
 
   /* Initialize GPIO interrupt dispatcher */
   GPIOINT_Init();
@@ -92,7 +105,17 @@ void GmdSilabsDriver::Init()
   GPIO_PinModeSet(BUTTON_IN_PORT, BUTTON_IN_PIN, gpioModeInputPullFilter, 1);
   GPIO_PinModeSet(PROX_IN_PORT, PROX_IN_PIN, gpioModeInputPullFilter, 1);
   GPIO_PinModeSet(LED_OUT_PORT, LED_OUT_PIN, gpioModePushPull, 1);
+  GPIO_PinModeSet(DEBUG_OUT_PORT, DEBUG_OUT_PIN, gpioModePushPull, 0);
 
+  sDebounceTimer = xTimerCreate("debounce", MillisToTicks(kDebounceTimeMillis), pdTRUE, nullptr, OnDebounceTimer);
+  if (sDebounceTimer == nullptr)
+  {
+      SetLightLedEnabled(true);
+      EmitDebugCode('N');
+  }
+  xTimerStart(sDebounceTimer, 100);
+
+#if 0
   /* Register callbacks before setting up and enabling pin interrupt. */
   sIntForButton = GPIOINT_CallbackRegisterExt(BUTTON_IN_PIN, GmdSilabsDriver::OnPinInterrupt, (void*)&GmdSilabsDriver::GetInstance());
   sIntForProx = GPIOINT_CallbackRegisterExt(PROX_IN_PIN, GmdSilabsDriver::OnPinInterrupt, (void*)&GmdSilabsDriver::GetInstance());
@@ -101,25 +124,42 @@ void GmdSilabsDriver::Init()
   GPIO_ExtIntConfig(BUTTON_IN_PORT, BUTTON_IN_PIN, sIntForButton, true, true, true);
   GPIO_ExtIntConfig(PROX_IN_PORT, PROX_IN_PIN, sIntForProx, true, true, true);
 
-  GPIO_IntEnable(GPIO_EnabledIntGet() | (1 << sIntForButton) | (1 << sIntForProx));
-
-  // NVIC_EnableIRQ(GPIO_ODD_IRQn);
-  // NVIC_EnableIRQ(GPIO_EVEN_IRQn);
+  GPIO_IntClear((1 << sIntForButton) | (1 << sIntForProx));
+  GPIO_IntEnable((1 << sIntForButton) | (1 << sIntForProx));
+#endif // 0
 }
 
-void GmdSilabsDriver::OnDebounceTimer(void *ctx)
+void GmdSilabsDriver::HandleDebounceTimer()
 {
-    uint32_t switch_pin = reinterpret_cast<uint32_t>(ctx);
-    if (switch_pin == BUTTON_IN_PIN)
-    {
-        auto self = GmdSilabsDriver::GetInstance();
-        self.SetLightLedEnabled(true);
-        if (self.IsSwitchButtonPressed() == sButtonSwitchStateToCheck)
-        {
-            self.mHardwareCallback(self.IsSwitchButtonPressed() ? HardwareEvent::kSwitchButtonPressed : HardwareEvent::kSwitchButtonReleased);
-        }
+    bool newIsButtonPressed = IsSwitchButtonPressed();
+    bool newIsProxDetected = IsProximityDetected();
 
-        GPIO_IntEnable(GPIO_EnabledIntGet() | (1 << sIntForButton));
+    EmitDebugCode(newIsButtonPressed ? 20 : 21);
+    EmitDebugCode(mGotInitialDebounceState ? 30 : 31);
+
+    if (!mGotInitialDebounceState)
+    {
+        mIsButtonPressed = newIsButtonPressed;
+        mIsProxDetected = newIsProxDetected;
+        mGotInitialDebounceState = true;
+        EmitDebugCode(100);
+        return;
+    }
+
+    EmitDebugCode(99);
+
+    if (newIsButtonPressed != mIsButtonPressed)
+    {
+        mIsButtonPressed = newIsButtonPressed;
+        EmitDebugCode(newIsButtonPressed ? 8 : 9);
+        CallHardwareEventCallback(newIsButtonPressed ? HardwareEvent::kSwitchButtonPressed : HardwareEvent::kSwitchButtonReleased);
+    }
+
+    if (newIsProxDetected != mIsProxDetected)
+    {
+        mIsProxDetected = newIsProxDetected;
+        EmitDebugCode(newIsProxDetected ? 10 : 11);
+        CallHardwareEventCallback(newIsProxDetected ? HardwareEvent::kOccupancyDetected : HardwareEvent::kOccupancyUndetected);
     }
 }
 
@@ -145,30 +185,22 @@ void GmdSilabsDriver::SetLightLedEnabled(bool enabled)
     }
 }
 
-// Static
-void GmdSilabsDriver::OnPinInterrupt(uint8_t intNum, void *ctx)
+void GmdSilabsDriver::SetDebugPin(bool high)
 {
-    GmdSilabsDriver * self = (GmdSilabsDriver*)ctx;
-    if (self->mHardwareCallback == nullptr)
+    if (high)
     {
-        return;
+        GPIO_PinOutSet(DEBUG_OUT_PORT, DEBUG_OUT_PIN);
     }
-
-    if (intNum == BUTTON_IN_PIN)
+    else
     {
-        sButtonSwitchStateToCheck = self->IsSwitchButtonPressed();
-
-        // Debounce the button before emitting events.
-// TODO START TIMER
-        osTimerStart(sSwitchDebounceTimer, MillisToTicks(kDebounceTimeMillis));
-        GPIO_IntEnable(GPIO_EnabledIntGet() & ~(1 << sIntForButton));
-    }
-    else if (intNum == PROX_IN_PIN)
-    {
-        self->mHardwareCallback(self->IsProximityDetected() ? HardwareEvent::kOccupancyDetected : HardwareEvent::kOccupancyUndetected);
+        GPIO_PinOutClear(DEBUG_OUT_PORT, DEBUG_OUT_PIN);
     }
 }
 
+void GmdSilabsDriver::EmitDebugCode(uint8_t code)
+{
+    ManchesterOut(*this, &code, 1);
+}
 
 } // namespace matter
 } // namespace google

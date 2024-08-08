@@ -21,9 +21,12 @@ source_set("product-specialization") {
   ]
   public_configs = [ ":config" ]
   sources = [
+    "include/DefaultGenericSwitchStateMachineDriver.h",
+    "include/GenericSwitchStateMachine.h",
     "include/GoogleMultiDeviceAttestationProvider.h",
     "include/GoogleMultiDeviceCommon.h",
     "include/GoogleMultiDeviceInfoProvider.h",
+    "src/GenericSwitchStateMachine.cpp",
     "src/GoogleMultiDeviceCommon.cpp",
   ]
   defines = [ "GOOGLE_DEVICE_HARDWARE=\"GMD-${chip_device_platform}\"" ]
