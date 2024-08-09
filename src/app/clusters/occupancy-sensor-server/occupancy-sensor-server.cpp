@@ -15,15 +15,20 @@
  *    limitations under the License.
  */
 
+#include <algorithm>
+
+#include <stdint.h>
+
 #include "occupancy-sensor-server.h"
-#include "occupancy-hal.h"
 
 #include <app/AttributeAccessInterfaceRegistry.h>
 #include <app/EventLogging.h>
+#include <app/SafeAttributePersistenceProvider.h>
 #include <app/data-model/Encode.h>
 #include <app/reporting/reporting.h>
 #include <app/util/attribute-storage.h>
 #include <lib/core/CHIPError.h>
+#include <lib/support/logging/CHIPLogging.h>
 
 using chip::Protocols::InteractionModel::Status;
 
@@ -33,56 +38,164 @@ namespace Clusters {
 namespace OccupancySensing {
 
 namespace {
-Structs::HoldTimeLimitsStruct::Type
-    sHoldTimeLimitsStructs[MATTER_DM_OCCUPANCY_SENSING_CLUSTER_SERVER_ENDPOINT_COUNT + CHIP_DEVICE_CONFIG_DYNAMIC_ENDPOINT_COUNT];
 
-uint16_t sHoldTime[MATTER_DM_OCCUPANCY_SENSING_CLUSTER_SERVER_ENDPOINT_COUNT + CHIP_DEVICE_CONFIG_DYNAMIC_ENDPOINT_COUNT];
+// Mapping table from spec:
+//
+//  | Feature Flag Value    | Value of OccupancySensorTypeBitmap    | Value of OccupancySensorType
+//  | PIR | US | PHY        | ===================================== | ============================
+//  | 0   | 0  | 0          | PIR ^*^                               | PIR
+//  | 1   | 0  | 0          | PIR                                   | PIR
+//  | 0   | 1  | 0          | Ultrasonic                            | Ultrasonic
+//  | 1   | 1  | 0          | PIR + Ultrasonic                      | PIRAndUltrasonic
+//  | 0   | 0  | 1          | PhysicalContact                       | PhysicalContact
+//  | 1   | 0  | 1          | PhysicalContact + PIR                 | PIR
+//  | 0   | 1  | 1          | PhysicalContact + Ultrasonic          | Ultrasonic
+//  | 1   | 1  | 1          | PhysicalContact + PIR + Ultrasonic    | PIRAndUltrasonic
+
+BitMask<OccupancySensorTypeBitmap> FeaturesToOccupancySensorTypeBitmap(BitFlags<Feature> features)
+{
+    BitMask<OccupancySensorTypeBitmap> occupancySensorTypeBitmap{};
+
+    if (!features.HasAny(Feature::kPassiveInfrared, Feature::kUltrasonic, Feature::kPhysicalContact))
+    {
+        // No legacy PIR/IS/PHY: assume at least PIR for backwards compatibility.
+        occupancySensorTypeBitmap.Set(OccupancySensorTypeBitmap::kPir);
+        return occupancySensorTypeBitmap;
+    }
+
+    // Otherwise each bit maps directly for PIR/US/PHY.
+    occupancySensorTypeBitmap.Set(OccupancySensorTypeBitmap::kPir, features.Has(Feature::kPassiveInfrared));
+    occupancySensorTypeBitmap.Set(OccupancySensorTypeBitmap::kUltrasonic, features.Has(Feature::kUltrasonic));
+    occupancySensorTypeBitmap.Set(OccupancySensorTypeBitmap::kPhysicalContact, features.Has(Feature::kPhysicalContact));
+
+    return occupancySensorTypeBitmap;
+}
+
+OccupancySensorTypeEnum FeaturesToOccupancySensorType(BitFlags<Feature> features)
+{
+    // Note how the truth table in the comment at the top of this section has
+    // the PIR/US/PHY columns not in MSB-descending order. This is OK as we apply the correct
+    // bit weighing to make the table equal below.
+    unsigned maskFromFeatures = (features.Has(Feature::kPhysicalContact) ? (1 << 2) : 0) |
+    (features.Has(Feature::kUltrasonic) ? (1 << 1) : 0) |
+    (features.Has(Feature::kPhysicalContact) ? (1 << 0) : 0);
+
+    const OccupancySensorTypeEnum mappingTable[8] = {
+      //                                                | PIR | US | PHY | Type value
+      OccupancySensorTypeEnum::kPir,                //  | 0   | 0  | 0   | PIR
+      OccupancySensorTypeEnum::kPir,                //  | 1   | 0  | 0   | PIR
+      OccupancySensorTypeEnum::kUltrasonic,         //  | 0   | 1  | 0   | Ultrasonic
+      OccupancySensorTypeEnum::kPIRAndUltrasonic,   //  | 1   | 1  | 0   | PIRAndUltrasonic
+      OccupancySensorTypeEnum::kPhysicalContact,    //  | 0   | 0  | 1   | PhysicalContact
+      OccupancySensorTypeEnum::kPir,                //  | 1   | 0  | 1   | PIR
+      OccupancySensorTypeEnum::kUltrasonic,         //  | 0   | 1  | 1   | Ultrasonic
+      OccupancySensorTypeEnum::kPIRAndUltrasonic,   //  | 1   | 1  | 1   | PIRAndUltrasonic
+    };
+
+    // This check is to ensure that no changes to the mapping table in the future can overrun.
+    if (maskFromFeatures >= sizeof(mappingTable))
+    {
+        return OccupancySensorTypeEnum::kPir;
+    }
+
+    return mappingTable[maskFromFeatures];
+}
+
+constexpr uint16_t kLatestClusterRevision = 5u;
+
 } // namespace
 
 CHIP_ERROR Instance::Init()
 {
+    mDelegate->SetInstance(this);
+    mDelegate->Init();
+    mFeatures = mDelegate->GetSupportedFeatures();
+
     VerifyOrReturnError(chip::app::AttributeAccessInterfaceRegistry::Instance().Register(this), CHIP_ERROR_INCORRECT_STATE);
+
+    // TODO: Convert this to new data model APIs when available.
+    mHasHoldTime = (nullptr != emberAfLocateAttributeMetadata(mEndpointId, OccupancySensing::Id,  Attributes::HoldTime::Id));
+    mHasPirOccupiedToUnoccupiedDelaySeconds = (nullptr != emberAfLocateAttributeMetadata(mEndpointId, OccupancySensing::Id,  Attributes::PIROccupiedToUnoccupiedDelay::Id));
+
+    if (mHasPirOccupiedToUnoccupiedDelaySeconds && !mHasHoldTime)
+    {
+        ChipLogError(Zcl, "PIROccupiedToUnoccupiedDelay requires HoldTime!");
+        return CHIP_ERROR_INCORRECT_STATE;
+    }
+
+    if (!mHasHoldTime)
+    {
+        return CHIP_NO_ERROR;
+    }
+
+    SafeAttributePersistenceProvider * persister = GetSafeAttributePersistenceProvider();
+    VerifyOrReturnError(persister != nullptr, CHIP_ERROR_INCORRECT_STATE);
+
+    Structs::HoldTimeLimitsStruct::Type holdTimeLimits = mDelegate->GetHoldTimeLimits();
+
+    auto holdTimePath = ConcreteAttributePath{mEndpointId, OccupancySensing::Id,  Attributes::HoldTime::Id};
+    uint16_t holdTimeSeconds = holdTimeLimits.holdTimeDefault;
+    if (persister->ReadScalarValue(holdTimePath, holdTimeSeconds) != CHIP_NO_ERROR)
+    {
+        ChipLogError(Zcl, "Warning: did not find persisted HoldTime in persisted storage for EP %u", static_cast<unsigned>(mEndpointId));
+    }
+    else
+    {
+        holdTimeSeconds = std::max(holdTimeLimits.holdTimeMin, holdTimeSeconds);
+        holdTimeSeconds = std::min(holdTimeSeconds, holdTimeLimits.holdTimeMax);
+    }
+
+    mHoldTimeSeconds = holdTimeSeconds;
     return CHIP_NO_ERROR;
 }
 
-void Instance::Shutdown()
-{
+Instance::~Instance() {
     chip::app::AttributeAccessInterfaceRegistry::Instance().Unregister(this);
 }
 
 CHIP_ERROR Instance::Read(const ConcreteReadAttributePath & aPath, AttributeValueEncoder & aEncoder)
 {
-    VerifyOrDie(aPath.mClusterId == app::Clusters::OccupancySensing::Id);
+    VerifyOrDie((aPath.mClusterId == app::Clusters::OccupancySensing::Id) && (mDelegate != nullptr));
 
     switch (aPath.mAttributeId)
     {
-    case Attributes::FeatureMap::Id:
-        ReturnErrorOnFailure(aEncoder.Encode(mFeature));
-        break;
-    case Attributes::HoldTime::Id: {
-
-        uint16_t * holdTime = GetHoldTimeForEndpoint(aPath.mEndpointId);
-
-        if (holdTime == nullptr)
-        {
-            return CHIP_ERROR_NOT_FOUND;
-        }
-
-        return aEncoder.Encode(*holdTime);
+    case Attributes::ClusterRevision::Id: {
+        return aEncoder.Encode(kLatestClusterRevision);
+    }
+    case Attributes::FeatureMap::Id: {
+        return aEncoder.Encode(mFeatures);
+    }
+    case Attributes::HoldTime::Id:
+    case Attributes::PIROccupiedToUnoccupiedDelay::Id: {
+        // Both attributes have to track.
+        return aEncoder.Encode(mHoldTimeSeconds);
     }
     case Attributes::HoldTimeLimits::Id: {
-
-        Structs::HoldTimeLimitsStruct::Type * holdTimeLimitsStruct = GetHoldTimeLimitsForEndpoint(aPath.mEndpointId);
-
-        if (holdTimeLimitsStruct == nullptr)
-        {
-            return CHIP_ERROR_NOT_FOUND;
-        }
-
-        return aEncoder.Encode(*holdTimeLimitsStruct);
+        Structs::HoldTimeLimitsStruct::Type holdTimeLimitsStruct = mDelegate->GetHoldTimeLimits();
+        return aEncoder.Encode(holdTimeLimitsStruct);
     }
+    case Attributes::OccupancySensorType::Id: {
+        return aEncoder.Encode(FeaturesToOccupancySensorType(mFeatures));
+    }
+    case Attributes::OccupancySensorTypeBitmap::Id: {
+        return aEncoder.Encode(FeaturesToOccupancySensorTypeBitmap(mFeatures));
+    }
+    case Attributes::Occupancy::Id: {
+        chip::BitMask<chip::app::Clusters::OccupancySensing::OccupancyBitmap> occupancy;
+        if (mOccupancyDetected)
+        {
+            occupancy.Set(OccupancyBitmap::kOccupied);
+        }
+        return aEncoder.Encode(occupancy);
+    }
+
+    // NOTE: All the legacy (non-hold-time) timing attributes are not implemented here
+    //       and they will flow-through to legacy ember handling.
+    //       It then becomes important to manage the timing of those parameters properly
+    //       against the HoldTime attribute.
+    // TODO: Implement a mode that supports Version 4 of the cluster in common code.
     default:
-        return CHIP_NO_ERROR;
+        break;
     }
 
     return CHIP_NO_ERROR;
@@ -90,101 +203,148 @@ CHIP_ERROR Instance::Read(const ConcreteReadAttributePath & aPath, AttributeValu
 
 CHIP_ERROR Instance::Write(const ConcreteDataAttributePath & aPath, AttributeValueDecoder & aDecoder)
 {
-    VerifyOrDie(aPath.mClusterId == app::Clusters::OccupancySensing::Id);
+    VerifyOrDie((aPath.mClusterId == app::Clusters::OccupancySensing::Id) && (mDelegate != nullptr));
 
     switch (aPath.mAttributeId)
     {
-    case Attributes::HoldTime::Id: {
-
-        uint16_t newHoldTime;
-
-        ReturnErrorOnFailure(aDecoder.Decode(newHoldTime));
-
-        Structs::HoldTimeLimitsStruct::Type * currHoldTimeLimits = GetHoldTimeLimitsForEndpoint(aPath.mEndpointId);
-        VerifyOrReturnError(currHoldTimeLimits != nullptr, CHIP_ERROR_INVALID_ARGUMENT);
-        VerifyOrReturnError(newHoldTime >= currHoldTimeLimits->holdTimeMin, CHIP_IM_GLOBAL_STATUS(ConstraintError));
-        VerifyOrReturnError(newHoldTime <= currHoldTimeLimits->holdTimeMax, CHIP_IM_GLOBAL_STATUS(ConstraintError));
-
-        return SetHoldTime(aPath.mEndpointId, newHoldTime);
+    case Attributes::HoldTime::Id:
+    case Attributes::PIROccupiedToUnoccupiedDelay::Id: {
+        // Processing is the same for both, since they have to track.
+        uint16_t newHoldTimeSeconds = mHoldTimeSeconds;
+        ReturnErrorOnFailure(aDecoder.Decode(newHoldTimeSeconds));
+        return HandleWriteHoldTime(newHoldTimeSeconds);
     }
-    default: {
+    default:
         break;
     }
-    }
 
     return CHIP_NO_ERROR;
 }
 
-bool Instance::HasFeature(Feature aFeature) const
+CHIP_ERROR Instance::HandleWriteHoldTime(uint16_t newHoldTimeSeconds)
 {
-    return mFeature.Has(aFeature);
-}
+    VerifyOrReturnError(mDelegate != nullptr, CHIP_IM_GLOBAL_STATUS(Failure));
 
-Structs::HoldTimeLimitsStruct::Type * GetHoldTimeLimitsForEndpoint(EndpointId endpoint)
-{
-    auto index = emberAfGetClusterServerEndpointIndex(endpoint, app::Clusters::OccupancySensing::Id,
-                                                      MATTER_DM_OCCUPANCY_SENSING_CLUSTER_SERVER_ENDPOINT_COUNT);
+    VerifyOrReturnError(mHasHoldTime, CHIP_IM_GLOBAL_STATUS(UnsupportedAttribute));
 
-    if (index == kEmberInvalidEndpointIndex)
+    SafeAttributePersistenceProvider * persister = GetSafeAttributePersistenceProvider();
+    VerifyOrReturnError(persister != nullptr, CHIP_IM_GLOBAL_STATUS(Failure));
+
+    Structs::HoldTimeLimitsStruct::Type currHoldTimeLimits = mDelegate->GetHoldTimeLimits();
+    VerifyOrReturnError(newHoldTimeSeconds >= currHoldTimeLimits.holdTimeMin, CHIP_IM_GLOBAL_STATUS(ConstraintError));
+    VerifyOrReturnError(newHoldTimeSeconds <= currHoldTimeLimits.holdTimeMax, CHIP_IM_GLOBAL_STATUS(ConstraintError));
+
+    // No change: do nothing.
+    if (newHoldTimeSeconds == mHoldTimeSeconds)
     {
-        return nullptr;
+        return CHIP_NO_ERROR;
     }
 
-    if (index >= ArraySize(sHoldTimeLimitsStructs))
+    mHoldTimeSeconds = newHoldTimeSeconds;
+
+    mDelegate->OnHoldTimeWrite(newHoldTimeSeconds);
+
+    auto holdTimePath = ConcreteAttributePath{mEndpointId, OccupancySensing::Id,  Attributes::HoldTime::Id};
+    CHIP_ERROR err = persister->WriteScalarValue(holdTimePath, newHoldTimeSeconds);
+    if (err != CHIP_NO_ERROR)
     {
-        ChipLogError(NotSpecified, "Internal error: invalid/unexpected hold time limits index.");
-        return nullptr;
-    }
-    return &sHoldTimeLimitsStructs[index];
-}
-
-CHIP_ERROR SetHoldTimeLimits(EndpointId endpointId, const Structs::HoldTimeLimitsStruct::Type & holdTimeLimits)
-{
-
-    VerifyOrReturnError(kInvalidEndpointId != endpointId, CHIP_ERROR_INVALID_ARGUMENT);
-
-    Structs::HoldTimeLimitsStruct::Type * holdTimeLimitsForEndpoint = GetHoldTimeLimitsForEndpoint(endpointId);
-    VerifyOrReturnError(holdTimeLimitsForEndpoint != nullptr, CHIP_ERROR_INVALID_ARGUMENT);
-
-    holdTimeLimitsForEndpoint->holdTimeMin     = holdTimeLimits.holdTimeMin;
-    holdTimeLimitsForEndpoint->holdTimeMax     = holdTimeLimits.holdTimeMax;
-    holdTimeLimitsForEndpoint->holdTimeDefault = holdTimeLimits.holdTimeDefault;
-
-    MatterReportingAttributeChangeCallback(endpointId, OccupancySensing::Id, Attributes::HoldTimeLimits::Id);
-
-    return CHIP_NO_ERROR;
-}
-
-uint16_t * GetHoldTimeForEndpoint(EndpointId endpoint)
-{
-    auto index = emberAfGetClusterServerEndpointIndex(endpoint, app::Clusters::OccupancySensing::Id,
-                                                      MATTER_DM_OCCUPANCY_SENSING_CLUSTER_SERVER_ENDPOINT_COUNT);
-
-    if (index == kEmberInvalidEndpointIndex)
-    {
-        return nullptr;
+        ChipLogError(Zcl, "Failed HoldTime storage on EP %u: %" CHIP_ERROR_FORMAT, static_cast<unsigned>(mEndpointId), err.Format());
     }
 
-    if (index >= ArraySize(sHoldTimeLimitsStructs))
+    MatterReportingAttributeChangeCallback(mEndpointId, OccupancySensing::Id, Attributes::HoldTime::Id);
+    if (mHasPirOccupiedToUnoccupiedDelaySeconds)
     {
-        ChipLogError(NotSpecified, "Internal error: invalid/unexpected hold time index.");
-        return nullptr;
+        MatterReportingAttributeChangeCallback(mEndpointId, OccupancySensing::Id, Attributes::PIROccupiedToUnoccupiedDelay::Id);
     }
-    return &sHoldTime[index];
+
+    return (err != CHIP_NO_ERROR) ? CHIP_IM_GLOBAL_STATUS(Failure) : CHIP_NO_ERROR;
 }
 
-CHIP_ERROR SetHoldTime(EndpointId endpointId, const uint16_t & holdTime)
+void Instance::UpdateHoldTimeFromSensor(uint16_t newHoldTimeSeconds)
 {
-    VerifyOrReturnError(kInvalidEndpointId != endpointId, CHIP_ERROR_INVALID_ARGUMENT);
+    ChipLogProgress(Zcl, "Got request from delegate to update hold time on EP %u to : %u", static_cast<unsigned>(mEndpointId), static_cast<unsigned>(newHoldTimeSeconds));
+    (void)HandleWriteHoldTime(newHoldTimeSeconds);
+}
 
-    uint16_t * holdTimeForEndpoint = GetHoldTimeForEndpoint(endpointId);
-    VerifyOrReturnError(holdTimeForEndpoint != nullptr, CHIP_ERROR_INVALID_ARGUMENT);
+// TODO: Deal with changes of hold time when hold time timer is running.
+void Instance::SetOccupancyDetectedFromSensor(bool detected)
+{
+    mLastOccupancyDetectedFromDelegate = detected;
+    if (mOccupancyDetected == detected)
+    {
+        return;
+    }
 
-    *holdTimeForEndpoint = holdTime;
+    // No hold time constraint --> immediately report on change
+    if (!mHasHoldTime || (mHoldTimeSeconds == 0))
+    {
+        InternalSetOccupancy(detected);
+        return;
+    }
 
-    MatterReportingAttributeChangeCallback(endpointId, OccupancySensing::Id, Attributes::HoldTime::Id);
+    // Hold time constraints --> let the timer handle falling edges, if needed, from last rising edge
+    if (mIsHoldTimerRunning)
+    {
+        // Let timer manage the situation.
+        return;
+    }
 
-    return CHIP_NO_ERROR;
+    // Unoccupied -> Occupied: start the occupancy detected timer.
+    if (!mOccupancyDetected && detected)
+    {
+        InternalSetOccupancy(true);
+        ChipLogProgress(Zcl, "Delaying unoccupied state by at least %u seconds on EP %u", static_cast<unsigned>(mHoldTimeSeconds), static_cast<unsigned>(mEndpointId));
+        mDelegate->StartHoldTimer(mHoldTimeSeconds, [this]() { this->HandleHoldTimerExpiry(); });
+    }
+    // Occupied -> Unoccupied: timer no longer running, so it's been long enough and we can move to unoccupied.
+    else if (mOccupancyDetected && !detected)
+    {
+        InternalSetOccupancy(false);
+    }
+    else
+    {
+        // This is impossible...
+    }
+}
+
+void Instance::HandleHoldTimerExpiry()
+{
+    mIsHoldTimerRunning = false;
+    ChipLogProgress(Zcl, "Got to end of hold delay on EP %u", static_cast<unsigned>(mEndpointId));
+
+    // If already unoccupied by end of hold timer, there was an unoccupied detection
+    // during the hold window. It's now time to apply it.
+    if (!mLastOccupancyDetectedFromDelegate)
+    {
+        InternalSetOccupancy(false);
+    }
+    else
+    {
+        // Still occupied --> the next occupied-to-unoccupied can directly hit outside the timer.
+    }
+}
+
+void Instance::InternalSetOccupancy(bool occupied)
+{
+    if (occupied == mOccupancyDetected)
+    {
+        return;
+    }
+
+    ChipLogProgress(Zcl, "Applying occupancy change: %d -> %d", static_cast<int>(mOccupancyDetected), static_cast<int>(occupied));
+    mOccupancyDetected = occupied;
+
+    if (mDelegate != nullptr)
+    {
+        chip::BitMask<chip::app::Clusters::OccupancySensing::OccupancyBitmap> occupancy;
+        if (occupied)
+        {
+            occupancy.Set(OccupancyBitmap::kOccupied);
+        }
+        mDelegate->OnOccupancyChange(occupancy);
+    }
+
+    MatterReportingAttributeChangeCallback(mEndpointId, OccupancySensing::Id, Attributes::Occupancy::Id);
 }
 
 } // namespace OccupancySensing
@@ -192,70 +352,7 @@ CHIP_ERROR SetHoldTime(EndpointId endpointId, const uint16_t & holdTime)
 } // namespace app
 } // namespace chip
 
-using namespace chip;
-using namespace chip::app;
-using namespace chip::app::Clusters;
-using namespace chip::app::Clusters::OccupancySensing;
-
-//******************************************************************************
-// Plugin init function
-//******************************************************************************
-void emberAfOccupancySensingClusterServerInitCallback(EndpointId endpoint)
-{
-    auto deviceType = halOccupancyGetSensorType(endpoint);
-
-    chip::BitMask<OccupancySensorTypeBitmap> deviceTypeBitmap = 0;
-    switch (deviceType)
-    {
-    case HAL_OCCUPANCY_SENSOR_TYPE_PIR:
-        deviceTypeBitmap.Set(OccupancySensorTypeBitmap::kPir);
-        Attributes::OccupancySensorType::Set(endpoint, OccupancySensorTypeEnum::kPir);
-        break;
-
-    case HAL_OCCUPANCY_SENSOR_TYPE_ULTRASONIC:
-        deviceTypeBitmap.Set(OccupancySensorTypeBitmap::kUltrasonic);
-        Attributes::OccupancySensorType::Set(endpoint, OccupancySensorTypeEnum::kUltrasonic);
-        break;
-
-    case HAL_OCCUPANCY_SENSOR_TYPE_PIR_AND_ULTRASONIC:
-        deviceTypeBitmap.Set(OccupancySensorTypeBitmap::kPir);
-        deviceTypeBitmap.Set(OccupancySensorTypeBitmap::kUltrasonic);
-        Attributes::OccupancySensorType::Set(endpoint, OccupancySensorTypeEnum::kPIRAndUltrasonic);
-        break;
-
-    case HAL_OCCUPANCY_SENSOR_TYPE_PHYSICAL:
-        deviceTypeBitmap.Set(OccupancySensorTypeBitmap::kPhysicalContact);
-        Attributes::OccupancySensorType::Set(endpoint, OccupancySensorTypeEnum::kPhysicalContact);
-        break;
-
-    default:
-        break;
-    }
-    Attributes::OccupancySensorTypeBitmap::Set(endpoint, deviceTypeBitmap);
-}
-
-//******************************************************************************
-// Notification callback from the HAL plugin
-//******************************************************************************
-void halOccupancyStateChangedCallback(EndpointId endpoint, HalOccupancyState occupancyState)
-{
-    chip::BitMask<OccupancyBitmap> mappedOccupancyState;
-    if (occupancyState & HAL_OCCUPANCY_STATE_OCCUPIED)
-    {
-        mappedOccupancyState.Set(OccupancyBitmap::kOccupied);
-        ChipLogProgress(Zcl, "Occupancy detected");
-    }
-    else
-    {
-        ChipLogProgress(Zcl, "Occupancy no longer detected");
-    }
-
-    Attributes::Occupancy::Set(endpoint, occupancyState);
-}
-
-HalOccupancySensorType __attribute__((weak)) halOccupancyGetSensorType(EndpointId endpoint)
-{
-    return HAL_OCCUPANCY_SENSOR_TYPE_PIR;
-}
-
+// Instantiate and initialize the OccupancySensing::Instance/Delegate from your application directly! Don't rely
+// on global initialization!
 void MatterOccupancySensingPluginServerInitCallback() {}
+void emberAfOccupancySensingClusterServerInitCallback(chip::EndpointId endpointId) {}

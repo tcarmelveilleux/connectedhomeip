@@ -16,7 +16,6 @@
  */
 
 #include <app/CommandHandler.h>
-#include <app/clusters/occupancy-sensor-server/occupancy-hal.h>
 #include <app/clusters/occupancy-sensor-server/occupancy-sensor-server.h>
 #include <app/util/attribute-storage.h>
 #include <platform/CHIPDeviceLayer.h>
