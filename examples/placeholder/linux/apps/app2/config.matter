@@ -9522,10 +9522,10 @@ endpoint 1 {
   }
 
   server cluster OccupancySensing {
-    ram      attribute occupancy;
-    ram      attribute occupancySensorType;
-    ram      attribute occupancySensorTypeBitmap;
-    ram      attribute PIROccupiedToUnoccupiedDelay default = 0x00;
+    callback attribute occupancy;
+    callback attribute occupancySensorType;
+    callback attribute occupancySensorTypeBitmap;
+    callback attribute PIROccupiedToUnoccupiedDelay;
     ram      attribute PIRUnoccupiedToOccupiedDelay default = 0x00;
     ram      attribute PIRUnoccupiedToOccupiedThreshold default = 1;
     ram      attribute ultrasonicOccupiedToUnoccupiedDelay default = 0x00;
@@ -9535,7 +9535,7 @@ endpoint 1 {
     ram      attribute physicalContactUnoccupiedToOccupiedDelay default = 0x00;
     ram      attribute physicalContactUnoccupiedToOccupiedThreshold default = 1;
     callback attribute featureMap;
-    callback attribute clusterRevision default = 5;
+    callback attribute clusterRevision;
   }
 }
 
