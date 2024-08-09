@@ -136,6 +136,8 @@ silabs_executable("google-multi-device") {
 
   sources = [
     "${examples_common_plat_dir}/main.cpp",
+    "../device-common/include/GoogleMultiDeviceCommon.h",
+    "../device-common/src/GoogleMultiDeviceCommon.cpp",
     "include/MultiDeviceDriver.h",
     "src/AppTask.cpp",
     "src/MultiDeviceDriver.cpp",

@@ -39,8 +39,6 @@
 #include <platform/CHIPDeviceLayer.h>
 
 #include "GoogleMultiDeviceCommon.h"
-#include "GenericSwitchStateMachine.h"
-#include "DefaultGenericSwitchStateMachineDriver.h"
 
 #include "MultiDeviceDriver.h"
 
@@ -61,8 +59,6 @@ using namespace ::chip::DeviceLayer::Silabs;
 
 namespace {
 LEDWidget sLightLED;
-chip::app::DefaultGenericSwitchStateMachineDriver sGenericSwitchDriverEp2;
-chip::app::GenericSwitchStateMachine sGenericSwitchStateMachineEp2;
 
 // WARNING: CALLED FROM ISR CONTEXT
 void MultiDeviceDriverEvent(HardwareEvent event)
@@ -105,9 +101,6 @@ AppTask AppTask::sAppTask;
 
 CHIP_ERROR AppTask::Init()
 {
-    sGenericSwitchDriverEp2.SetEndpointId(2);
-    sGenericSwitchStateMachineEp2.SetDriver(&sGenericSwitchDriverEp2);
-
     CHIP_ERROR err = CHIP_NO_ERROR;
     chip::DeviceLayer::Silabs::GetPlatform().SetButtonsCb(AppTask::ButtonEventHandler);
 
@@ -149,7 +142,7 @@ void AppTask::AppTaskMain(void * pvParameter)
 #endif
 
     chip::DeviceLayer::SystemLayer().ScheduleLambda([](){
-        google::matter::InitializeProduct();
+        GoogleMultiDeviceIntegration::GetInstance().InitializeProduct();
     });
 
     SILABS_LOG("App Task started");
@@ -167,27 +160,26 @@ void AppTask::AppTaskMain(void * pvParameter)
 
 void AppTask::MultiDeviceDriverAppEventHandler(AppEvent * aEvent)
 {
-    auto driver = GmdSilabsDriver::GetInstance();
+    auto & driver = GmdSilabsDriver::GetInstance();
+    auto & productIntegration = GoogleMultiDeviceIntegration::GetInstance();
 
     switch (aEvent->Type)
     {
         case AppEvent::kEventType_SwitchButtonPressed:
             driver.EmitDebugCode(40);
-            chip::DeviceLayer::SystemLayer().ScheduleLambda([](){
-                sGenericSwitchStateMachineEp2.HandleEvent(GenericSwitchStateMachine::Event::MakeButtonPressEvent(1));
-            });
+            productIntegration.HandleButtonPress(0);
             break;
         case AppEvent::kEventType_SwitchButtonReleased:
             driver.EmitDebugCode(41);
-            chip::DeviceLayer::SystemLayer().ScheduleLambda([](){
-                sGenericSwitchStateMachineEp2.HandleEvent(GenericSwitchStateMachine::Event::MakeButtonReleaseEvent(1));
-            });
+            productIntegration.HandleButtonRelease(0);
             break;
         case AppEvent::kEventType_OccupancyDetected:
-            // driver.SetLightLedEnabled(true);
+            driver.EmitDebugCode(50);
+            productIntegration.HandleOccupancyDetected(0);
             break;
         case AppEvent::kEventType_OccupancyUndetected:
-            // driver.SetLightLedEnabled(false);
+            driver.EmitDebugCode(51);
+            productIntegration.HandleOccupancyUndetected(0);
             break;
         default:
             break;
@@ -205,4 +197,16 @@ void AppTask::ButtonEventHandler(uint8_t button, uint8_t btnAction)
         button_event.Handler = BaseApplication::ButtonHandler;
         AppTask::GetAppTask().PostEvent(&button_event);
     }
+}
+
+void ::google::matter::GoogleMultiDeviceIntegration::SetDebugLed(bool enabled)
+{
+    auto & driver = GmdSilabsDriver::GetInstance();
+    driver.SetLightLedEnabled(enabled);
+}
+
+void ::google::matter::GoogleMultiDeviceIntegration::EmitDebugCode(uint8_t code)
+{
+    auto & driver = GmdSilabsDriver::GetInstance();
+    driver.EmitDebugCode(code);
 }
