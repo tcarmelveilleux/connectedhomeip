@@ -294,6 +294,7 @@ void Instance::SetOccupancyDetectedFromSensor(bool detected)
     {
         InternalSetOccupancy(true);
         ChipLogProgress(Zcl, "Delaying unoccupied state by at least %u seconds on EP %u", static_cast<unsigned>(mHoldTimeSeconds), static_cast<unsigned>(mEndpointId));
+        mIsHoldTimerRunning = true;
         mDelegate->StartHoldTimer(mHoldTimeSeconds, [this]() { this->HandleHoldTimerExpiry(); });
     }
     // Occupied -> Unoccupied: timer no longer running, so it's been long enough and we can move to unoccupied.
