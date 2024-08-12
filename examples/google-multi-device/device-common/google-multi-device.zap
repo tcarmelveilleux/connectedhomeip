@@ -3815,7 +3815,7 @@
         1
       ],
       "deviceIdentifiers": [
-        257
+        14
       ],
       "deviceTypeName": "MA-aggregator",
       "deviceTypeCode": 14,
@@ -4097,7 +4097,23 @@
               "storageOption": "RAM",
               "singleton": 0,
               "bounded": 0,
-              "defaultValue": "",
+              "defaultValue": "0",
+              "reportable": 1,
+              "minInterval": 0,
+              "maxInterval": 65344,
+              "reportableChange": 0
+            },
+            {
+              "name": "MultiPressMax",
+              "code": 2,
+              "mfgCode": null,
+              "side": "server",
+              "type": "int8u",
+              "included": 1,
+              "storageOption": "RAM",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "2",
               "reportable": 1,
               "minInterval": 0,
               "maxInterval": 65344,
@@ -4110,7 +4126,7 @@
               "side": "server",
               "type": "bitmap32",
               "included": 1,
-              "storageOption": "RAM",
+              "storageOption": "external",
               "singleton": 0,
               "bounded": 0,
               "defaultValue": "58",
