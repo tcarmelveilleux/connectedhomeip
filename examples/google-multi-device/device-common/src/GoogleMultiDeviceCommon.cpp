@@ -1,5 +1,8 @@
 // Copyright 2024 Google. All rights reserved.
 
+#include <memory>
+#include <utility>
+
 #include <stdint.h>
 
 #include "GoogleMultiDeviceCommon.h"
@@ -8,6 +11,7 @@
 #include "GoogleMultiDeviceAttestationProvider.h"
 #include "GenericSwitchStateMachine.h"
 #include "DefaultGenericSwitchStateMachineDriver.h"
+#include "GoogleMultiDeviceDishwasherOpstate.h"
 
 #include <include/platform/DeviceInstanceInfoProvider.h>
 #include <lib/support/CodeUtils.h>
@@ -113,11 +117,11 @@ GoogleMultiDeviceIntegration::~GoogleMultiDeviceIntegration()
 {
     if (mOccupancyInstanceEp3 != nullptr)
     {
-        delete mOccupancyInstanceEp3;
+        mOccupancyInstanceEp3.reset();
     }
     if (mOccupancyDelegateEp3 != nullptr)
     {
-        delete mOccupancyDelegateEp3;
+        mOccupancyDelegateEp3.reset();
     }
 }
 
@@ -126,17 +130,23 @@ void GoogleMultiDeviceIntegration::InitializeProduct()
     chip::DeviceLayer::SetDeviceInstanceInfoProvider(&sDeviceInfoProvider);
     chip::Credentials::SetDeviceAttestationCredentialsProvider(&sAttestationProvider);
 
+    // EP2: Generic switch setup
     mGenericSwitchDriverEp2.SetEndpointId(2);
     mGenericSwitchStateMachineEp2.SetDriver(&mGenericSwitchDriverEp2);
 
-    EndpointId kOccupancyEndpointId = 3;
-    mOccupancyDelegateEp3 = new OccupancyDelegate(kOccupancyEndpointId);
-    VerifyOrDie(mOccupancyDelegateEp3 != nullptr);
-
-    mOccupancyInstanceEp3 = new OccupancySensing::Instance(mOccupancyDelegateEp3, kOccupancyEndpointId);
-    VerifyOrDie(mOccupancyInstanceEp3 != nullptr);
-
+    // EP3: Occupancy sensor setup
+    const EndpointId kOccupancyEndpointId = 3;
+    mOccupancyDelegateEp3 = std::make_unique<OccupancyDelegate>(kOccupancyEndpointId);
+    mOccupancyInstanceEp3 = std::make_unique<OccupancySensing::Instance>(mOccupancyDelegateEp3.get(), kOccupancyEndpointId);
     VerifyOrDie(mOccupancyInstanceEp3->Init() == CHIP_NO_ERROR);
+
+    // EP4: Dishwasher setup
+    const EndpointId kDishwasherEndpointId = 4;
+    mFakeDishwasherEp4 = MakeGoogleFakeDishwasher(kDishwasherEndpointId);
+    mOpStateInstanceEp4 = std::make_unique<OperationalState::Instance>(mFakeDishwasherEp4->GetDelegate(), kDishwasherEndpointId);
+
+    mOpStateInstanceEp4->SetOperationalState(to_underlying(OperationalState::OperationalStateEnum::kStopped));
+    mOpStateInstanceEp4->Init();
 }
 
 void GoogleMultiDeviceIntegration::HandleButtonPress(uint8_t buttonId)

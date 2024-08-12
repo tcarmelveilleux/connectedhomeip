@@ -138,6 +138,8 @@ silabs_executable("google-multi-device") {
     "${examples_common_plat_dir}/main.cpp",
     "../device-common/include/GoogleMultiDeviceCommon.h",
     "../device-common/src/GoogleMultiDeviceCommon.cpp",
+    "../device-common/src/GoogleMultiDeviceDishwasherOpstate.cpp",
+    "../device-common/include/GoogleMultiDeviceDishwasherOpstate.h",
     "include/MultiDeviceDriver.h",
     "src/AppTask.cpp",
     "src/MultiDeviceDriver.cpp",

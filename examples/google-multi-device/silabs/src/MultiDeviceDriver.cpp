@@ -45,6 +45,7 @@ TimerHandle_t sDebounceTimer = nullptr;
 
 constexpr unsigned int kDebounceTimeMillis = 10u;
 
+#if 0
 void ManchesterOut(GmdSilabsDriver & driver, const uint8_t *data, size_t size)
 {
     // ADAPT kSpeedFactor to whatever speed sets the right rate on the target...
@@ -77,6 +78,7 @@ void ManchesterOut(GmdSilabsDriver & driver, const uint8_t *data, size_t size)
         size--;
     }
 }
+#endif // 0
 
 uint32_t MillisToTicks(uint32_t millis)
 {
@@ -199,7 +201,7 @@ void GmdSilabsDriver::SetDebugPin(bool high)
 
 void GmdSilabsDriver::EmitDebugCode(uint8_t code)
 {
-    ManchesterOut(*this, &code, 1);
+    (void)code; //ManchesterOut(*this, &code, 1);
 }
 
 } // namespace matter

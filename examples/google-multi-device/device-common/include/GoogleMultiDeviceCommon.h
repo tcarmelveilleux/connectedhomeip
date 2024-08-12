@@ -2,11 +2,15 @@
 
 #pragma once
 
+#include <memory>
+
 #include <stdint.h>
 
 #include "GenericSwitchStateMachine.h"
 #include "DefaultGenericSwitchStateMachineDriver.h"
+#include "GoogleMultiDeviceDishwasherOpstate.h"
 #include "app/clusters/occupancy-sensor-server/occupancy-sensor-server.h"
+#include "app/clusters/operational-state-server/operational-state-server.h"
 
 namespace google {
 namespace matter {
@@ -41,8 +45,11 @@ class GoogleMultiDeviceIntegration
     chip::app::DefaultGenericSwitchStateMachineDriver mGenericSwitchDriverEp2;
     chip::app::GenericSwitchStateMachine mGenericSwitchStateMachineEp2;
 
-    chip::app::Clusters::OccupancySensing::Instance *mOccupancyInstanceEp3 = nullptr;
-    chip::app::Clusters::OccupancySensing::Instance::Delegate *mOccupancyDelegateEp3 = nullptr;
+    std::unique_ptr<chip::app::Clusters::OccupancySensing::Instance> mOccupancyInstanceEp3 = nullptr;
+    std::unique_ptr<chip::app::Clusters::OccupancySensing::Instance::Delegate> mOccupancyDelegateEp3 = nullptr;
+
+    std::unique_ptr<GoogleFakeDishwasherInterface> mFakeDishwasherEp4 = nullptr;
+    std::unique_ptr<chip::app::Clusters::OperationalState::Instance> mOpStateInstanceEp4 = nullptr;
 };
 
 } // namespace matter
