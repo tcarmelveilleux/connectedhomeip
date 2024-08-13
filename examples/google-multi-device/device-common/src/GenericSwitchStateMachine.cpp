@@ -123,6 +123,7 @@ void GenericSwitchStateMachine::OnStateEnter(State newState)
     {
         case State::kIdleWaitFirstPress: {
             mCurrentPressedPosition = 0;
+            mReachedMaximumPresses = false;
             break;
         }
         case State::kWaitLongDetermination: {
@@ -153,10 +154,15 @@ void GenericSwitchStateMachine::OnStateEnter(State newState)
             {
                 ++mMultiPressCount;
             }
+            else
+            {
+                mReachedMaximumPresses = true;
+            }
             break;
         }
         case State::kMultiPressDone: {
-            mDriver->EmitMultiPressComplete(mCurrentPressedPosition, mMultiPressCount);
+            uint8_t numPresses = mReachedMaximumPresses ? 0 : mMultiPressCount;
+            mDriver->EmitMultiPressComplete(mCurrentPressedPosition, numPresses);
             TransitionTo(State::kIdleWaitFirstPress);
             break;
         }

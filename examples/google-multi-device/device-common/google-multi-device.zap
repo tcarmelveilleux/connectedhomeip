@@ -4113,7 +4113,7 @@
               "storageOption": "RAM",
               "singleton": 0,
               "bounded": 0,
-              "defaultValue": "2",
+              "defaultValue": "5",
               "reportable": 1,
               "minInterval": 0,
               "maxInterval": 65344,
@@ -4126,7 +4126,7 @@
               "side": "server",
               "type": "bitmap32",
               "included": 1,
-              "storageOption": "External",
+              "storageOption": "RAM",
               "singleton": 0,
               "bounded": 0,
               "defaultValue": "58",
@@ -4592,7 +4592,6 @@
             }
           ]
         },
-
         {
           "name": "Occupancy Sensing",
           "code": 1030,
@@ -4736,7 +4735,7 @@
               "side": "server",
               "type": "bitmap32",
               "included": 1,
-              "storageOption": "RAM",
+              "storageOption": "External",
               "singleton": 0,
               "bounded": 0,
               "defaultValue": "32",

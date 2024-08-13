@@ -135,6 +135,7 @@ class GenericSwitchStateMachine
     uint8_t mMultiPressCount = 0;
     uint8_t mCurrentPressedPosition = 0;
     uint16_t mMaxMultiPress = 5;
+    bool mReachedMaximumPresses = false;
     uint32_t mLongPressThresholdMillis = 800u;
     uint32_t mIdleThresholdMillis = 400u;
 };
