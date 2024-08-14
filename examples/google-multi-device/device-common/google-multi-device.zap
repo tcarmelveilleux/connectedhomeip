@@ -1348,7 +1348,15 @@
               "mfgCode": null,
               "source": "client",
               "isIncoming": 1,
-              "isEnabled": 0
+              "isEnabled": 1
+            },
+            {
+              "name": "RetrieveLogsResponse",
+              "code": 1,
+              "mfgCode": null,
+              "source": "server",
+              "isIncoming": 0,
+              "isEnabled": 1
             }
           ],
           "attributes": [
@@ -3305,7 +3313,7 @@
               "mfgCode": null,
               "source": "client",
               "isIncoming": 1,
-              "isEnabled": 1
+              "isEnabled": 0
             },
             {
               "name": "RevokeCommissioning",
@@ -4675,6 +4683,22 @@
               "singleton": 0,
               "bounded": 0,
               "defaultValue": null,
+              "reportable": 1,
+              "minInterval": 1,
+              "maxInterval": 65534,
+              "reportableChange": 0
+            },
+            {
+              "name": "PIROccupiedToUnoccupiedDelay",
+              "code": 16,
+              "mfgCode": null,
+              "side": "server",
+              "type": "int16u",
+              "included": 1,
+              "storageOption": "External",
+              "singleton": 0,
+              "bounded": 0,
+              "defaultValue": "0",
               "reportable": 1,
               "minInterval": 1,
               "maxInterval": 65534,

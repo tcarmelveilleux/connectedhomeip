@@ -1665,6 +1665,7 @@ endpoint 0 {
     ram      attribute clusterRevision default = 1;
 
     handle command RetrieveLogsRequest;
+    handle command RetrieveLogsResponse;
   }
 
   server cluster GeneralDiagnostics {
@@ -1795,7 +1796,7 @@ endpoint 2 {
     emits event SwitchLatched;
     ram      attribute numberOfPositions default = 2;
     ram      attribute currentPosition default = 0;
-    ram      attribute multiPressMax default = 2;
+    ram      attribute multiPressMax default = 5;
     ram      attribute featureMap default = 58;
     ram      attribute clusterRevision default = 2;
   }
@@ -1844,6 +1845,7 @@ endpoint 3 {
     callback attribute occupancySensorTypeBitmap;
     callback attribute holdTime;
     callback attribute holdTimeLimits;
+    callback attribute PIROccupiedToUnoccupiedDelay;
     callback attribute generatedCommandList;
     callback attribute acceptedCommandList;
     callback attribute attributeList;
