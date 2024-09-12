@@ -415,19 +415,14 @@ void ApplicationInit()
         sChipNamedPipeCommands.Stop();
     }
 
-    EndpointId robotoEndpointId = 2;
-    EndpointId parentEndpointId = 0;
+    constexpr EndpointId kRobotoEndpointId = 2;
+    constexpr EndpointId kParentEndpointId = 0;
 
-    static std::unique_ptr<CommandHandlerInterface> sRobotoClusterInstance = GetRobotoClusterHandler(/*aEndpointId =*/robotoEndpointId);
+    static std::unique_ptr<CommandHandlerInterface> sRobotoClusterInstance = GetRobotoClusterHandler(/*aEndpointId =*/kRobotoEndpointId);
     VerifyOrDie(sRobotoClusterInstance != nullptr);
 
-    // Disable last fixed endpoint, which is used as a placeholder for all of the
-    // supported clusters so that ZAP will generated the requisite code.
-    emberAfEndpointEnableDisable(emberAfEndpointFromIndex(static_cast<uint16_t>(emberAfFixedEndpointCount() - 1)), false);
-
-    uint16_t index = 0;
-
-    CHIP_ERROR err = emberAfSetDynamicEndpoint(index, robotoEndpointId, &robotoEndpoint, Span<DataVersion>(gRobotoDataVersions), Span<const EmberAfDeviceType>(gRobotoDeviceTypes), parentEndpointId);
+    constexpr uint16_t kFirstDynamicEndpointIndex = 0;
+    CHIP_ERROR err = emberAfSetDynamicEndpoint(kFirstDynamicEndpointIndex, kRobotoEndpointId, &robotoEndpoint, Span<DataVersion>(gRobotoDataVersions), Span<const EmberAfDeviceType>(gRobotoDeviceTypes), kParentEndpointId);
     VerifyOrDie(err == CHIP_NO_ERROR);
 }
 
