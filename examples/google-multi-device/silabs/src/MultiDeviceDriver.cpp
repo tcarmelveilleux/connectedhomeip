@@ -19,20 +19,41 @@
 #include <lib/support/CodeUtils.h>
 
 // ========= Pin definitions (local) =======
-#define LED_OUT_PORT                             gpioPortA
-#define LED_OUT_PIN                              0
+#define RED_LED_OUT_PORT        gpioPortC
+#define RED_LED_OUT_PIN         0
 
-#define POT_IN_PORT                              gpioPortB
-#define POT_IN_PIN                               0
+#define YELLOW_LED_OUT_PORT     gpioPortC
+#define YELLOW_LED_OUT_PIN      3
 
-#define BUTTON_IN_PORT                           gpioPortB
-#define BUTTON_IN_PIN                            1
+#define GREEN_LED_OUT_PORT      gpioPortC
+#define GREEN_LED_OUT_PIN       8
 
-#define PROX_IN_PORT                             gpioPortD
-#define PROX_IN_PIN                              4
+#define POT_IN_PORT             gpioPortB
+#define POT_IN_PIN              0
 
-#define DEBUG_OUT_PORT                           gpioPortC
-#define DEBUG_OUT_PIN                            8
+#define RED_BUTTON_IN_PORT      gpioPortC
+#define RED_BUTTON_IN_PIN       2
+
+#define YELLOW_BUTTON_IN_PORT   gpioPortC
+#define YELLOW_BUTTON_IN_PIN    1
+
+#define GREEN_BUTTON_IN_PORT    gpioPortB
+#define GREEN_BUTTON_IN_PIN     1
+
+#define LATCH1_IN_PORT          gpioPortA
+#define LATCH1_IN_PIN           0
+
+#define LATCH2_IN_PORT          gpioPortB
+#define LATCH2_IN_PIN           4
+
+#define LATCH3_IN_PORT          gpioPortB
+#define LATCH3_IN_PIN           5
+
+#define PROX_IN_PORT            gpioPortD
+#define PROX_IN_PIN             4
+
+#define DEBUG_OUT_PORT          gpioPortD
+#define DEBUG_OUT_PIN           5
 
 // ============ Start of driver code =============
 
@@ -104,9 +125,19 @@ void GmdSilabsDriver::Init()
   /* Initialize GPIO interrupt dispatcher */
   GPIOINT_Init();
 
-  GPIO_PinModeSet(BUTTON_IN_PORT, BUTTON_IN_PIN, gpioModeInputPullFilter, 1);
+  GPIO_PinModeSet(RED_BUTTON_IN_PORT, RED_BUTTON_IN_PIN, gpioModeInputPullFilter, 1);
+  GPIO_PinModeSet(YELLOW_BUTTON_IN_PORT, YELLOW_BUTTON_IN_PIN, gpioModeInputPullFilter, 1);
+  GPIO_PinModeSet(GREEN_BUTTON_IN_PORT, GREEN_BUTTON_IN_PIN, gpioModeInputPullFilter, 1);
+  GPIO_PinModeSet(LATCH1_IN_PORT, LATCH1_IN_PIN, gpioModeInputPullFilter, 1);
+  GPIO_PinModeSet(LATCH2_IN_PORT, LATCH2_IN_PIN, gpioModeInputPullFilter, 1);
+  GPIO_PinModeSet(LATCH3_IN_PORT, LATCH3_IN_PIN, gpioModeInputPullFilter, 1);
+
   GPIO_PinModeSet(PROX_IN_PORT, PROX_IN_PIN, gpioModeInputPullFilter, 1);
-  GPIO_PinModeSet(LED_OUT_PORT, LED_OUT_PIN, gpioModePushPull, 1);
+
+  GPIO_PinModeSet(RED_LED_OUT_PORT, RED_LED_OUT_PIN, gpioModePushPull, 1);
+  GPIO_PinModeSet(YELLOW_LED_OUT_PORT, YELLOW_LED_OUT_PIN, gpioModePushPull, 1);
+  GPIO_PinModeSet(GREEN_LED_OUT_PORT, GREEN_LED_OUT_PIN, gpioModePushPull, 1);
+
   GPIO_PinModeSet(DEBUG_OUT_PORT, DEBUG_OUT_PIN, gpioModePushPull, 0);
 
   sDebounceTimer = xTimerCreate("debounce", MillisToTicks(kDebounceTimeMillis), pdTRUE, nullptr, OnDebounceTimer);
@@ -119,11 +150,11 @@ void GmdSilabsDriver::Init()
 
 #if 0
   /* Register callbacks before setting up and enabling pin interrupt. */
-  sIntForButton = GPIOINT_CallbackRegisterExt(BUTTON_IN_PIN, GmdSilabsDriver::OnPinInterrupt, (void*)&GmdSilabsDriver::GetInstance());
+  sIntForButton = GPIOINT_CallbackRegisterExt(RED_BUTTON_IN_PIN, GmdSilabsDriver::OnPinInterrupt, (void*)&GmdSilabsDriver::GetInstance());
   sIntForProx = GPIOINT_CallbackRegisterExt(PROX_IN_PIN, GmdSilabsDriver::OnPinInterrupt, (void*)&GmdSilabsDriver::GetInstance());
 
   /* Set fall and rising edge interrupts*/
-  GPIO_ExtIntConfig(BUTTON_IN_PORT, BUTTON_IN_PIN, sIntForButton, true, true, true);
+  GPIO_ExtIntConfig(RED_BUTTON_IN_PORT, RED_BUTTON_IN_PIN, sIntForButton, true, true, true);
   GPIO_ExtIntConfig(PROX_IN_PORT, PROX_IN_PIN, sIntForProx, true, true, true);
 
   GPIO_IntClear((1 << sIntForButton) | (1 << sIntForProx));
@@ -135,9 +166,6 @@ void GmdSilabsDriver::HandleDebounceTimer()
 {
     bool newIsButtonPressed = IsSwitchButtonPressed();
     bool newIsProxDetected = IsProximityDetected();
-
-    EmitDebugCode(newIsButtonPressed ? 20 : 21);
-    EmitDebugCode(mGotInitialDebounceState ? 30 : 31);
 
     if (!mGotInitialDebounceState)
     {
@@ -154,7 +182,7 @@ void GmdSilabsDriver::HandleDebounceTimer()
     {
         mIsButtonPressed = newIsButtonPressed;
         EmitDebugCode(newIsButtonPressed ? 8 : 9);
-        CallHardwareEventCallback(newIsButtonPressed ? HardwareEvent::kSwitchButtonPressed : HardwareEvent::kSwitchButtonReleased);
+        CallHardwareEventCallback(newIsButtonPressed ? HardwareEvent::kRedButtonPressed : HardwareEvent::kRedButtonReleased);
     }
 
     if (newIsProxDetected != mIsProxDetected)
@@ -167,7 +195,7 @@ void GmdSilabsDriver::HandleDebounceTimer()
 
 bool GmdSilabsDriver::IsSwitchButtonPressed() const
 {
-    return GPIO_PinInGet(BUTTON_IN_PORT, BUTTON_IN_PIN) == 0;
+    return GPIO_PinInGet(RED_BUTTON_IN_PORT, RED_BUTTON_IN_PIN) == 0;
 }
 
 bool GmdSilabsDriver::IsProximityDetected() const
@@ -179,11 +207,11 @@ void GmdSilabsDriver::SetLightLedEnabled(bool enabled)
 {
     if (enabled)
     {
-        GPIO_PinOutClear(LED_OUT_PORT, LED_OUT_PIN);
+        GPIO_PinOutClear(RED_LED_OUT_PORT, RED_LED_OUT_PIN);
     }
     else
     {
-        GPIO_PinOutSet(LED_OUT_PORT, LED_OUT_PIN);
+        GPIO_PinOutSet(RED_LED_OUT_PORT, RED_LED_OUT_PIN);
     }
 }
 

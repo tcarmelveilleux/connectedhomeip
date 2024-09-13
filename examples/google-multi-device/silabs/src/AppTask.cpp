@@ -69,10 +69,10 @@ void MultiDeviceDriverEvent(HardwareEvent event)
     bool send_event = true;
     switch (event)
     {
-        case HardwareEvent::kSwitchButtonPressed:
+        case HardwareEvent::kRedButtonPressed:
             app_event.Type = AppEvent::kEventType_SwitchButtonPressed;
             break;
-        case HardwareEvent::kSwitchButtonReleased:
+        case HardwareEvent::kRedButtonReleased:
             app_event.Type = AppEvent::kEventType_SwitchButtonReleased;
             break;
         case HardwareEvent::kOccupancyDetected:
