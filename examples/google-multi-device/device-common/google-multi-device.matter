@@ -1787,7 +1787,7 @@ endpoint 2 {
     ram      attribute vendorID default = 0x6006;
     ram      attribute productName default = "Action Switch";
     ram      attribute reachable default = 1;
-    ram      attribute uniqueID default = "09710cf2bdb2d13d70dab67633e7afb4";
+    ram      attribute uniqueID default = "09750cf2bdb2d13d70dab67633e7afb4";
     ram      attribute featureMap default = 0;
     ram      attribute clusterRevision default = 4;
   }
@@ -1822,7 +1822,7 @@ endpoint 3 {
     ram      attribute vendorID default = 0x6006;
     ram      attribute productName default = "Legacy Switch";
     ram      attribute reachable default = 1;
-    ram      attribute uniqueID default = "09710cf2bdb2d13d10dab67633e7afb4";
+    ram      attribute uniqueID default = "09740cf2bdb2d13d10dab67633e7afb4";
     ram      attribute featureMap default = 0;
     ram      attribute clusterRevision default = 4;
   }
@@ -1857,7 +1857,7 @@ endpoint 4 {
     ram      attribute vendorID default = 0x6006;
     ram      attribute productName default = "Latching Switch";
     ram      attribute reachable default = 1;
-    ram      attribute uniqueID default = "09710cf2bdb2d13d70dab67633e7afb4";
+    ram      attribute uniqueID default = "09730cf2bdb2d13d70dab67633e7afb4";
     ram      attribute featureMap default = 0;
     ram      attribute clusterRevision default = 4;
   }
@@ -1904,7 +1904,7 @@ endpoint 5 {
     ram      attribute vendorID default = 0x6006;
     ram      attribute productName default = "Radar Sensor";
     ram      attribute reachable default = 1;
-    ram      attribute uniqueID default = "09710cf2bdb2d13d70dab67633e7afb5";
+    ram      attribute uniqueID default = "09720cf2bdb2d13d70dab67633e7afb5";
     ram      attribute featureMap default = 0;
     ram      attribute clusterRevision default = 4;
   }
@@ -1983,5 +1983,3 @@ endpoint 6 {
     handle command OperationalCommandResponse;
   }
 }
-
-

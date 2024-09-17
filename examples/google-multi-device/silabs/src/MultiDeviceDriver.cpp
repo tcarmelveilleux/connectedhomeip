@@ -187,7 +187,6 @@ void GmdSilabsDriver::Init()
   sDebounceTimer = xTimerCreate("debounce", MillisToTicks(kDebounceTimeMillis), pdTRUE, nullptr, OnDebounceTimer);
   if (sDebounceTimer == nullptr)
   {
-      SetLightLedEnabled(LedId::kRed, true);
       EmitDebugCode('N');
   }
   xTimerStart(sDebounceTimer, 100);
@@ -234,6 +233,12 @@ void GmdSilabsDriver::HandleDebounceTimer()
             mIsButtonPressed[btn_idx] = newIsButtonPressed[btn_idx];
             CallHardwareEventCallback(newIsButtonPressed[btn_idx] ? gSwitchPressEvents[btn_idx] : gSwitchReleaseEvents[btn_idx]);
         }
+    }
+
+    if (newIsProxDetected != mIsProxDetected)
+    {
+        mIsProxDetected = newIsProxDetected;
+        CallHardwareEventCallback(newIsProxDetected ? HardwareEvent::kOccupancyDetected : HardwareEvent::kOccupancyUndetected);
     }
 }
 
