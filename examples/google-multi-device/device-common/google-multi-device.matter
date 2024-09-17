@@ -409,14 +409,10 @@ cluster AccessControl = 31 {
     fabric_idx fabricIndex = 254;
   }
 
-  fabric_sensitive info event access(read: administer) AccessRestrictionEntryChanged = 2 {
-    fabric_idx fabricIndex = 254;
-  }
-
-  fabric_sensitive info event access(read: administer) FabricRestrictionReviewUpdate = 3 {
+  fabric_sensitive info event access(read: administer) FabricRestrictionReviewUpdate = 2 {
     int64u token = 0;
-    nullable long_char_string instruction = 1;
-    nullable long_char_string redirectURL = 2;
+    optional long_char_string instruction = 1;
+    optional long_char_string ARLRequestFlowUrl = 2;
     fabric_idx fabricIndex = 254;
   }
 
@@ -443,7 +439,7 @@ cluster AccessControl = 31 {
   }
 
   /** This command signals to the service associated with the device vendor that the fabric administrator would like a review of the current restrictions on the accessing fabric. */
-  fabric command access(invoke: administer) ReviewFabricRestrictions(ReviewFabricRestrictionsRequest): DefaultSuccess = 0;
+  fabric command access(invoke: administer) ReviewFabricRestrictions(ReviewFabricRestrictionsRequest): ReviewFabricRestrictionsResponse = 0;
 }
 
 /** This cluster provides attributes and events for determining basic information about Nodes, which supports both
@@ -1122,6 +1118,7 @@ cluster BridgedDeviceBasicInformation = 57 {
 
   request struct KeepActiveRequest {
     int32u stayActiveDuration = 0;
+    int32u timeoutMs = 1;
   }
 
   /** The server SHALL attempt to keep the devices specified active for StayActiveDuration milliseconds when they are next active. */
@@ -1132,7 +1129,7 @@ cluster BridgedDeviceBasicInformation = 57 {
 Two types of switch devices are supported: latching switch (e.g. rocker switch) and momentary switch (e.g. push button), distinguished with their feature flags.
 Interactions with the switch device are exposed as attributes (for the latching switch) and as events (for both types of switches). An interested party MAY subscribe to these attributes/events and thus be informed of the interactions, and can perform actions based on this, for example by sending commands to perform an action such as controlling a light or a window shade. */
 cluster Switch = 59 {
-  revision 1;
+  revision 2;
 
   bitmap Feature : bitmap32 {
     kLatchingSwitch = 0x1;
@@ -1504,7 +1501,7 @@ cluster OperationalState = 96 {
   command Resume(): OperationalCommandResponse = 3;
 }
 
-/** Attributes and commands for configuring occupancy sensing, and reporting occupancy status. */
+/** The server cluster provides an interface to occupancy sensing functionality based on one or more sensing modalities, including configuration and provision of notifications of occupancy status. */
 cluster OccupancySensing = 1030 {
   revision 5;
 
@@ -1540,6 +1537,10 @@ cluster OccupancySensing = 1030 {
     int16u holdTimeMin = 0;
     int16u holdTimeMax = 1;
     int16u holdTimeDefault = 2;
+  }
+
+  info event OccupancyChanged = 0 {
+    OccupancyBitmap occupancy = 0;
   }
 
   readonly attribute OccupancyBitmap occupancy = 0;
@@ -1787,7 +1788,7 @@ endpoint 2 {
     ram      attribute vendorID default = 0x6006;
     ram      attribute productName default = "Action Switch";
     ram      attribute reachable default = 1;
-    ram      attribute uniqueID default = "09750cf2bdb2d13d70dab67633e7afb4";
+    ram      attribute uniqueID default = "09710cf2bdb2d13d70dab67633e7afb4";
     ram      attribute featureMap default = 0;
     ram      attribute clusterRevision default = 4;
   }
@@ -1822,7 +1823,7 @@ endpoint 3 {
     ram      attribute vendorID default = 0x6006;
     ram      attribute productName default = "Legacy Switch";
     ram      attribute reachable default = 1;
-    ram      attribute uniqueID default = "09740cf2bdb2d13d10dab67633e7afb4";
+    ram      attribute uniqueID default = "09710cf2bdb2d13d10dab67633e7afb4";
     ram      attribute featureMap default = 0;
     ram      attribute clusterRevision default = 4;
   }
@@ -1857,7 +1858,7 @@ endpoint 4 {
     ram      attribute vendorID default = 0x6006;
     ram      attribute productName default = "Latching Switch";
     ram      attribute reachable default = 1;
-    ram      attribute uniqueID default = "09730cf2bdb2d13d70dab67633e7afb4";
+    ram      attribute uniqueID default = "09710cf2bdb2d13d70dab67633e7afb4";
     ram      attribute featureMap default = 0;
     ram      attribute clusterRevision default = 4;
   }
@@ -1904,7 +1905,7 @@ endpoint 5 {
     ram      attribute vendorID default = 0x6006;
     ram      attribute productName default = "Radar Sensor";
     ram      attribute reachable default = 1;
-    ram      attribute uniqueID default = "09720cf2bdb2d13d70dab67633e7afb5";
+    ram      attribute uniqueID default = "09710cf2bdb2d13d70dab67633e7afb5";
     ram      attribute featureMap default = 0;
     ram      attribute clusterRevision default = 4;
   }
@@ -1983,3 +1984,5 @@ endpoint 6 {
     handle command OperationalCommandResponse;
   }
 }
+
+

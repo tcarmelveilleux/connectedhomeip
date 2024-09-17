@@ -5059,40 +5059,6 @@ Protocols::InteractionModel::Status Set(EndpointId endpoint, uint16_t value, Mar
 namespace OccupancySensing {
 namespace Attributes {
 
-namespace Occupancy {
-Protocols::InteractionModel::Status
-Get(EndpointId endpoint, chip::BitMask<chip::app::Clusters::OccupancySensing::OccupancyBitmap> * value); // OccupancyBitmap
-Protocols::InteractionModel::Status Set(EndpointId endpoint,
-                                        chip::BitMask<chip::app::Clusters::OccupancySensing::OccupancyBitmap> value);
-Protocols::InteractionModel::Status
-Set(EndpointId endpoint, chip::BitMask<chip::app::Clusters::OccupancySensing::OccupancyBitmap> value, MarkAttributeDirty markDirty);
-} // namespace Occupancy
-
-namespace OccupancySensorType {
-Protocols::InteractionModel::Status
-Get(EndpointId endpoint, chip::app::Clusters::OccupancySensing::OccupancySensorTypeEnum * value); // OccupancySensorTypeEnum
-Protocols::InteractionModel::Status Set(EndpointId endpoint, chip::app::Clusters::OccupancySensing::OccupancySensorTypeEnum value);
-Protocols::InteractionModel::Status Set(EndpointId endpoint, chip::app::Clusters::OccupancySensing::OccupancySensorTypeEnum value,
-                                        MarkAttributeDirty markDirty);
-} // namespace OccupancySensorType
-
-namespace OccupancySensorTypeBitmap {
-Protocols::InteractionModel::Status
-Get(EndpointId endpoint,
-    chip::BitMask<chip::app::Clusters::OccupancySensing::OccupancySensorTypeBitmap> * value); // OccupancySensorTypeBitmap
-Protocols::InteractionModel::Status Set(EndpointId endpoint,
-                                        chip::BitMask<chip::app::Clusters::OccupancySensing::OccupancySensorTypeBitmap> value);
-Protocols::InteractionModel::Status Set(EndpointId endpoint,
-                                        chip::BitMask<chip::app::Clusters::OccupancySensing::OccupancySensorTypeBitmap> value,
-                                        MarkAttributeDirty markDirty);
-} // namespace OccupancySensorTypeBitmap
-
-namespace PIROccupiedToUnoccupiedDelay {
-Protocols::InteractionModel::Status Get(EndpointId endpoint, uint16_t * value); // int16u
-Protocols::InteractionModel::Status Set(EndpointId endpoint, uint16_t value);
-Protocols::InteractionModel::Status Set(EndpointId endpoint, uint16_t value, MarkAttributeDirty markDirty);
-} // namespace PIROccupiedToUnoccupiedDelay
-
 namespace PIRUnoccupiedToOccupiedDelay {
 Protocols::InteractionModel::Status Get(EndpointId endpoint, uint16_t * value); // int16u
 Protocols::InteractionModel::Status Set(EndpointId endpoint, uint16_t value);
@@ -5140,12 +5106,6 @@ Protocols::InteractionModel::Status Get(EndpointId endpoint, uint8_t * value); /
 Protocols::InteractionModel::Status Set(EndpointId endpoint, uint8_t value);
 Protocols::InteractionModel::Status Set(EndpointId endpoint, uint8_t value, MarkAttributeDirty markDirty);
 } // namespace PhysicalContactUnoccupiedToOccupiedThreshold
-
-namespace ClusterRevision {
-Protocols::InteractionModel::Status Get(EndpointId endpoint, uint16_t * value); // int16u
-Protocols::InteractionModel::Status Set(EndpointId endpoint, uint16_t value);
-Protocols::InteractionModel::Status Set(EndpointId endpoint, uint16_t value, MarkAttributeDirty markDirty);
-} // namespace ClusterRevision
 
 } // namespace Attributes
 } // namespace OccupancySensing
