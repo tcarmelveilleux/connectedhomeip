@@ -179,11 +179,24 @@ private:
     BitFlags<Feature> mFeatures{};
     bool mHasHoldTime = false;
     bool mHasPirOccupiedToUnoccupiedDelaySeconds = false;
+    bool mHasUltrasonicOccupiedToUnoccupiedDelaySeconds = false;
+    bool mHasPhysicalContactOccupiedToUnoccupiedDelaySeconds = false;
     uint16_t mHoldTimeSeconds = 0; // When set to zero, no hold timer will be called.
     bool mOccupancyDetected = false;
     bool mIsHoldTimerRunning = false;
     bool mLastOccupancyDetectedFromDelegate = false;
 };
+
+// TODO: Fix Linux simulation
+#if 0
+CHIP_ERROR SetHoldTimeLimits(EndpointId endpointId, const Structs::HoldTimeLimitsStruct::Type & holdTimeLimits);
+
+CHIP_ERROR SetHoldTime(EndpointId endpointId, uint16_t newHoldTime);
+
+Structs::HoldTimeLimitsStruct::Type * GetHoldTimeLimitsForEndpoint(EndpointId endpoint);
+
+uint16_t * GetHoldTimeForEndpoint(EndpointId endpoint);
+#endif
 
 } // namespace OccupancySensing
 } // namespace Clusters

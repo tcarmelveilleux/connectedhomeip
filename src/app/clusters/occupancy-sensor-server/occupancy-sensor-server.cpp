@@ -208,7 +208,9 @@ CHIP_ERROR Instance::Write(const ConcreteDataAttributePath & aPath, AttributeVal
     switch (aPath.mAttributeId)
     {
     case Attributes::HoldTime::Id:
-    case Attributes::PIROccupiedToUnoccupiedDelay::Id: {
+    case Attributes::PIROccupiedToUnoccupiedDelay::Id:
+    case Attributes::UltrasonicOccupiedToUnoccupiedDelay::Id: 
+    case Attributes::PhysicalContactOccupiedToUnoccupiedDelay::Id: {
         // Processing is the same for both, since they have to track.
         uint16_t newHoldTimeSeconds = mHoldTimeSeconds;
         ReturnErrorOnFailure(aDecoder.Decode(newHoldTimeSeconds));
@@ -255,6 +257,14 @@ CHIP_ERROR Instance::HandleWriteHoldTime(uint16_t newHoldTimeSeconds)
     if (mHasPirOccupiedToUnoccupiedDelaySeconds)
     {
         MatterReportingAttributeChangeCallback(mEndpointId, OccupancySensing::Id, Attributes::PIROccupiedToUnoccupiedDelay::Id);
+    }
+    if (mHasUltrasonicOccupiedToUnoccupiedDelaySeconds)
+    {
+        MatterReportingAttributeChangeCallback(mEndpointId, OccupancySensing::Id, Attributes::UltrasonicOccupiedToUnoccupiedDelay::Id);
+    }
+    if (mHasPhysicalContactOccupiedToUnoccupiedDelaySeconds)
+    {
+        MatterReportingAttributeChangeCallback(mEndpointId, OccupancySensing::Id, Attributes::PhysicalContactOccupiedToUnoccupiedDelay::Id);
     }
 
     return (err != CHIP_NO_ERROR) ? CHIP_IM_GLOBAL_STATUS(Failure) : CHIP_NO_ERROR;
@@ -357,3 +367,20 @@ void Instance::InternalSetOccupancy(bool occupied)
 // on global initialization!
 void MatterOccupancySensingPluginServerInitCallback() {}
 void emberAfOccupancySensingClusterServerInitCallback(chip::EndpointId endpointId) {}
+
+// TODO: Fix linux simulation
+#if 0
+    uint16_t previousHoldTime = *holdTimeForEndpoint;
+    *holdTimeForEndpoint      = newHoldTime;
+
+    if (previousHoldTime != newHoldTime)
+    {
+        MatterReportingAttributeChangeCallback(endpointId, OccupancySensing::Id, Attributes::HoldTime::Id);
+    }
+
+    // Blindly try to write RAM-backed legacy attributes (will fail silently if absent)
+    // to keep them in sync.
+    (void) Attributes::PIROccupiedToUnoccupiedDelay::Set(endpointId, newHoldTime);
+    (void) Attributes::UltrasonicOccupiedToUnoccupiedDelay::Set(endpointId, newHoldTime);
+    (void) Attributes::PhysicalContactOccupiedToUnoccupiedDelay::Set(endpointId, newHoldTime);
+#endif
