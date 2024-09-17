@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 struct AppEvent;
 typedef void (*EventHandler)(AppEvent *);
 
@@ -30,10 +32,22 @@ struct AppEvent
         kEventType_Timer,
         kEventType_Light,
         kEventType_Install,
-        kEventType_SwitchButtonPressed,
-        kEventType_SwitchButtonReleased,
         kEventType_OccupancyDetected,
         kEventType_OccupancyUndetected,
+
+        kEventType_kRedButtonPressed,
+        kEventType_kRedButtonReleased,
+        kEventType_kYellowButtonPressed,
+        kEventType_kYellowButtonReleased,
+        kEventType_kGreenButtonPressed,
+        kEventType_kGreenButtonReleased,
+
+        kEventType_kLatchSwitch1Selected,
+        kEventType_kLatchSwitch1Deselected,
+        kEventType_kLatchSwitch2Selected,
+        kEventType_kLatchSwitch2Deselected,
+        kEventType_kLatchSwitch3Selected,
+        kEventType_kLatchSwitch3Deselected,
     };
 
     uint16_t Type;

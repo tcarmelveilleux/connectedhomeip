@@ -115,13 +115,13 @@ class OccupancyDelegate : public OccupancySensing::Instance::Delegate
 
 GoogleMultiDeviceIntegration::~GoogleMultiDeviceIntegration()
 {
-    if (mOccupancyInstanceEp3 != nullptr)
+    if (mOccupancyInstanceEp5 != nullptr)
     {
-        mOccupancyInstanceEp3.reset();
+        mOccupancyInstanceEp5.reset();
     }
-    if (mOccupancyDelegateEp3 != nullptr)
+    if (mOccupancyDelegateEp5 != nullptr)
     {
-        mOccupancyDelegateEp3.reset();
+        mOccupancyDelegateEp5.reset();
     }
 }
 
@@ -135,23 +135,23 @@ void GoogleMultiDeviceIntegration::InitializeProduct()
     mGenericSwitchStateMachineEp2.SetDriver(&mGenericSwitchDriverEp2);
 
     // EP3: Occupancy sensor setup
-    const EndpointId kOccupancyEndpointId = 3;
-    mOccupancyDelegateEp3 = std::make_unique<OccupancyDelegate>(kOccupancyEndpointId);
-    mOccupancyInstanceEp3 = std::make_unique<OccupancySensing::Instance>(mOccupancyDelegateEp3.get(), kOccupancyEndpointId);
-    VerifyOrDie(mOccupancyInstanceEp3->Init() == CHIP_NO_ERROR);
+    const EndpointId kOccupancyEndpointId = 5;
+    mOccupancyDelegateEp5 = std::make_unique<OccupancyDelegate>(kOccupancyEndpointId);
+    mOccupancyInstanceEp5 = std::make_unique<OccupancySensing::Instance>(mOccupancyDelegateEp5.get(), kOccupancyEndpointId);
+    VerifyOrDie(mOccupancyInstanceEp5->Init() == CHIP_NO_ERROR);
 
     // EP4: Dishwasher setup
-    const EndpointId kDishwasherEndpointId = 4;
-    mFakeDishwasherEp4 = MakeGoogleFakeDishwasher(kDishwasherEndpointId);
-    mOpStateInstanceEp4 = std::make_unique<OperationalState::Instance>(mFakeDishwasherEp4->GetDelegate(), kDishwasherEndpointId);
+    const EndpointId kDishwasherEndpointId = 6;
+    mFakeDishwasherEp6 = MakeGoogleFakeDishwasher(kDishwasherEndpointId);
+    mOpStateInstanceEp6 = std::make_unique<OperationalState::Instance>(mFakeDishwasherEp6->GetDelegate(), kDishwasherEndpointId);
 
-    mOpStateInstanceEp4->SetOperationalState(to_underlying(OperationalState::OperationalStateEnum::kStopped));
-    mOpStateInstanceEp4->Init();
+    mOpStateInstanceEp6->SetOperationalState(to_underlying(OperationalState::OperationalStateEnum::kStopped));
+    mOpStateInstanceEp6->Init();
 }
 
-void GoogleMultiDeviceIntegration::HandleButtonPress(uint8_t buttonId)
+void GoogleMultiDeviceIntegration::HandleButtonPress(ButtonId buttonId)
 {
-    if (buttonId == 0)
+    if (buttonId == ButtonId::kRed)
     {
         // Position 1 on EP2
         chip::DeviceLayer::SystemLayer().ScheduleLambda([this](){
@@ -160,9 +160,9 @@ void GoogleMultiDeviceIntegration::HandleButtonPress(uint8_t buttonId)
     }
 }
 
-void GoogleMultiDeviceIntegration::HandleButtonRelease(uint8_t buttonId)
+void GoogleMultiDeviceIntegration::HandleButtonRelease(ButtonId buttonId)
 {
-    if (buttonId == 0)
+    if (buttonId == ButtonId::kRed)
     {
         // Position 1 on EP2
         chip::DeviceLayer::SystemLayer().ScheduleLambda([this](){
@@ -176,7 +176,7 @@ void GoogleMultiDeviceIntegration::HandleOccupancyDetected(uint8_t sensorId)
     if (sensorId == 0)
     {
         chip::DeviceLayer::SystemLayer().ScheduleLambda([this](){
-            this->mOccupancyInstanceEp3->SetOccupancyDetectedFromSensor(true);
+            this->mOccupancyInstanceEp5->SetOccupancyDetectedFromSensor(true);
         });
     }
 }
@@ -186,7 +186,7 @@ void GoogleMultiDeviceIntegration::HandleOccupancyUndetected(uint8_t sensorId)
     if (sensorId == 0)
     {
         chip::DeviceLayer::SystemLayer().ScheduleLambda([this](){
-            this->mOccupancyInstanceEp3->SetOccupancyDetectedFromSensor(false);
+            this->mOccupancyInstanceEp5->SetOccupancyDetectedFromSensor(false);
         });
     }
 }

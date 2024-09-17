@@ -66,6 +66,50 @@ TimerHandle_t sDebounceTimer = nullptr;
 
 constexpr unsigned int kDebounceTimeMillis = 10u;
 
+struct PortAndPin {
+    PortAndPin(unsigned the_port, unsigned the_pin): port(the_port), pin(the_pin) {}
+
+    unsigned port;
+    unsigned pin;
+};
+
+const PortAndPin gLedMappings[static_cast<size_t>(GmdSilabsDriver::LedId::kNumLeds)] =
+{
+   PortAndPin{RED_LED_OUT_PORT, RED_LED_OUT_PIN},
+   PortAndPin{YELLOW_LED_OUT_PORT, YELLOW_LED_OUT_PIN},
+   PortAndPin{GREEN_LED_OUT_PORT, GREEN_LED_OUT_PIN},
+};
+
+const PortAndPin gSwitchMappings[static_cast<size_t>(GmdSilabsDriver::ButtonId::kNumButtons)] =
+{
+   PortAndPin{RED_BUTTON_IN_PORT, RED_BUTTON_IN_PIN},
+   PortAndPin{YELLOW_BUTTON_IN_PORT, YELLOW_BUTTON_IN_PIN},
+   PortAndPin{GREEN_BUTTON_IN_PORT, GREEN_BUTTON_IN_PIN},
+   PortAndPin{LATCH1_IN_PORT, LATCH1_IN_PIN},
+   PortAndPin{LATCH2_IN_PORT, LATCH2_IN_PIN},
+   PortAndPin{LATCH3_IN_PORT, LATCH3_IN_PIN},
+};
+
+const HardwareEvent gSwitchPressEvents[static_cast<size_t>(GmdSilabsDriver::ButtonId::kNumButtons)] =
+{
+    HardwareEvent::kRedButtonPressed,
+    HardwareEvent::kYellowButtonPressed,
+    HardwareEvent::kGreenButtonPressed,
+    HardwareEvent::kLatchSwitch1Selected,
+    HardwareEvent::kLatchSwitch2Selected,
+    HardwareEvent::kLatchSwitch3Selected,
+};
+
+const HardwareEvent gSwitchReleaseEvents[static_cast<size_t>(GmdSilabsDriver::ButtonId::kNumButtons)] =
+{
+    HardwareEvent::kRedButtonReleased,
+    HardwareEvent::kYellowButtonReleased,
+    HardwareEvent::kGreenButtonReleased,
+    HardwareEvent::kLatchSwitch1Deselected,
+    HardwareEvent::kLatchSwitch2Deselected,
+    HardwareEvent::kLatchSwitch3Deselected,
+};
+
 #if 0
 void ManchesterOut(GmdSilabsDriver & driver, const uint8_t *data, size_t size)
 {
@@ -143,7 +187,7 @@ void GmdSilabsDriver::Init()
   sDebounceTimer = xTimerCreate("debounce", MillisToTicks(kDebounceTimeMillis), pdTRUE, nullptr, OnDebounceTimer);
   if (sDebounceTimer == nullptr)
   {
-      SetLightLedEnabled(true);
+      SetLightLedEnabled(LedId::kRed, true);
       EmitDebugCode('N');
   }
   xTimerStart(sDebounceTimer, 100);
@@ -164,54 +208,67 @@ void GmdSilabsDriver::Init()
 
 void GmdSilabsDriver::HandleDebounceTimer()
 {
-    bool newIsButtonPressed = IsSwitchButtonPressed();
+    bool newIsButtonPressed[static_cast<size_t>(ButtonId::kNumButtons)] = {0};
+    
+    for (size_t btn_idx = 0; btn_idx < static_cast<size_t>(ButtonId::kNumButtons); ++btn_idx)
+    {
+        newIsButtonPressed[btn_idx] = IsSwitchButtonPressed(static_cast<ButtonId>(btn_idx));
+        if (!mGotInitialDebounceState)
+        {
+            mIsButtonPressed[btn_idx] = newIsButtonPressed[btn_idx];
+        }
+    }
     bool newIsProxDetected = IsProximityDetected();
 
     if (!mGotInitialDebounceState)
     {
-        mIsButtonPressed = newIsButtonPressed;
         mIsProxDetected = newIsProxDetected;
         mGotInitialDebounceState = true;
-        EmitDebugCode(100);
         return;
     }
 
-    EmitDebugCode(99);
-
-    if (newIsButtonPressed != mIsButtonPressed)
+    for (size_t btn_idx = 0; btn_idx < static_cast<size_t>(ButtonId::kNumButtons); ++btn_idx)
     {
-        mIsButtonPressed = newIsButtonPressed;
-        EmitDebugCode(newIsButtonPressed ? 8 : 9);
-        CallHardwareEventCallback(newIsButtonPressed ? HardwareEvent::kRedButtonPressed : HardwareEvent::kRedButtonReleased);
-    }
-
-    if (newIsProxDetected != mIsProxDetected)
-    {
-        mIsProxDetected = newIsProxDetected;
-        EmitDebugCode(newIsProxDetected ? 10 : 11);
-        CallHardwareEventCallback(newIsProxDetected ? HardwareEvent::kOccupancyDetected : HardwareEvent::kOccupancyUndetected);
+        if (newIsButtonPressed[btn_idx] != mIsButtonPressed[btn_idx])
+        {
+            mIsButtonPressed[btn_idx] = newIsButtonPressed[btn_idx];
+            CallHardwareEventCallback(newIsButtonPressed[btn_idx] ? gSwitchPressEvents[btn_idx] : gSwitchReleaseEvents[btn_idx]);
+        }
     }
 }
 
-bool GmdSilabsDriver::IsSwitchButtonPressed() const
+bool GmdSilabsDriver::IsSwitchButtonPressed(ButtonId button_id) const
 {
-    return GPIO_PinInGet(RED_BUTTON_IN_PORT, RED_BUTTON_IN_PIN) == 0;
-}
+    if (button_id >= ButtonId::kNumButtons)
+    {
+        return false;
+    }
 
+    PortAndPin port_and_pin = gSwitchMappings[static_cast<size_t>(button_id)];
+    return GPIO_PinInGet(port_and_pin.port, port_and_pin.pin) == 0;
+}
+    
 bool GmdSilabsDriver::IsProximityDetected() const
 {
     return GPIO_PinInGet(PROX_IN_PORT, PROX_IN_PIN) == 0;
 }
 
-void GmdSilabsDriver::SetLightLedEnabled(bool enabled)
+void GmdSilabsDriver::SetLightLedEnabled(LedId led_id, bool enabled)
 {
+    if (led_id >= LedId::kNumLeds)
+    {
+        return;
+    }
+
+    PortAndPin port_and_pin = gLedMappings[static_cast<size_t>(led_id)];
+
     if (enabled)
     {
-        GPIO_PinOutClear(RED_LED_OUT_PORT, RED_LED_OUT_PIN);
+        GPIO_PinOutClear(port_and_pin.port, port_and_pin.pin);
     }
     else
     {
-        GPIO_PinOutSet(RED_LED_OUT_PORT, RED_LED_OUT_PIN);
+        GPIO_PinOutSet(port_and_pin.port, port_and_pin.pin);
     }
 }
 

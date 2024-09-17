@@ -18,6 +18,15 @@ namespace matter {
 class GoogleMultiDeviceIntegration
 {
   public:
+    enum class ButtonId : uint8_t {
+        kRed = 0,
+        kYellow = 1,
+        kGreen = 2,
+        kLatch1 = 3,
+        kLatch2 = 4,
+        kLatch3 = 5
+    };
+
     GoogleMultiDeviceIntegration() = default;
     ~GoogleMultiDeviceIntegration();
 
@@ -27,8 +36,8 @@ class GoogleMultiDeviceIntegration
 
     void InitializeProduct();
 
-    void HandleButtonPress(uint8_t buttonId);
-    void HandleButtonRelease(uint8_t buttonId);
+    void HandleButtonPress(ButtonId buttonId);
+    void HandleButtonRelease(ButtonId buttonId);
     void HandleOccupancyDetected(uint8_t sensorId);
     void HandleOccupancyUndetected(uint8_t sensorId);
 
@@ -45,11 +54,11 @@ class GoogleMultiDeviceIntegration
     chip::app::DefaultGenericSwitchStateMachineDriver mGenericSwitchDriverEp2;
     chip::app::GenericSwitchStateMachine mGenericSwitchStateMachineEp2;
 
-    std::unique_ptr<chip::app::Clusters::OccupancySensing::Instance> mOccupancyInstanceEp3 = nullptr;
-    std::unique_ptr<chip::app::Clusters::OccupancySensing::Instance::Delegate> mOccupancyDelegateEp3 = nullptr;
+    std::unique_ptr<chip::app::Clusters::OccupancySensing::Instance> mOccupancyInstanceEp5 = nullptr;
+    std::unique_ptr<chip::app::Clusters::OccupancySensing::Instance::Delegate> mOccupancyDelegateEp5 = nullptr;
 
-    std::unique_ptr<GoogleFakeDishwasherInterface> mFakeDishwasherEp4 = nullptr;
-    std::unique_ptr<chip::app::Clusters::OperationalState::Instance> mOpStateInstanceEp4 = nullptr;
+    std::unique_ptr<GoogleFakeDishwasherInterface> mFakeDishwasherEp6 = nullptr;
+    std::unique_ptr<chip::app::Clusters::OperationalState::Instance> mOpStateInstanceEp6 = nullptr;
 };
 
 } // namespace matter

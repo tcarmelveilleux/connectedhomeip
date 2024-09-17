@@ -1802,6 +1802,76 @@ endpoint 2 {
   }
 }
 endpoint 3 {
+  device type ma_genericswitch = 15, version 3;
+
+
+  server cluster Descriptor {
+    callback attribute deviceTypeList;
+    callback attribute serverList;
+    callback attribute clientList;
+    callback attribute partsList;
+    callback attribute featureMap;
+    callback attribute clusterRevision;
+  }
+
+  server cluster BridgedDeviceBasicInformation {
+    emits event StartUp;
+    emits event ShutDown;
+    emits event Leave;
+    ram      attribute vendorName default = "Google";
+    ram      attribute vendorID default = 0x6006;
+    ram      attribute productName default = "Legacy Switch";
+    ram      attribute reachable default = 1;
+    ram      attribute uniqueID default = "09710cf2bdb2d13d10dab67633e7afb4";
+    ram      attribute featureMap default = 0;
+    ram      attribute clusterRevision default = 4;
+  }
+
+  server cluster Switch {
+    emits event SwitchLatched;
+    ram      attribute numberOfPositions default = 2;
+    ram      attribute currentPosition default = 0;
+    ram      attribute multiPressMax default = 5;
+    ram      attribute featureMap default = 58;
+    ram      attribute clusterRevision default = 2;
+  }
+}
+endpoint 4 {
+  device type ma_genericswitch = 15, version 3;
+
+
+  server cluster Descriptor {
+    callback attribute deviceTypeList;
+    callback attribute serverList;
+    callback attribute clientList;
+    callback attribute partsList;
+    callback attribute featureMap;
+    callback attribute clusterRevision;
+  }
+
+  server cluster BridgedDeviceBasicInformation {
+    emits event StartUp;
+    emits event ShutDown;
+    emits event Leave;
+    ram      attribute vendorName default = "Google";
+    ram      attribute vendorID default = 0x6006;
+    ram      attribute productName default = "Latching Switch";
+    ram      attribute reachable default = 1;
+    ram      attribute uniqueID default = "09710cf2bdb2d13d70dab67633e7afb4";
+    ram      attribute featureMap default = 0;
+    ram      attribute clusterRevision default = 4;
+  }
+
+  server cluster Switch {
+    emits event SwitchLatched;
+    ram      attribute numberOfPositions default = 3;
+    ram      attribute currentPosition default = 0;
+    ram      attribute multiPressMax default = 5;
+    ram      attribute featureMap default = 1;
+    ram      attribute clusterRevision default = 2;
+  }
+}
+endpoint 5 {
   device type ma_occupancysensor = 263, version 4;
 
 
@@ -1853,7 +1923,7 @@ endpoint 3 {
     callback attribute clusterRevision;
   }
 }
-endpoint 4 {
+endpoint 6 {
   device type ma_dishwasher = 117, version 1;
 
 
