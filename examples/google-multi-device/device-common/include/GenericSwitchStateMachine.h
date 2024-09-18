@@ -21,7 +21,10 @@
 #include <algorithm>
 #include <stdbool.h>
 #include <stdint.h>
+
+#include <app-common/zap-generated/cluster-enums.h>
 #include <lib/core/DataModelTypes.h>
+#include <lib/support/BitFlags.h>
 
 namespace chip {
 namespace app {
@@ -37,6 +40,7 @@ class GenericSwitchStateMachine
           kButtonRelease = 1,
           kLongPressTimerHit = 2,
           kIdleTimerHit = 3,
+          kLatchSwitchChange = 4,
         };
 
         Type type;
@@ -56,6 +60,13 @@ class GenericSwitchStateMachine
         static Event MakeButtonReleaseEvent(uint8_t buttonPos)
         {
             Event event(Type::kButtonRelease);
+            event.buttonPosition = buttonPos;
+            return event;
+        }
+
+        static Event MakeLatchSwitchChangeEvent(uint8_t buttonPos)
+        {
+            Event event(Type::kLatchSwitchChange);
             event.buttonPosition = buttonPos;
             return event;
         }
@@ -93,8 +104,15 @@ class GenericSwitchStateMachine
         virtual void EmitLongPress(uint8_t newPosition) = 0;
         virtual void EmitLongRelease(uint8_t prevPosition) = 0;
         virtual void EmitMultiPressComplete(uint8_t prevPosition, uint8_t numPresses) = 0;
-
+        virtual void EmitShortRelease(uint8_t prevPosition) = 0;
+        virtual void EmitMultiPressOngoing(uint8_t newPosition, uint8_t currentCount) = 0;
+  
+        // TODO: Revisit this method living in the driver.
         virtual void SetButtonPosition(uint8_t newPosition) = 0;
+
+        virtual BitFlags<Clusters::Switch::Feature> GetSupportedFeatures() const = 0;
+        virtual uint8_t GetMultiPressMax() const = 0;
+        virtual uint8_t GetNumPositions() const  = 0;
 
         void SetEndpointId(EndpointId endpointId) { mEndpointId = endpointId; }
       protected:
@@ -107,7 +125,6 @@ class GenericSwitchStateMachine
 
     uint32_t GetLongPressThresholdMillis() const { return mLongPressThresholdMillis; }
     uint32_t GetIdleThresholdMillis() const { return mIdleThresholdMillis; }
-    uint8_t GetMaxMultiPress() const { return mMaxMultiPress; }
 
     void SetLongPressThresholdMillis(uint32_t longPressThresholdMillis)
     {
@@ -117,11 +134,6 @@ class GenericSwitchStateMachine
     {
         mIdleThresholdMillis = std::max(idleThresholdMillis, static_cast<uint32_t>(1));
     }
-    void SetMaxMultiPress(uint8_t maxMultiPress)
-    {
-        mMaxMultiPress = std::max(maxMultiPress, static_cast<uint8_t>(1u));
-    }
-
 
     void HandleEvent(const Event &event);
 
@@ -134,7 +146,7 @@ class GenericSwitchStateMachine
     State mState = State::kIdleWaitFirstPress;
     uint8_t mMultiPressCount = 0;
     uint8_t mCurrentPressedPosition = 0;
-    uint16_t mMaxMultiPress = 5;
+    uint8_t mCurrentLatchedPosition = 0xFFu;
     bool mReachedMaximumPresses = false;
     uint32_t mLongPressThresholdMillis = 800u;
     uint32_t mIdleThresholdMillis = 400u;

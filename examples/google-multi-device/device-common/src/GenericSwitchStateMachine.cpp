@@ -20,6 +20,7 @@
 
 #include "GenericSwitchStateMachine.h"
 
+#include <app-common/zap-generated/cluster-enums.h>
 #include <lib/support/logging/CHIPLogging.h>
 
 namespace chip {
@@ -56,6 +57,7 @@ void GenericSwitchStateMachine::HandleEvent(const Event &event)
             {
                 TransitionTo(State::kMultiPressReleased);
             }
+            // NOTE: kLongPressTimerHit won't ever happen if LongPress not supported.
             else if (event.type == Event::Type::kLongPressTimerHit)
             {
                 TransitionTo(State::kLongPressOngoing);
@@ -74,6 +76,7 @@ void GenericSwitchStateMachine::HandleEvent(const Event &event)
             break;
         }
         case State::kMultiPressReleased: {
+// TODO: Handle lack of multipress support            
             if (event.type == Event::Type::kButtonPress)
             {
                 TransitionTo(State::kMultiPressPressed);
@@ -84,6 +87,8 @@ void GenericSwitchStateMachine::HandleEvent(const Event &event)
             }
             break;
         }
+// TODO: Handle short release and multipress ongoing
+// TODO: Support latching switch
         case State::kMultiPressPressed: {
             if (event.type == Event::Type::kButtonRelease)
             {
@@ -129,7 +134,10 @@ void GenericSwitchStateMachine::OnStateEnter(State newState)
         case State::kWaitLongDetermination: {
             mMultiPressCount = 1;
             mDriver->EmitInitialPress(mCurrentPressedPosition);
-            mDriver->StartLongPressTimer(mLongPressThresholdMillis, this);
+            if (mDriver->GetSupportedFeatures().Has(Clusters::Switch::Feature::kMomentarySwitchLongPress))
+            {
+                mDriver->StartLongPressTimer(mLongPressThresholdMillis, this);
+            }
             break;
         }
         case State::kLongPressOngoing: {
@@ -150,7 +158,7 @@ void GenericSwitchStateMachine::OnStateEnter(State newState)
             mDriver->CancelWaitIdleTimer();
 
             // Ignore counting once we reach the max, just wait for idle.
-            if (mMultiPressCount != mMaxMultiPress)
+            if (mMultiPressCount != mDriver->GetMultiPressMax())
             {
                 ++mMultiPressCount;
             }

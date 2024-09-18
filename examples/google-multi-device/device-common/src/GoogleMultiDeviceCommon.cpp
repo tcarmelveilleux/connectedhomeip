@@ -13,10 +13,12 @@
 #include "DefaultGenericSwitchStateMachineDriver.h"
 #include "GoogleMultiDeviceDishwasherOpstate.h"
 
+#include <app-common/zap-generated/cluster-enums.h>
 #include <include/platform/DeviceInstanceInfoProvider.h>
 #include <lib/support/CodeUtils.h>
 #include <lib/core/CHIPError.h>
 #include <lib/core/DataModelTypes.h>
+#include <lib/support/BitFlags.h>
 
 #include <system/SystemClock.h>
 #include <system/SystemLayer.h>
@@ -130,17 +132,58 @@ void GoogleMultiDeviceIntegration::InitializeProduct()
     chip::DeviceLayer::SetDeviceInstanceInfoProvider(&sDeviceInfoProvider);
     chip::Credentials::SetDeviceAttestationCredentialsProvider(&sAttestationProvider);
 
-    // EP2: Generic switch setup
-    mGenericSwitchDriverEp2.SetEndpointId(2);
-    mGenericSwitchStateMachineEp2.SetDriver(&mGenericSwitchDriverEp2);
+    // EP2: Generic switch setup (Action Switch features)
+    {
+        mGenericSwitchDriverEp2.SetEndpointId(2);
+        BitFlags<Clusters::Switch::Feature> ep2Features;
+        ep2Features
+            .Set(Clusters::Switch::Feature::kActionSwitch)
+            .Set(Clusters::Switch::Feature::kMomentarySwitch)
+            .Set(Clusters::Switch::Feature::kMomentarySwitchLongPress)
+            .Set(Clusters::Switch::Feature::kMomentarySwitchMultiPress);
+        mGenericSwitchDriverEp2.SetSupportedFeatures(ep2Features);
+        mGenericSwitchDriverEp2.SetMultiPressMax(5);
+        mGenericSwitchDriverEp2.SetNumPositions(2);
+        
+        mGenericSwitchStateMachineEp2.SetDriver(&mGenericSwitchDriverEp2);
+    }
 
-    // EP3: Occupancy sensor setup
+    // EP3: Generic switch setup (Legacy Switch features)
+    {
+        mGenericSwitchDriverEp3.SetEndpointId(3);
+        BitFlags<Clusters::Switch::Feature> ep3Features;
+        ep3Features
+            .Set(Clusters::Switch::Feature::kMomentarySwitch)
+            .Set(Clusters::Switch::Feature::kMomentarySwitchLongPress)
+            .Set(Clusters::Switch::Feature::kMomentarySwitchRelease)
+            .Set(Clusters::Switch::Feature::kMomentarySwitchMultiPress);
+        mGenericSwitchDriverEp3.SetSupportedFeatures(ep3Features);
+        mGenericSwitchDriverEp3.SetMultiPressMax(5);
+        mGenericSwitchDriverEp3.SetNumPositions(2);
+
+        mGenericSwitchStateMachineEp3.SetDriver(&mGenericSwitchDriverEp3);
+    }
+
+    // EP4: Generic switch setup (Latching Switch features)
+    {
+        mGenericSwitchDriverEp4.SetEndpointId(4);
+        
+        BitFlags<Clusters::Switch::Feature> ep4Features;
+        ep4Features.Set(Clusters::Switch::Feature::kLatchingSwitch);
+        mGenericSwitchDriverEp4.SetSupportedFeatures(ep4Features);
+        mGenericSwitchDriverEp4.SetNumPositions(3);
+        mGenericSwitchDriverEp4.SetMultiPressMax(0);
+
+        mGenericSwitchStateMachineEp4.SetDriver(&mGenericSwitchDriverEp4);
+    }
+
+    // EP5: Occupancy sensor setup
     const EndpointId kOccupancyEndpointId = 5;
     mOccupancyDelegateEp5 = std::make_unique<OccupancyDelegate>(kOccupancyEndpointId);
     mOccupancyInstanceEp5 = std::make_unique<OccupancySensing::Instance>(mOccupancyDelegateEp5.get(), kOccupancyEndpointId);
     VerifyOrDie(mOccupancyInstanceEp5->Init() == CHIP_NO_ERROR);
 
-    // EP4: Dishwasher setup
+    // EP6: Dishwasher setup
     const EndpointId kDishwasherEndpointId = 6;
     mFakeDishwasherEp6 = MakeGoogleFakeDishwasher(kDishwasherEndpointId);
     mOpStateInstanceEp6 = std::make_unique<OperationalState::Instance>(mFakeDishwasherEp6->GetDelegate(), kDishwasherEndpointId);

@@ -53,6 +53,12 @@ class GoogleMultiDeviceIntegration
   private:
     chip::app::DefaultGenericSwitchStateMachineDriver mGenericSwitchDriverEp2;
     chip::app::GenericSwitchStateMachine mGenericSwitchStateMachineEp2;
+    
+    chip::app::DefaultGenericSwitchStateMachineDriver mGenericSwitchDriverEp3;
+    chip::app::GenericSwitchStateMachine mGenericSwitchStateMachineEp3;
+
+    chip::app::DefaultGenericSwitchStateMachineDriver mGenericSwitchDriverEp4;
+    chip::app::GenericSwitchStateMachine mGenericSwitchStateMachineEp4;
 
     std::unique_ptr<chip::app::Clusters::OccupancySensing::Instance> mOccupancyInstanceEp5 = nullptr;
     std::unique_ptr<chip::app::Clusters::OccupancySensing::Instance::Delegate> mOccupancyDelegateEp5 = nullptr;

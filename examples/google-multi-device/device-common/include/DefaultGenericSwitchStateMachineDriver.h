@@ -29,11 +29,13 @@
 #include <system/SystemLayer.h>
 
 #include <app-common/zap-generated/attributes/Accessors.h>
+#include <app-common/zap-generated/cluster-enums.h>
 #include <app-common/zap-generated/cluster-objects.h>
 #include <app/EventLogging.h>
 #include <lib/core/CHIPError.h>
 #include <lib/core/DataModelTypes.h>
 #include <lib/support/logging/CHIPLogging.h>
+#include <lib/support/BitFlags.h>
 #include <lib/support/IntrusiveList.h>
 #include <platform/CHIPDeviceLayer.h>
 
@@ -43,7 +45,14 @@ namespace app {
 class DefaultGenericSwitchStateMachineDriver : public GenericSwitchStateMachine::Driver
 {
   public:
-    DefaultGenericSwitchStateMachineDriver() {}
+    DefaultGenericSwitchStateMachineDriver() 
+    {
+        mFeatures
+            .Set(Clusters::Switch::Feature::kActionSwitch)
+            .Set(Clusters::Switch::Feature::kMomentarySwitch)
+            .Set(Clusters::Switch::Feature::kMomentarySwitchLongPress)
+            .Set(Clusters::Switch::Feature::kMomentarySwitchMultiPress);
+    }
 
     // Starts/restarts a timer for timeoutMillis ms, with given `ctx` context pointer. Returns true on success.
     bool StartLongPressTimer(uint32_t timeoutMillis, GenericSwitchStateMachine *stateMachine) override
@@ -147,11 +156,70 @@ class DefaultGenericSwitchStateMachineDriver : public GenericSwitchStateMachine:
         }
     }
 
+    void EmitShortRelease(uint8_t prevPosition) override
+    {
+        Clusters::Switch::Events::ShortRelease::Type event{};
+        event.previousPosition            = prevPosition;
+        EventNumber eventNumber           = 0;
+
+        CHIP_ERROR err = LogEvent(event, mEndpointId, eventNumber);
+        if (err != CHIP_NO_ERROR)
+        {
+            ChipLogError(NotSpecified, "Failed to log ShortRelease event: %" CHIP_ERROR_FORMAT, err.Format());
+        }
+        else
+        {
+            ChipLogProgress(NotSpecified, "Logged ShortRelease(prev=%u) on Endpoint %u", static_cast<unsigned>(prevPosition),
+                            static_cast<unsigned>(mEndpointId));
+        }
+    }
+
+    void EmitMultiPressOngoing(uint8_t newPosition, uint8_t currentCount) override
+    {
+        Clusters::Switch::Events::MultiPressOngoing::Type event{};
+        event.newPosition = newPosition;
+        event.currentNumberOfPressesCounted = currentCount;
+        EventNumber eventNumber           = 0;
+
+        CHIP_ERROR err = LogEvent(event, mEndpointId, eventNumber);
+        if (err != CHIP_NO_ERROR)
+        {
+            ChipLogError(NotSpecified, "Failed to log EmitMultiPressOngoing event: %" CHIP_ERROR_FORMAT, err.Format());
+        }
+        else
+        {
+            ChipLogProgress(NotSpecified, "Logged EmitMultiPressOngoing(count=%u) on Endpoint %u", static_cast<unsigned>(currentCount),
+                            static_cast<unsigned>(mEndpointId));
+        }
+    }
+
     void SetButtonPosition(uint8_t newPosition) override
     {
         Clusters::Switch::Attributes::CurrentPosition::Set(mEndpointId, newPosition);
     }
 
+    BitFlags<Clusters::Switch::Feature> GetSupportedFeatures() const override { return mFeatures; }
+    uint8_t GetMultiPressMax() const override { return mMultiPressMax; }
+    uint8_t GetNumPositions() const override { return mNumPositions; }
+
+    void SetSupportedFeatures(BitFlags<Clusters::Switch::Feature> features)
+    {
+        mFeatures = features;
+    }
+
+    void SetMultiPressMax(uint8_t multiPressMax) 
+    { 
+        mMultiPressMax = multiPressMax;
+    }
+
+    void SetNumPositions(uint8_t numPositions) 
+    { 
+        if ((numPositions > 1) && (numPositions < 255))
+        {
+            mNumPositions = numPositions;
+        }
+    }
+    
   private:
     using StateMachineCallback = std::function<void()>;
 
@@ -180,6 +248,12 @@ class DefaultGenericSwitchStateMachineDriver : public GenericSwitchStateMachine:
 
     CallbackWrapper mLongPressTimerWrapper;
     CallbackWrapper mIdleTimerWrapper;
+
+    uint8_t mMultiPressMax = 2u;
+    uint8_t mNumPositions = 2u;
+
+    BitFlags<Clusters::Switch::Feature> mFeatures;
+
 };
 
 } // namespace app
