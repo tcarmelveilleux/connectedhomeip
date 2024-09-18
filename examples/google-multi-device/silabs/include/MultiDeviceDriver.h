@@ -26,6 +26,9 @@ enum class HardwareEvent
   kLatchSwitch2Deselected = 11,
   kLatchSwitch3Selected = 12,
   kLatchSwitch3Deselected = 13,
+
+  // For some no-ops in tables
+  kNoHardwareEvent = 14,
 };
 
 typedef void (*HardwareEventCallback)(HardwareEvent event);
@@ -70,7 +73,7 @@ class GmdSilabsDriver
 
     void CallHardwareEventCallback(HardwareEvent event)
     {
-        if (mHardwareCallback != nullptr)
+        if (mHardwareCallback != nullptr && (event != HardwareEvent::kNoHardwareEvent))
         {
             mHardwareCallback(event);
         }

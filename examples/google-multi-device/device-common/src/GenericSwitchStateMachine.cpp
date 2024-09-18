@@ -30,16 +30,32 @@ void GenericSwitchStateMachine::HandleEvent(const Event &event)
 {
     VerifyOrDie(mDriver != nullptr);
 
+#if 0
     ChipLogError(NotSpecified, "Got Event %d", (int)event.type);
+#endif
 
-    // TODO: Support multiple pressed positions.
+    bool supports_latch = mDriver->GetSupportedFeatures().Has(Clusters::Switch::Feature::kLatchingSwitch);
+
     if (event.type == Event::Type::kButtonPress)
     {
         mDriver->SetButtonPosition(event.buttonPosition);
     }
+    // TODO: Support multiple pressed positions (not always return to 0).
     else if (event.type == Event::Type::kButtonRelease)
     {
         mDriver->SetButtonPosition(0);
+    }
+    else if (event.type == Event::Type::kLatchSwitchChange && supports_latch)
+    {
+        if (event.buttonPosition != mCurrentPosition)
+        {
+            mDriver->SetButtonPosition(event.buttonPosition);
+            mDriver->EmitSwitchLatched(event.buttonPosition);
+            mCurrentPosition = event.buttonPosition;
+        }
+
+        // No state machine transitions for latchign switches.
+        return;
     }
 
     switch (mState)
@@ -47,7 +63,7 @@ void GenericSwitchStateMachine::HandleEvent(const Event &event)
         case State::kIdleWaitFirstPress: {
             if (event.type == Event::Type::kButtonPress)
             {
-                mCurrentPressedPosition = event.buttonPosition;
+                mCurrentPosition = event.buttonPosition;
                 TransitionTo(State::kWaitLongDetermination);
             }
             break;
@@ -76,7 +92,6 @@ void GenericSwitchStateMachine::HandleEvent(const Event &event)
             break;
         }
         case State::kMultiPressReleased: {
-// TODO: Handle lack of multipress support            
             if (event.type == Event::Type::kButtonPress)
             {
                 TransitionTo(State::kMultiPressPressed);
@@ -87,8 +102,6 @@ void GenericSwitchStateMachine::HandleEvent(const Event &event)
             }
             break;
         }
-// TODO: Handle short release and multipress ongoing
-// TODO: Support latching switch
         case State::kMultiPressPressed: {
             if (event.type == Event::Type::kButtonRelease)
             {
@@ -124,43 +137,73 @@ void GenericSwitchStateMachine::TransitionTo(State newState)
 void GenericSwitchStateMachine::OnStateEnter(State newState)
 {
     VerifyOrDie(mDriver != nullptr);
+
+    bool supports_msr = mDriver->GetSupportedFeatures().Has(Clusters::Switch::Feature::kMomentarySwitchRelease);
+    bool supports_msl = mDriver->GetSupportedFeatures().Has(Clusters::Switch::Feature::kMomentarySwitchLongPress);
+    bool supports_msm = mDriver->GetSupportedFeatures().Has(Clusters::Switch::Feature::kMomentarySwitchMultiPress);
+    bool supports_as = mDriver->GetSupportedFeatures().Has(Clusters::Switch::Feature::kActionSwitch);
+
     switch (mState)
     {
         case State::kIdleWaitFirstPress: {
-            mCurrentPressedPosition = 0;
+            mCurrentPosition = 0;
             mReachedMaximumPresses = false;
             break;
         }
         case State::kWaitLongDetermination: {
             mMultiPressCount = 1;
-            mDriver->EmitInitialPress(mCurrentPressedPosition);
-            if (mDriver->GetSupportedFeatures().Has(Clusters::Switch::Feature::kMomentarySwitchLongPress))
+            mDriver->EmitInitialPress(mCurrentPosition);
+            if (supports_msl)
             {
                 mDriver->StartLongPressTimer(mLongPressThresholdMillis, this);
             }
             break;
         }
         case State::kLongPressOngoing: {
-            mDriver->EmitLongPress(mCurrentPressedPosition);
+            mDriver->EmitLongPress(mCurrentPosition);
             break;
         }
         case State::kLongPressDone: {
-            mDriver->EmitLongRelease(mCurrentPressedPosition);
+            mDriver->EmitLongRelease(mCurrentPosition);
             TransitionTo(State::kIdleWaitFirstPress);
             break;
         }
         case State::kMultiPressReleased: {
-            mDriver->CancelLongPressTimer();
-            mDriver->StartWaitIdleTimer(mIdleThresholdMillis, this);
+            if (supports_msr && !supports_as)
+            {
+                mDriver->EmitShortRelease(mCurrentPosition);
+            }
+
+            if (supports_msm)
+            {
+                // For multipress, start waiting for idle time until a next press.
+                mDriver->CancelLongPressTimer();
+                mDriver->StartWaitIdleTimer(mIdleThresholdMillis, this);
+            }
+            else
+            {
+                // For non-multipress, immediately go to multipress done.
+                TransitionTo(State::kMultiPressDone);
+            }
             break;
         }
         case State::kMultiPressPressed: {
             mDriver->CancelWaitIdleTimer();
 
+            if (supports_msm && !supports_as)
+            {
+                mDriver->EmitInitialPress(mCurrentPosition);
+            }
+
             // Ignore counting once we reach the max, just wait for idle.
             if (mMultiPressCount != mDriver->GetMultiPressMax())
             {
                 ++mMultiPressCount;
+
+                if (supports_msm && !supports_as)
+                {
+                    mDriver->EmitMultiPressOngoing(mCurrentPosition, mMultiPressCount);
+                }
             }
             else
             {
@@ -169,8 +212,12 @@ void GenericSwitchStateMachine::OnStateEnter(State newState)
             break;
         }
         case State::kMultiPressDone: {
-            uint8_t numPresses = mReachedMaximumPresses ? 0 : mMultiPressCount;
-            mDriver->EmitMultiPressComplete(mCurrentPressedPosition, numPresses);
+            if (supports_msm)
+            {
+                uint8_t numPresses = mReachedMaximumPresses ? 0 : mMultiPressCount;
+                mDriver->EmitMultiPressComplete(mCurrentPosition, numPresses);
+            }
+
             TransitionTo(State::kIdleWaitFirstPress);
             break;
         }

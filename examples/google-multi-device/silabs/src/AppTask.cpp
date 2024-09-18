@@ -92,22 +92,13 @@ void MultiDeviceDriverEvent(HardwareEvent event)
         case HardwareEvent::kLatchSwitch1Selected:
             app_event.Type = AppEvent::kEventType_kLatchSwitch1Selected;
             break;
-        case HardwareEvent::kLatchSwitch1Deselected:
-            app_event.Type = AppEvent::kEventType_kLatchSwitch1Deselected;
-            break;
 
         case HardwareEvent::kLatchSwitch2Selected:
             app_event.Type = AppEvent::kEventType_kLatchSwitch2Selected;
             break;
-        case HardwareEvent::kLatchSwitch2Deselected:
-            app_event.Type = AppEvent::kEventType_kLatchSwitch2Deselected;
-            break;
 
         case HardwareEvent::kLatchSwitch3Selected:
             app_event.Type = AppEvent::kEventType_kLatchSwitch3Selected;
-            break;
-        case HardwareEvent::kLatchSwitch3Deselected:
-            app_event.Type = AppEvent::kEventType_kLatchSwitch3Deselected;
             break;
 
         case HardwareEvent::kOccupancyDetected:
@@ -196,25 +187,42 @@ void AppTask::AppTaskMain(void * pvParameter)
 
 void AppTask::MultiDeviceDriverAppEventHandler(AppEvent * aEvent)
 {
-    auto & driver = GmdSilabsDriver::GetInstance();
     auto & productIntegration = GoogleMultiDeviceIntegration::GetInstance();
 
     switch (aEvent->Type)
     {
         case AppEvent::kEventType_kRedButtonPressed:
-            driver.EmitDebugCode(40);
             productIntegration.HandleButtonPress(GoogleMultiDeviceIntegration::ButtonId::kRed);
             break;
         case AppEvent::kEventType_kRedButtonReleased:
-            driver.EmitDebugCode(41);
             productIntegration.HandleButtonRelease(GoogleMultiDeviceIntegration::ButtonId::kRed);
             break;
+        case AppEvent::kEventType_kYellowButtonPressed:
+            productIntegration.HandleButtonPress(GoogleMultiDeviceIntegration::ButtonId::kYellow);
+            break;
+        case AppEvent::kEventType_kYellowButtonReleased:
+            productIntegration.HandleButtonRelease(GoogleMultiDeviceIntegration::ButtonId::kYellow);
+            break;
+        case AppEvent::kEventType_kGreenButtonPressed:
+            productIntegration.HandleButtonPress(GoogleMultiDeviceIntegration::ButtonId::kGreen);
+            break;
+        case AppEvent::kEventType_kGreenButtonReleased:
+            productIntegration.HandleButtonRelease(GoogleMultiDeviceIntegration::ButtonId::kGreen);
+            break;
+        case AppEvent::kEventType_kLatchSwitch1Selected:
+            productIntegration.HandleButtonPress(GoogleMultiDeviceIntegration::ButtonId::kLatch1);
+            break;
+        case AppEvent::kEventType_kLatchSwitch2Selected:
+            productIntegration.HandleButtonPress(GoogleMultiDeviceIntegration::ButtonId::kLatch2);
+            break;
+        case AppEvent::kEventType_kLatchSwitch3Selected:
+            productIntegration.HandleButtonPress(GoogleMultiDeviceIntegration::ButtonId::kLatch3);
+            break;
+
         case AppEvent::kEventType_OccupancyDetected:
-            driver.EmitDebugCode(50);
             productIntegration.HandleOccupancyDetected(0);
             break;
         case AppEvent::kEventType_OccupancyUndetected:
-            driver.EmitDebugCode(51);
             productIntegration.HandleOccupancyUndetected(0);
             break;
         default:
@@ -245,4 +253,23 @@ void ::google::matter::GoogleMultiDeviceIntegration::EmitDebugCode(uint8_t code)
 {
     auto & driver = GmdSilabsDriver::GetInstance();
     driver.EmitDebugCode(code);
+}
+
+uint8_t ::google::matter::GoogleMultiDeviceIntegration::GetEp4LatchInitialPosition()
+{
+    auto & driver = GmdSilabsDriver::GetInstance();
+    if (driver.IsSwitchButtonPressed(GmdSilabsDriver::ButtonId::kLatch1))
+    {
+        return 0;
+    }
+    else if (driver.IsSwitchButtonPressed(GmdSilabsDriver::ButtonId::kLatch2))
+    {
+        return 1;
+    }
+    else if (driver.IsSwitchButtonPressed(GmdSilabsDriver::ButtonId::kLatch3))
+    {
+        return 2;
+    }
+
+    return 0;
 }

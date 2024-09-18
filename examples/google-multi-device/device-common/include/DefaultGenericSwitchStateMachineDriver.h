@@ -45,7 +45,7 @@ namespace app {
 class DefaultGenericSwitchStateMachineDriver : public GenericSwitchStateMachine::Driver
 {
   public:
-    DefaultGenericSwitchStateMachineDriver() 
+    DefaultGenericSwitchStateMachineDriver()
     {
         mFeatures
             .Set(Clusters::Switch::Feature::kActionSwitch)
@@ -184,11 +184,29 @@ class DefaultGenericSwitchStateMachineDriver : public GenericSwitchStateMachine:
         CHIP_ERROR err = LogEvent(event, mEndpointId, eventNumber);
         if (err != CHIP_NO_ERROR)
         {
-            ChipLogError(NotSpecified, "Failed to log EmitMultiPressOngoing event: %" CHIP_ERROR_FORMAT, err.Format());
+            ChipLogError(NotSpecified, "Failed to log MultiPressOngoing event: %" CHIP_ERROR_FORMAT, err.Format());
         }
         else
         {
-            ChipLogProgress(NotSpecified, "Logged EmitMultiPressOngoing(count=%u) on Endpoint %u", static_cast<unsigned>(currentCount),
+            ChipLogProgress(NotSpecified, "Logged MultiPressOngoing(count=%u) on Endpoint %u", static_cast<unsigned>(currentCount),
+                            static_cast<unsigned>(mEndpointId));
+        }
+    }
+
+    void EmitSwitchLatched(uint8_t newPosition) override
+    {
+        Clusters::Switch::Events::SwitchLatched::Type event{};
+        event.newPosition = newPosition;
+        EventNumber eventNumber           = 0;
+
+        CHIP_ERROR err = LogEvent(event, mEndpointId, eventNumber);
+        if (err != CHIP_NO_ERROR)
+        {
+            ChipLogError(NotSpecified, "Failed to log SwitchLatched event: %" CHIP_ERROR_FORMAT, err.Format());
+        }
+        else
+        {
+            ChipLogProgress(NotSpecified, "Logged SwitchLatched(new=%u) on Endpoint %u", static_cast<unsigned>(newPosition),
                             static_cast<unsigned>(mEndpointId));
         }
     }
@@ -207,19 +225,19 @@ class DefaultGenericSwitchStateMachineDriver : public GenericSwitchStateMachine:
         mFeatures = features;
     }
 
-    void SetMultiPressMax(uint8_t multiPressMax) 
-    { 
+    void SetMultiPressMax(uint8_t multiPressMax)
+    {
         mMultiPressMax = multiPressMax;
     }
 
-    void SetNumPositions(uint8_t numPositions) 
-    { 
+    void SetNumPositions(uint8_t numPositions)
+    {
         if ((numPositions > 1) && (numPositions < 255))
         {
             mNumPositions = numPositions;
         }
     }
-    
+
   private:
     using StateMachineCallback = std::function<void()>;
 

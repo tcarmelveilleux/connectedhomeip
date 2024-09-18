@@ -44,6 +44,7 @@ class GoogleMultiDeviceIntegration
     // IMPLEMENT IN THE ACTUAL PRODUCT MODULE
     void SetDebugLed(bool enabled);
     void EmitDebugCode(uint8_t code);
+    uint8_t GetEp4LatchInitialPosition();
 
     static GoogleMultiDeviceIntegration & GetInstance()
     {
@@ -53,7 +54,7 @@ class GoogleMultiDeviceIntegration
   private:
     chip::app::DefaultGenericSwitchStateMachineDriver mGenericSwitchDriverEp2;
     chip::app::GenericSwitchStateMachine mGenericSwitchStateMachineEp2;
-    
+
     chip::app::DefaultGenericSwitchStateMachineDriver mGenericSwitchDriverEp3;
     chip::app::GenericSwitchStateMachine mGenericSwitchStateMachineEp3;
 

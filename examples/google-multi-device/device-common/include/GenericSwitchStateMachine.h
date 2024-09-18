@@ -106,8 +106,10 @@ class GenericSwitchStateMachine
         virtual void EmitMultiPressComplete(uint8_t prevPosition, uint8_t numPresses) = 0;
         virtual void EmitShortRelease(uint8_t prevPosition) = 0;
         virtual void EmitMultiPressOngoing(uint8_t newPosition, uint8_t currentCount) = 0;
-  
+        virtual void EmitSwitchLatched(uint8_t newPosition) = 0;
+
         // TODO: Revisit this method living in the driver.
+        // TODO: Handle initial position in the logic to avoid recording events on initial position being set.
         virtual void SetButtonPosition(uint8_t newPosition) = 0;
 
         virtual BitFlags<Clusters::Switch::Feature> GetSupportedFeatures() const = 0;
@@ -135,6 +137,12 @@ class GenericSwitchStateMachine
         mIdleThresholdMillis = std::max(idleThresholdMillis, static_cast<uint32_t>(1));
     }
 
+    void SetInitialPosition(uint8_t buttonPosition)
+    {
+        mCurrentPosition = buttonPosition;
+        mDriver->SetButtonPosition(buttonPosition);
+    }
+
     void HandleEvent(const Event &event);
 
   private:
@@ -145,8 +153,7 @@ class GenericSwitchStateMachine
     GenericSwitchStateMachine::Driver *mDriver = nullptr;
     State mState = State::kIdleWaitFirstPress;
     uint8_t mMultiPressCount = 0;
-    uint8_t mCurrentPressedPosition = 0;
-    uint8_t mCurrentLatchedPosition = 0xFFu;
+    uint8_t mCurrentPosition = 0;
     bool mReachedMaximumPresses = false;
     uint32_t mLongPressThresholdMillis = 800u;
     uint32_t mIdleThresholdMillis = 400u;

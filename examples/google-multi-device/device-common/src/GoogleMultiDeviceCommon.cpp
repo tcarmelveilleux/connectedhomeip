@@ -144,8 +144,9 @@ void GoogleMultiDeviceIntegration::InitializeProduct()
         mGenericSwitchDriverEp2.SetSupportedFeatures(ep2Features);
         mGenericSwitchDriverEp2.SetMultiPressMax(5);
         mGenericSwitchDriverEp2.SetNumPositions(2);
-        
+
         mGenericSwitchStateMachineEp2.SetDriver(&mGenericSwitchDriverEp2);
+        mGenericSwitchDriverEp2.SetButtonPosition(0);
     }
 
     // EP3: Generic switch setup (Legacy Switch features)
@@ -162,12 +163,13 @@ void GoogleMultiDeviceIntegration::InitializeProduct()
         mGenericSwitchDriverEp3.SetNumPositions(2);
 
         mGenericSwitchStateMachineEp3.SetDriver(&mGenericSwitchDriverEp3);
+        mGenericSwitchDriverEp3.SetButtonPosition(0);
     }
 
     // EP4: Generic switch setup (Latching Switch features)
     {
         mGenericSwitchDriverEp4.SetEndpointId(4);
-        
+
         BitFlags<Clusters::Switch::Feature> ep4Features;
         ep4Features.Set(Clusters::Switch::Feature::kLatchingSwitch);
         mGenericSwitchDriverEp4.SetSupportedFeatures(ep4Features);
@@ -175,6 +177,9 @@ void GoogleMultiDeviceIntegration::InitializeProduct()
         mGenericSwitchDriverEp4.SetMultiPressMax(0);
 
         mGenericSwitchStateMachineEp4.SetDriver(&mGenericSwitchDriverEp4);
+
+        // Initialize initial state.
+        mGenericSwitchDriverEp4.SetButtonPosition(GetEp4LatchInitialPosition());
     }
 
     // EP5: Occupancy sensor setup
@@ -194,23 +199,72 @@ void GoogleMultiDeviceIntegration::InitializeProduct()
 
 void GoogleMultiDeviceIntegration::HandleButtonPress(ButtonId buttonId)
 {
-    if (buttonId == ButtonId::kRed)
+    uint8_t latchPos = 0;
+    bool isLatch = false;
+
+    switch (buttonId)
     {
+    case ButtonId::kRed:
         // Position 1 on EP2
         chip::DeviceLayer::SystemLayer().ScheduleLambda([this](){
             this->mGenericSwitchStateMachineEp2.HandleEvent(GenericSwitchStateMachine::Event::MakeButtonPressEvent(1));
+        });
+        break;
+    case ButtonId::kYellow:
+        // Position 1 on EP3
+        chip::DeviceLayer::SystemLayer().ScheduleLambda([this](){
+            this->mGenericSwitchStateMachineEp3.HandleEvent(GenericSwitchStateMachine::Event::MakeButtonPressEvent(1));
+        });
+        break;
+    case ButtonId::kGreen:
+        // TODO: Handle for opstate
+        break;
+    case ButtonId::kLatch1:
+        latchPos = 0;
+        isLatch = true;
+        break;
+    case ButtonId::kLatch2:
+        latchPos = 1;
+        isLatch = true;
+        break;
+    case ButtonId::kLatch3:
+        latchPos = 2;
+        isLatch = true;
+        break;
+    default:
+        break;
+    }
+
+    if (isLatch)
+    {
+        // Latch positions on EP4
+        chip::DeviceLayer::SystemLayer().ScheduleLambda([this, latchPos](){
+            this->mGenericSwitchStateMachineEp4.HandleEvent(GenericSwitchStateMachine::Event::MakeLatchSwitchChangeEvent(latchPos));
         });
     }
 }
 
 void GoogleMultiDeviceIntegration::HandleButtonRelease(ButtonId buttonId)
 {
-    if (buttonId == ButtonId::kRed)
+    switch (buttonId)
     {
+    case ButtonId::kRed:
         // Position 1 on EP2
         chip::DeviceLayer::SystemLayer().ScheduleLambda([this](){
             this->mGenericSwitchStateMachineEp2.HandleEvent(GenericSwitchStateMachine::Event::MakeButtonReleaseEvent(1));
         });
+        break;
+    case ButtonId::kYellow:
+        // Position 1 on EP3
+        chip::DeviceLayer::SystemLayer().ScheduleLambda([this](){
+            this->mGenericSwitchStateMachineEp3.HandleEvent(GenericSwitchStateMachine::Event::MakeButtonReleaseEvent(1));
+        });
+        break;
+    case ButtonId::kGreen:
+        // TODO: Handle for opstate
+        break;
+    default:
+        break;
     }
 }
 

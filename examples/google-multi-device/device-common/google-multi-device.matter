@@ -1833,7 +1833,7 @@ endpoint 3 {
     ram      attribute numberOfPositions default = 2;
     ram      attribute currentPosition default = 0;
     ram      attribute multiPressMax default = 5;
-    ram      attribute featureMap default = 58;
+    ram      attribute featureMap default = 30;
     ram      attribute clusterRevision default = 2;
   }
 }
@@ -1867,7 +1867,6 @@ endpoint 4 {
     emits event SwitchLatched;
     ram      attribute numberOfPositions default = 3;
     ram      attribute currentPosition default = 0;
-    ram      attribute multiPressMax default = 5;
     ram      attribute featureMap default = 1;
     ram      attribute clusterRevision default = 2;
   }

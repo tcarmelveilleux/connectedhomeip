@@ -166,12 +166,18 @@ CHIP_ERROR Instance::Read(const ConcreteReadAttributePath & aPath, AttributeValu
         return aEncoder.Encode(mFeatures);
     }
     case Attributes::HoldTime::Id:
-    case Attributes::PIROccupiedToUnoccupiedDelay::Id: {
+    case Attributes::PIROccupiedToUnoccupiedDelay::Id:
+    case Attributes::UltrasonicOccupiedToUnoccupiedDelay::Id:
+    case Attributes::PhysicalContactOccupiedToUnoccupiedDelay::Id: {
         // Both attributes have to track.
         return aEncoder.Encode(mHoldTimeSeconds);
     }
     case Attributes::HoldTimeLimits::Id: {
         Structs::HoldTimeLimitsStruct::Type holdTimeLimitsStruct = mDelegate->GetHoldTimeLimits();
+
+        // Ensure minimum of 1 is always met.
+        holdTimeLimitsStruct.holdTimeMin = std::max(static_cast<uint16_t>(1u), holdTimeLimitsStruct.holdTimeMin);
+
         return aEncoder.Encode(holdTimeLimitsStruct);
     }
     case Attributes::OccupancySensorType::Id: {
@@ -209,7 +215,7 @@ CHIP_ERROR Instance::Write(const ConcreteDataAttributePath & aPath, AttributeVal
     {
     case Attributes::HoldTime::Id:
     case Attributes::PIROccupiedToUnoccupiedDelay::Id:
-    case Attributes::UltrasonicOccupiedToUnoccupiedDelay::Id: 
+    case Attributes::UltrasonicOccupiedToUnoccupiedDelay::Id:
     case Attributes::PhysicalContactOccupiedToUnoccupiedDelay::Id: {
         // Processing is the same for both, since they have to track.
         uint16_t newHoldTimeSeconds = mHoldTimeSeconds;
@@ -233,7 +239,7 @@ CHIP_ERROR Instance::HandleWriteHoldTime(uint16_t newHoldTimeSeconds)
     VerifyOrReturnError(persister != nullptr, CHIP_IM_GLOBAL_STATUS(Failure));
 
     Structs::HoldTimeLimitsStruct::Type currHoldTimeLimits = mDelegate->GetHoldTimeLimits();
-    VerifyOrReturnError(newHoldTimeSeconds >= currHoldTimeLimits.holdTimeMin, CHIP_IM_GLOBAL_STATUS(ConstraintError));
+    VerifyOrReturnError(newHoldTimeSeconds >= std::max(static_cast<uint16_t>(1), currHoldTimeLimits.holdTimeMin), CHIP_IM_GLOBAL_STATUS(ConstraintError));
     VerifyOrReturnError(newHoldTimeSeconds <= currHoldTimeLimits.holdTimeMax, CHIP_IM_GLOBAL_STATUS(ConstraintError));
 
     // No change: do nothing.

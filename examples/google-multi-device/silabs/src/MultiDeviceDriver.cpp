@@ -105,9 +105,10 @@ const HardwareEvent gSwitchReleaseEvents[static_cast<size_t>(GmdSilabsDriver::Bu
     HardwareEvent::kRedButtonReleased,
     HardwareEvent::kYellowButtonReleased,
     HardwareEvent::kGreenButtonReleased,
-    HardwareEvent::kLatchSwitch1Deselected,
-    HardwareEvent::kLatchSwitch2Deselected,
-    HardwareEvent::kLatchSwitch3Deselected,
+    // Latch 1..3 don't emit release.
+    HardwareEvent::kNoHardwareEvent,
+    HardwareEvent::kNoHardwareEvent,
+    HardwareEvent::kNoHardwareEvent,
 };
 
 #if 0
@@ -208,7 +209,7 @@ void GmdSilabsDriver::Init()
 void GmdSilabsDriver::HandleDebounceTimer()
 {
     bool newIsButtonPressed[static_cast<size_t>(ButtonId::kNumButtons)] = {0};
-    
+
     for (size_t btn_idx = 0; btn_idx < static_cast<size_t>(ButtonId::kNumButtons); ++btn_idx)
     {
         newIsButtonPressed[btn_idx] = IsSwitchButtonPressed(static_cast<ButtonId>(btn_idx));
@@ -252,7 +253,7 @@ bool GmdSilabsDriver::IsSwitchButtonPressed(ButtonId button_id) const
     PortAndPin port_and_pin = gSwitchMappings[static_cast<size_t>(button_id)];
     return GPIO_PinInGet(port_and_pin.port, port_and_pin.pin) == 0;
 }
-    
+
 bool GmdSilabsDriver::IsProximityDetected() const
 {
     return GPIO_PinInGet(PROX_IN_PORT, PROX_IN_PIN) == 0;
