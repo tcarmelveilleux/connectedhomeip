@@ -26,6 +26,7 @@
 #include <app/server/OnboardingCodesUtil.h>
 #include <app/server/Server.h>
 #include <app/util/attribute-storage.h>
+#include <credentials/DeviceAttestationCredsProvider.h>
 
 #include <assert.h>
 
@@ -56,6 +57,20 @@ using namespace chip::app;
 using namespace google::matter;
 using namespace ::chip::DeviceLayer;
 using namespace ::chip::DeviceLayer::Silabs;
+
+// HACK: on Silabs to remove the Example DAC provider. Dunno why it's even needed.
+namespace chip {
+namespace Credentials {
+namespace Examples {
+
+DeviceAttestationCredentialsProvider * GetExampleDACProvider()
+{
+    return nullptr;
+}
+
+} // namespace Examples
+} // namespace Credentials
+} // namespace chip
 
 namespace {
 LEDWidget sLightLED;
@@ -272,4 +287,10 @@ uint8_t ::google::matter::GoogleMultiDeviceIntegration::GetEp4LatchInitialPositi
     }
 
     return 0;
+}
+
+bool ::google::matter::GoogleMultiDeviceIntegration::IsAlternativeDiscriminator()
+{
+    auto & driver = GmdSilabsDriver::GetInstance();
+    return driver.IsAlternativeDiscriminator();
 }

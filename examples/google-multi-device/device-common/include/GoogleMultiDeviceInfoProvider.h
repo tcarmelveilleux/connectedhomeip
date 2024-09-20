@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include <include/platform/DeviceInstanceInfoProvider.h>
+#include <include/platform/CommissionableDataProvider.h>
 
 #include <lib/core/CHIPError.h>
 #include <lib/support/CHIPMemString.h>
@@ -18,9 +19,10 @@
 namespace google {
 namespace matter {
 
-class GoogleMultiDeviceInfoProvider : public chip::DeviceLayer::DeviceInstanceInfoProvider
+class GoogleMultiDeviceInfoProvider : public chip::DeviceLayer::DeviceInstanceInfoProvider, public chip::DeviceLayer::CommissionableDataProvider
 {
   public:
+    // =============== DeviceInstanceInfoProvider interface =============
     CHIP_ERROR GetVendorName(char * buf, size_t bufSize) override
     {
         chip::Platform::CopyString(buf, bufSize, "Google LLC");
@@ -93,6 +95,59 @@ class GoogleMultiDeviceInfoProvider : public chip::DeviceLayer::DeviceInstanceIn
     {
         return CHIP_ERROR_NOT_IMPLEMENTED;
     }
+
+    // =============== CommissionableDataProvider interface =============
+    CHIP_ERROR GetSetupDiscriminator(uint16_t & setupDiscriminator) override
+    {
+        setupDiscriminator = mDiscriminator;
+        return CHIP_NO_ERROR;
+    }
+
+    CHIP_ERROR SetSetupDiscriminator(uint16_t setupDiscriminator) override
+    {
+        mDiscriminator = setupDiscriminator;
+        return CHIP_NO_ERROR;
+    }
+
+    CHIP_ERROR GetSpake2pIterationCount(uint32_t & iterationCount) override
+    {
+        return mPreviousCommissionableDataProvider->GetSpake2pIterationCount(iterationCount);
+    }
+
+    CHIP_ERROR GetSpake2pSalt(chip::MutableByteSpan & saltBuf) override
+    {
+        return mPreviousCommissionableDataProvider->GetSpake2pSalt(saltBuf);
+    }
+
+    CHIP_ERROR GetSpake2pVerifier(chip::MutableByteSpan & verifierBuf, size_t & outVerifierLen) override
+    {
+        return mPreviousCommissionableDataProvider->GetSpake2pVerifier(verifierBuf, outVerifierLen);
+    }
+
+    CHIP_ERROR GetSetupPasscode(uint32_t & setupPasscode) override
+    {
+        setupPasscode = 20202021;
+        return CHIP_NO_ERROR;
+    }
+
+    CHIP_ERROR SetSetupPasscode(uint32_t setupPasscode) override
+    {
+        return CHIP_ERROR_NOT_IMPLEMENTED;
+    }
+
+    // =============== Other public interface methods =============
+    void InitCommissionableDataProvider()
+    {
+        if (mPreviousCommissionableDataProvider == nullptr)
+        {
+            mPreviousCommissionableDataProvider = chip::DeviceLayer::GetCommissionableDataProvider();
+            chip::DeviceLayer::SetCommissionableDataProvider(this);
+        }
+    }
+
+private:
+    chip::DeviceLayer::CommissionableDataProvider * mPreviousCommissionableDataProvider = nullptr;
+    uint16_t mDiscriminator = 2994;
 };
 
 } // namespace matter

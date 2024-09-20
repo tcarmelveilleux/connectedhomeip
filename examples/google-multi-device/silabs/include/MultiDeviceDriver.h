@@ -63,6 +63,7 @@ class GmdSilabsDriver
 
     bool IsSwitchButtonPressed(ButtonId button_id) const;
     bool IsProximityDetected() const;
+    bool IsAlternativeDiscriminator() const;
 
     void HandleDebounceTimer();
 

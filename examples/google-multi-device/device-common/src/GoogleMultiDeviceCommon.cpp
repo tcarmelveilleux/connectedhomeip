@@ -13,7 +13,9 @@
 #include "DefaultGenericSwitchStateMachineDriver.h"
 #include "GoogleMultiDeviceDishwasherOpstate.h"
 
+#include <app/server/Server.h>
 #include <app-common/zap-generated/cluster-enums.h>
+#include <include/platform/ConnectivityManager.h>
 #include <include/platform/DeviceInstanceInfoProvider.h>
 #include <lib/support/CodeUtils.h>
 #include <lib/core/CHIPError.h>
@@ -132,6 +134,17 @@ void GoogleMultiDeviceIntegration::InitializeProduct()
     chip::DeviceLayer::SetDeviceInstanceInfoProvider(&sDeviceInfoProvider);
     chip::Credentials::SetDeviceAttestationCredentialsProvider(&sAttestationProvider);
 
+    sDeviceInfoProvider.InitCommissionableDataProvider();
+    if (IsAlternativeDiscriminator())
+    {
+        sDeviceInfoProvider.SetSetupDiscriminator(681);
+        sAttestationProvider.SetUseSecondDac(true);
+    }
+    else
+    {
+        sDeviceInfoProvider.SetSetupDiscriminator(2994);
+        sAttestationProvider.SetUseSecondDac(false);
+    }
     // EP2: Generic switch setup (Action Switch features)
     {
         mGenericSwitchDriverEp2.SetEndpointId(2);
@@ -195,6 +208,13 @@ void GoogleMultiDeviceIntegration::InitializeProduct()
 
     mOpStateInstanceEp6->SetOperationalState(to_underlying(OperationalState::OperationalStateEnum::kStopped));
     mOpStateInstanceEp6->Init();
+
+    if (chip::Server::GetInstance().GetFabricTable().FabricCount() == 0)
+    {
+        chip::DeviceLayer::SystemLayer().ScheduleLambda([](){
+           chip::DeviceLayer::ConnectivityMgr().SetBLEAdvertisingMode(chip::DeviceLayer::ConnectivityManager::BLEAdvertisingMode::kFastAdvertising);
+        });
+    }
 }
 
 void GoogleMultiDeviceIntegration::HandleButtonPress(ButtonId buttonId)

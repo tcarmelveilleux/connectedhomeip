@@ -28,8 +28,8 @@
 #define GREEN_LED_OUT_PORT      gpioPortC
 #define GREEN_LED_OUT_PIN       8
 
-#define POT_IN_PORT             gpioPortB
-#define POT_IN_PIN              0
+#define DISCRIMINATOR_IN_PORT   gpioPortB
+#define DISCRIMINATOR_IN_PIN    0
 
 #define RED_BUTTON_IN_PORT      gpioPortC
 #define RED_BUTTON_IN_PIN       2
@@ -179,6 +179,8 @@ void GmdSilabsDriver::Init()
 
   GPIO_PinModeSet(PROX_IN_PORT, PROX_IN_PIN, gpioModeInputPullFilter, 1);
 
+  GPIO_PinModeSet(DISCRIMINATOR_IN_PORT, DISCRIMINATOR_IN_PIN, gpioModeInputPullFilter, 1);
+
   GPIO_PinModeSet(RED_LED_OUT_PORT, RED_LED_OUT_PIN, gpioModePushPull, 1);
   GPIO_PinModeSet(YELLOW_LED_OUT_PORT, YELLOW_LED_OUT_PIN, gpioModePushPull, 1);
   GPIO_PinModeSet(GREEN_LED_OUT_PORT, GREEN_LED_OUT_PIN, gpioModePushPull, 1);
@@ -293,6 +295,11 @@ void GmdSilabsDriver::SetDebugPin(bool high)
 void GmdSilabsDriver::EmitDebugCode(uint8_t code)
 {
     (void)code; //ManchesterOut(*this, &code, 1);
+}
+
+bool GmdSilabsDriver::IsAlternativeDiscriminator() const
+{
+    return GPIO_PinInGet(DISCRIMINATOR_IN_PORT, DISCRIMINATOR_IN_PIN) == 0;
 }
 
 } // namespace matter

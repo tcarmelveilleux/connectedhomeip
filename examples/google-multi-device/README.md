@@ -11,6 +11,10 @@
   - PA00: Latch 1
   - PB04: Latch 2
   - PB05: Latch 3
-  - PB00: 10k pot centertap, powered 3.3V
+  - PB00: Alternative discriminator/DAC select: floating/high: 2994, low: 681
   - PD04: Proximity sensor
   - PD05: Debug pin
+
+### Build command
+
+- `./scripts/examples/gn_silabs_example.sh ./examples/google-multi-device/silabs/ ./out/google-multi-device-efr BRD2703A sl_matter_version=3 sl_matter_version_str='"1.0.3"' chip_build_example_creds=false`

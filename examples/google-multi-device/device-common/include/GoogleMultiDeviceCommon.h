@@ -45,6 +45,7 @@ class GoogleMultiDeviceIntegration
     void SetDebugLed(bool enabled);
     void EmitDebugCode(uint8_t code);
     uint8_t GetEp4LatchInitialPosition();
+    bool IsAlternativeDiscriminator();
 
     static GoogleMultiDeviceIntegration & GetInstance()
     {

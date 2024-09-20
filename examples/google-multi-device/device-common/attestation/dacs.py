@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import typing
+import random
 from binascii import unhexlify
 from enum import Enum
 
@@ -138,7 +139,8 @@ class DevCertBuilder:
             type_flag = '-t i'
             vidpid_fallback_encoding_flag = ''
         elif self.cert_type == CertType.DAC:
-            subject_name = 'Matter Dev DAC 0x{:X}/0x{:X}'.format(self.vid, self.pid)
+            token = random.randint(0, 0xFFFFFFF)
+            subject_name = 'Matter Dev DAC 0x{:X}/0x{:X} {:d}'.format(self.vid, self.pid, token)
             pid_flag = '-P 0x{:X}'.format(self.pid)
             type_flag = '-t d'
             # For a subset of DACs with PIDs in a range [0x8010, 0x8014]
