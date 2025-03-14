@@ -59,7 +59,7 @@ public:
     /**
      * @brief Returns true if either a pending VVSC or vidVerificationStatement exists and is active.
      */
-    virtual bool HasPendingVidVerificationElements() const 
+    virtual bool HasPendingVidVerificationElements() const
     {
         // Default false to match the CHIP_ERROR_NOT_IMPLEMENTED for default versions in this base class.
         return false;
@@ -147,9 +147,10 @@ public:
      * @retval CHIP_ERROR_INVALID_FABRIC_INDEX if `fabricIndex` mismatches the one from a previous successful
      *                                         `AddNewTrustedRootCertForFabric`.
      * @retval CHIP_ERROR_INCORRECT_STATE if the certificate store is not properly initialized, if this method
-     *                                    is called after `UpdateOpCertsForFabric`, or if there was
-     *                                    already a pending or persisted operational cert chain for the given `fabricIndex`,
-     *                                    or if AddNewTrustedRootCertForFabric had not yet been called for the given `fabricIndex`.
+     *                                    is called after `UpdateOpCertsForFabric`, if there was
+     *                                    already a pending or persisted operational cert chain for the given `fabricIndex`, or
+     *                                    if AddNewTrustedRootCertForFabric had not yet been called for the given `fabricIndex`.
+     *
      * @retval other CHIP_ERROR value on internal errors
      */
     virtual CHIP_ERROR AddNewOpCertsForFabric(FabricIndex fabricIndex, const ByteSpan & noc, const ByteSpan & icac) = 0;
@@ -185,9 +186,10 @@ public:
      * @retval CHIP_ERROR_NO_MEMORY if there is insufficient memory to maintain the temporary `noc` and `icac` cert copies
      * @retval CHIP_ERROR_INVALID_ARGUMENT if either the noc or icac are invalid sizes
      * @retval CHIP_ERROR_INCORRECT_STATE if the certificate store is not properly initialized, if this method
-     *                                    is called after `AddNewOpCertsForFabric`, or if there was
-     *                                    already a pending cert chain for the given `fabricIndex`, or if there are
-     *                                    no associated persisted root and NOC chain for the given `fabricIndex`.
+     *                                    is called after `AddNewOpCertsForFabric`, if there was
+     *                                    already a pending cert chain for the given `fabricIndex`, if there are
+     *                                    no associated persisted root and NOC chain for the given `fabricIndex`,
+     *                                    or if a VVSC is present and `icac` is not empty.
      * @retval other CHIP_ERROR value on internal errors
      */
     virtual CHIP_ERROR UpdateOpCertsForFabric(FabricIndex fabricIndex, const ByteSpan & noc, const ByteSpan & icac) = 0;
@@ -218,14 +220,12 @@ public:
      *
      * @param fabricIndex - FabricIndex for which to commit the the data.
      *
-     * @retval CHIP_NO_ERROR on success
-     * @retval CHIP_ERROR_INCORRECT_STATE if the certificate store is not properly initialized,
-     *                                    or if no valid pending state is available.
+     * @retval CHIP_NO_ERROR on success or if nothing is pending to commit.
+     * @retval CHIP_ERROR_INCORRECT_STATE if the certificate store is not properly initialized.
      * @retval CHIP_ERROR_NOT_IMPLEMENTED if this method is not implemented (e.g. for simple controller-only cases).
      * @retval other CHIP_ERROR value on internal storage errors
      */
-
-    virtual CHIP_ERROR CommitVidVerificationForFabric(FabricIndex fabricIndex) 
+    virtual CHIP_ERROR CommitVidVerificationForFabric(FabricIndex fabricIndex)
     {
         return CHIP_ERROR_NOT_IMPLEMENTED;
     }
@@ -235,7 +235,7 @@ public:
      *
      * This is to be used for RemoveFabric. Removes both the pending operational cert chain
      * elements for the fabricIndex (if any) and the committed ones (if any).
-     * 
+     *
      * This must also remove any VID Verification statement elements, if they exist, since
      * those are associated with the opcerts.
      *
@@ -262,7 +262,7 @@ public:
     virtual void RevertPendingOpCerts() = 0;
 
     /**
-     * @brief Permanently release VID Verification Statement and/or VVSC, if pending, and 
+     * @brief Permanently release VID Verification Statement and/or VVSC, if pending, and
      *        revert to prior data.
      *
      * This is to be used when a fail-safe expires prior to CommissioningComplete.
