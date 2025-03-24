@@ -2180,4 +2180,10 @@ CHIP_ERROR FabricTable::SetShouldAdvertiseIdentity(FabricIndex fabricIndex, Adve
     return CHIP_NO_ERROR;
 }
 
+
+CHIP_ERROR FabricTable::SignVIDVerificationRequest(FabricIndex fabricIndex, const ByteSpan & clientChallenge, const ByteSpan & attestationChallenge, SignVIDVerificationResponseData &outResponse);
+{
+
+}
+
 } // namespace chip
