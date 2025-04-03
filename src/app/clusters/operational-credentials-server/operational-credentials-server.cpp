@@ -403,6 +403,13 @@ void MatterOperationalCredentialsPluginServerInitCallback()
     DeviceLayer::PlatformMgrImpl().AddEventHandler(OnPlatformEventHandler);
 }
 
+void MatterOperationalCredentialsPluginServerShutdownCallback()
+{
+    DeviceLayer::PlatformMgrImpl().RemoveEventHandler(OnPlatformEventHandler);
+    Server::GetInstance().GetFabricTable().RemoveFabricDelegate(&gFabricDelegate);
+    AttributeAccessInterfaceRegistry::Instance().Unregister(&gAttrAccess);
+}
+
 bool emberAfOperationalCredentialsClusterRemoveFabricCallback(app::CommandHandler * commandObj,
                                                               const app::ConcreteCommandPath & commandPath,
                                                               const Commands::RemoveFabric::DecodableType & commandData)
@@ -1197,19 +1204,19 @@ exit:
 }
 
 bool emberAfOperationalCredentialsClusterSetVIDVerificationStatementCallback(
-  app::CommandHandler * commandObj, const app::ConcreteCommandPath & commandPath,
-  const Commands::SetVIDVerificationStatement::DecodableType & commandData)
+    app::CommandHandler * commandObj, const app::ConcreteCommandPath & commandPath,
+    const Commands::SetVIDVerificationStatement::DecodableType & commandData)
 {
-    (void)commandData;
+    (void) commandData;
     commandObj->AddStatus(commandPath, Status::UnsupportedCommand);
     return true;
 }
 
 bool emberAfOperationalCredentialsClusterSignVIDVerificationRequestCallback(
-  app::CommandHandler * commandObj, const app::ConcreteCommandPath & commandPath,
-  const Commands::SignVIDVerificationRequest::DecodableType & commandData)
+    app::CommandHandler * commandObj, const app::ConcreteCommandPath & commandPath,
+    const Commands::SignVIDVerificationRequest::DecodableType & commandData)
 {
-    (void)commandData;
+    (void) commandData;
     commandObj->AddStatus(commandPath, Status::UnsupportedCommand);
     return true;
 }
