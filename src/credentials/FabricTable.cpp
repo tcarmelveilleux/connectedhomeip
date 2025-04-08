@@ -2183,6 +2183,25 @@ CHIP_ERROR FabricTable::SetShouldAdvertiseIdentity(FabricIndex fabricIndex, Adve
 
 CHIP_ERROR FabricTable::SignVIDVerificationRequest(FabricIndex fabricIndex, const ByteSpan & clientChallenge, const ByteSpan & attestationChallenge, SignVIDVerificationResponseData &outResponse)
 {
+    FabricInfo* fabricInfo = GetMutableFabricByIndex(FabricIndex fabricIndex);
+    VerifyOrReturnError(fabricInfo != nullptr, CHIP_ERROR_INVALID_ARGUMENT);
+
+    P256PublicKey rootPubKey;
+    ReturnErrorOnFailure(fabricInfo->FetchRootPubkey(rootPublicKey));
+
+    // Step 1: Generate FabricBindingMessage for given fabric.
+    uint8_t fabricBindingMessageBuffer[kVendorFabricBindingMessageV1MaxSize];
+    MutableByteSpan fabricBindingMessageSpan{fabricBindingMessageBuffer};
+
+    ReturnErrorOnFailure(GenerateVendorFabricBindingMessage(kFabricBindingVersionV1, rootPublicKey, fabricInfo->GetFabricId(),
+      reinterpret_cast<uint16_t>(fabricInfo->GetVendorId()), fabricBindingMessageSpan));
+
+    // Step 2: Recover VIDVerificationStatement, if any.
+    // TODO(#)
+
+
+    // Step 3: Generate VidVerificationToBeSigned
+
     return CHIP_ERROR_NOT_IMPLEMENTED;
 }
 
