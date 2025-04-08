@@ -1216,7 +1216,54 @@ bool emberAfOperationalCredentialsClusterSignVIDVerificationRequestCallback(
     app::CommandHandler * commandObj, const app::ConcreteCommandPath & commandPath,
     const Commands::SignVIDVerificationRequest::DecodableType & commandData)
 {
-    (void) commandData;
-    commandObj->AddStatus(commandPath, Status::UnsupportedCommand);
-    return true;
+  ChipLogProgress(Zcl, "OpCreds: Received a SignVIDVerificationRequest Command for FabricIndex 0x%x",
+                  static_cast<unsigned>(commandData.fabricIndex));
+
+  if (!IsValidFabricIndex(commandData.fabricIndex) || (commandData.clientChallenge.size() != kVendorIdVerificationClientChallengeSize))
+  {
+      commandObj->AddStatus(commandPath, Status::ConstraintError);
+      return true;
+  }
+
+  commandObj->FlushAcksRightAwayOnSlowCommand();
+
+  CHIP_ERROR err = DeleteFabricFromTable(fabricBeingRemoved);
+  SuccessOrExit(err);
+
+  // Notification was already done by FabricTable delegate
+
+exit:
+  // Not using ConvertToNOCResponseStatus here because it's pretty
+  // AddNOC/UpdateNOC specific.
+  if (err == CHIP_ERROR_NOT_FOUND)
+  {
+      ChipLogError(Zcl, "OpCreds: Failed RemoveFabric due to FabricIndex not found locally");
+      SendNOCResponse(commandObj, commandPath, NodeOperationalCertStatusEnum::kInvalidFabricIndex, fabricBeingRemoved,
+                      CharSpan());
+  }
+  else if (err != CHIP_NO_ERROR)
+  {
+      // We have no idea what happened; just report failure.
+      ChipLogError(Zcl, "OpCreds: Failed RemoveFabric due to internal error (err = %" CHIP_ERROR_FORMAT ")", err.Format());
+      StatusIB status(err);
+      commandObj->AddStatus(commandPath, status.mStatus);
+  }
+  else
+  {
+      ChipLogProgress(Zcl, "OpCreds: RemoveFabric successful");
+      SendNOCResponse(commandObj, commandPath, NodeOperationalCertStatusEnum::kOk, fabricBeingRemoved, CharSpan());
+
+      chip::Messaging::ExchangeContext * ec = commandObj->GetExchangeContext();
+      FabricIndex currentFabricIndex        = commandObj->GetAccessingFabricIndex();
+      if (currentFabricIndex == fabricBeingRemoved)
+      {
+          ec->AbortAllOtherCommunicationOnFabric();
+      }
+      else
+      {
+          SessionManager * sessionManager = ec->GetExchangeMgr()->GetSessionManager();
+          CleanupSessionsForFabric(*sessionManager, fabricBeingRemoved);
+      }
+  }
+  return true;
 }
