@@ -320,6 +320,18 @@ void OnPlatformEventHandler(const chip::DeviceLayer::ChipDeviceEvent * event, in
     }
 }
 
+// Get the attestation challenge for the current session in progress. Only valid when called
+// synchronously from inside a CommandHandler.
+// TODO: Create an alternative way to retrieve the Attestation Challenge without this huge amount of calls.
+ByteSpan GetAttestationChallengeFromCurrentSession(app::CommandHandler * commandObj)
+{
+    VerifyOrDie((commandObj != nullptr) && (commandObj->GetExchangeContext() != nullptr));
+
+    ByteSpan attestationChallenge =
+        commandObj->GetExchangeContext()->GetSessionHandle()->AsSecureSession()->GetCryptoContext().GetAttestationChallenge();
+    return attestationChallenge;
+}
+
 } // anonymous namespace
 
 class OpCredsFabricTableDelegate : public chip::FabricTable::Delegate
@@ -932,10 +944,7 @@ bool emberAfOperationalCredentialsClusterAttestationRequestCallback(app::Command
                                                               // See DeviceAttestationCredsExample
     MutableByteSpan certDeclSpan(certDeclBuf);
 
-    // TODO: Create an alternative way to retrieve the Attestation Challenge without this huge amount of calls.
-    // Retrieve attestation challenge
-    ByteSpan attestationChallenge =
-        commandObj->GetExchangeContext()->GetSessionHandle()->AsSecureSession()->GetCryptoContext().GetAttestationChallenge();
+    ByteSpan attestationChallenge = GetAttestationChallengeFromCurrentSession(commandObj);
 
     // TODO: in future versions, retrieve vendor information to populate the fields below.
     uint32_t timestamp = 0;
@@ -1032,10 +1041,7 @@ bool emberAfOperationalCredentialsClusterCSRRequestCallback(app::CommandHandler 
     auto & CSRNonce     = commandData.CSRNonce;
     bool isForUpdateNoc = commandData.isForUpdateNOC.ValueOr(false);
 
-    // TODO: Create an alternative way to retrieve the Attestation Challenge without this huge amount of calls.
-    // Retrieve attestation challenge
-    ByteSpan attestationChallenge =
-        commandObj->GetExchangeContext()->GetSessionHandle()->AsSecureSession()->GetCryptoContext().GetAttestationChallenge();
+    ByteSpan attestationChallenge = GetAttestationChallengeFromCurrentSession(commandObj);
 
     failSafeContext.SetCsrRequestForUpdateNoc(isForUpdateNoc);
     const FabricInfo * fabricInfo = RetrieveCurrentFabric(commandObj);
@@ -1216,54 +1222,41 @@ bool emberAfOperationalCredentialsClusterSignVIDVerificationRequestCallback(
     app::CommandHandler * commandObj, const app::ConcreteCommandPath & commandPath,
     const Commands::SignVIDVerificationRequest::DecodableType & commandData)
 {
-  ChipLogProgress(Zcl, "OpCreds: Received a SignVIDVerificationRequest Command for FabricIndex 0x%x",
-                  static_cast<unsigned>(commandData.fabricIndex));
+    ChipLogProgress(Zcl, "OpCreds: Received a SignVIDVerificationRequest Command for FabricIndex 0x%x",
+                    static_cast<unsigned>(commandData.fabricIndex));
 
-  if (!IsValidFabricIndex(commandData.fabricIndex) || (commandData.clientChallenge.size() != kVendorIdVerificationClientChallengeSize))
-  {
-      commandObj->AddStatus(commandPath, Status::ConstraintError);
-      return true;
-  }
+    if (!IsValidFabricIndex(commandData.fabricIndex) || (commandData.clientChallenge.size() != kVendorIdVerificationClientChallengeSize))
+    {
+        commandObj->AddStatus(commandPath, Status::ConstraintError);
+        return true;
+    }
 
-  commandObj->FlushAcksRightAwayOnSlowCommand();
+    commandObj->FlushAcksRightAwayOnSlowCommand();
 
-  CHIP_ERROR err = DeleteFabricFromTable(fabricBeingRemoved);
-  SuccessOrExit(err);
+    auto & fabricTable = Server::GetInstance().GetFabricTable();
+    FabricTable::SignVIDVerificationResponseData responseData;
+    ByteSpan attestationChallenge = GetAttestationChallengeFromCurrentSession(commandObj);
 
-  // Notification was already done by FabricTable delegate
+    CHIP_ERROR err = fabricTable.SignVIDVerificationRequest(commandData.fabricIndex, commandData.clientChallenge, attestationChallenge, responseData);
+    if (err == CHIP_ERROR_INVALID_ARGUMENT)
+    {
+        commandObj->AddStatus(commandPath, Status::ConstraintError);
+        return true;
+    }
 
-exit:
-  // Not using ConvertToNOCResponseStatus here because it's pretty
-  // AddNOC/UpdateNOC specific.
-  if (err == CHIP_ERROR_NOT_FOUND)
-  {
-      ChipLogError(Zcl, "OpCreds: Failed RemoveFabric due to FabricIndex not found locally");
-      SendNOCResponse(commandObj, commandPath, NodeOperationalCertStatusEnum::kInvalidFabricIndex, fabricBeingRemoved,
-                      CharSpan());
-  }
-  else if (err != CHIP_NO_ERROR)
-  {
-      // We have no idea what happened; just report failure.
-      ChipLogError(Zcl, "OpCreds: Failed RemoveFabric due to internal error (err = %" CHIP_ERROR_FORMAT ")", err.Format());
-      StatusIB status(err);
-      commandObj->AddStatus(commandPath, status.mStatus);
-  }
-  else
-  {
-      ChipLogProgress(Zcl, "OpCreds: RemoveFabric successful");
-      SendNOCResponse(commandObj, commandPath, NodeOperationalCertStatusEnum::kOk, fabricBeingRemoved, CharSpan());
+    if (err != CHIP_NO_ERROR)
+    {
+        // We have no idea what happened; just report failure.
+        StatusIB status(err);
+        commandObj->AddStatus(commandPath, status.mStatus);
+        return true;
+    }
 
-      chip::Messaging::ExchangeContext * ec = commandObj->GetExchangeContext();
-      FabricIndex currentFabricIndex        = commandObj->GetAccessingFabricIndex();
-      if (currentFabricIndex == fabricBeingRemoved)
-      {
-          ec->AbortAllOtherCommunicationOnFabric();
-      }
-      else
-      {
-          SessionManager * sessionManager = ec->GetExchangeMgr()->GetSessionManager();
-          CleanupSessionsForFabric(*sessionManager, fabricBeingRemoved);
-      }
-  }
-  return true;
+    Commands::SignVIDVerificationResponse::Type response;
+    response.fabricIndex = responseData.fabricIndex;
+    response.fabricBindingVersion = responseData.fabricBindingVersion;
+    response.signature = responseData.signature.Span();
+    commandObj->AddResponse(commandPath, response);
+
+    return true;
 }
