@@ -123,29 +123,35 @@ CHIP_ERROR OperationalCredentialsAttrAccess::ReadNOCs(EndpointId endpoint, Attri
         const auto & fabricTable = Server::GetInstance().GetFabricTable();
         for (const auto & fabricInfo : fabricTable)
         {
-            Clusters::OperationalCredentials::Structs::NOCStruct::Type noc;
+            Clusters::OperationalCredentials::Structs::NOCStruct::Type nocStruct;
             uint8_t nocBuf[kMaxCHIPCertLength];
-            uint8_t icacBuf[kMaxCHIPCertLength];
+            uint8_t icacOrVvscBuf[kMaxCHIPCertLength];
             MutableByteSpan nocSpan{ nocBuf };
-            MutableByteSpan icacSpan{ icacBuf };
+            MutableByteSpan icacOrVvscSpan{ icacOrVvscBuf };
             FabricIndex fabricIndex = fabricInfo.GetFabricIndex();
 
-            noc.fabricIndex = fabricIndex;
+            nocStruct.fabricIndex = fabricIndex;
 
-            if (accessingFabricIndex == fabricIndex)
+            ReturnErrorOnFailure(fabricTable.FetchNOCCert(fabricIndex, nocSpan));
+            nocStruct.noc = nocSpan;
+
+            // ICAC and VVSC are mutually exclusive. ICAC is nullable, VVSC is optional.
+            ReturnErrorOnFailure(fabricTable.FetchICACert(fabricIndex, icacOrVvscSpan));
+            if (!icacOrVvscSpan.empty())
             {
-
-                ReturnErrorOnFailure(fabricTable.FetchNOCCert(fabricIndex, nocSpan));
-                ReturnErrorOnFailure(fabricTable.FetchICACert(fabricIndex, icacSpan));
-
-                noc.noc = nocSpan;
-                if (!icacSpan.empty())
+                nocStruct.icac.SetNonNull(icacOrVvscSpan);
+            }
+            else
+            {
+                icacOrVvscSpan = MutableByteSpan{icacOrVvscBuf};
+                ReturnErrorOnFailure(fabricTable.FetchVVSC(fabricIndex, icacOrVvscSpan));
+                if (!icacOrVvscSpan.empty())
                 {
-                    noc.icac.SetNonNull(icacSpan);
+                    nocStruct.vvsc = MakeOptional(icacOrVvscSpan);
                 }
             }
 
-            ReturnErrorOnFailure(encoder.Encode(noc));
+            ReturnErrorOnFailure(encoder.Encode(nocStruct));
         }
 
         return CHIP_NO_ERROR;
@@ -184,6 +190,14 @@ CHIP_ERROR OperationalCredentialsAttrAccess::ReadFabricsList(EndpointId endpoint
             Crypto::P256PublicKey pubKey;
             ReturnErrorOnFailure(fabricTable.FetchRootPubkey(fabricIndex, pubKey));
             fabricDescriptor.rootPublicKey = ByteSpan{ pubKey.ConstBytes(), pubKey.Length() };
+
+            uint8_t vidVerificationStatement[Crypto::kVendorIdVerificationStatementV1Size];
+            MutableByteSpan vidVerificationStatementSpan{vidVerificationStatement};
+            ReturnErrorOnFailure(fabricTable.FetchVIDVerificationStatement(fabricIndex, vidVerificationStatementSpan));
+            if (!vidVerificationStatementSpan.empty())
+            {
+                fabricDescriptor.VIDVerificationStatement = MakeOptional(vidVerificationStatementSpan);
+            }
 
             ReturnErrorOnFailure(encoder.Encode(fabricDescriptor));
         }
