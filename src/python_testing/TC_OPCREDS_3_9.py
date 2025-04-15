@@ -37,12 +37,16 @@
 
 import chip.clusters as Clusters
 from chip.testing.matter_testing import MatterBaseTest, TestStep, async_test_body, default_matter_test_main
+from chip.interaction_model import InteractionModelError, Status
 from chip.tlv import TLVReader
 from chip.utils import CommissioningBuildingBlocks
+import enum
+import hashlib
+from binascii import unhexlify
+from ecdsa import NIST256p, VerifyingKey
+from ecdsa.keys import BadSignatureError
+from typing import Optional
 from mobly import asserts
-from test_plan_support import (commission_from_existing, commission_if_required, read_attribute, remove_fabric,
-                               verify_commissioning_successful, verify_success)
-import dataclasses
 import logging
 
 
@@ -62,67 +66,93 @@ class MatterCertParser:
         return public_key_bytes
 
 
+# From Matter spec src/crypto_primitives/crypto_primitives.py
+class MappingsV1(enum.IntEnum):
+  CHIP_CRYPTO_HASH_LEN_BITS = 256
+  CHIP_CRYPTO_HASH_LEN_BYTES = 32
+  CHIP_CRYPTO_HASH_BLOCK_LEN_BYTES = 64
+  CHIP_CRYPTO_GROUP_SIZE_BITS = 256
+  CHIP_CRYPTO_GROUP_SIZE_BYTES = 32
+  CHIP_CRYPTO_PUBLIC_KEY_SIZE_BYTES = (2 * CHIP_CRYPTO_GROUP_SIZE_BYTES) + 1
+  CHIP_CRYPTO_SYMMETRIC_KEY_LENGTH_BITS = 128
+  CHIP_CRYPTO_SYMMETRIC_KEY_LENGTH_BYTES = 16
+  CHIP_CRYPTO_AEAD_MIC_LENGTH_BITS = 128
+  CHIP_CRYPTO_AEAD_MIC_LENGTH_BYTES = 16
+  CHIP_CRYPTO_AEAD_NONCE_LENGTH_BYTES = 13
+
+
+# From Matter spec src/crypto_primitives/crypto_primitives.py
+def bytes_from_hex(hex: str) -> bytes:
+  """Converts any `hex` string representation including `01:ab:cd` to bytes
+
+  Handles any whitespace including newlines, which are all stripped.
+  """
+  return unhexlify("".join(hex.replace(":","").split()))
+
+
+# From Matter spec src/crypto_primitives/vid_verify_payload_test_vector.py
+# ECDSA-with-SHA256 using NIST P-256
+FABRIC_BINDING_VERSION_1 = 0x01
+STATEMENT_VERSION_1 = 0x21
+SIGNATURE_SIZE = (2 * MappingsV1.CHIP_CRYPTO_GROUP_SIZE_BYTES)
+SKID_SIZE = 20
+VID_VERIFICATION_CLIENT_CHALLENGE_SIZE_BYTES = 32
+ATTESTATION_CHALLENGE_SIZE_BYTES = MappingsV1.CHIP_CRYPTO_SYMMETRIC_KEY_LENGTH_BYTES
+
+
+def verify_signature(public_key: bytes, message: bytes, signature: bytes) -> bool:
+  """Verify a `signature` on the given `message` using `public_key`. Returns True on success."""
+
+  verifying_key: VerifyingKey = VerifyingKey.from_string(public_key, curve=NIST256p)
+  assert verifying_key.curve == NIST256p
+
+  try:
+    return verifying_key.verify(signature, message, hashfunc=hashlib.sha256)
+  except BadSignatureError:
+    return False
+
+
+# From Matter spec src/crypto_primitives/vid_verify_payload_test_vector.py
+def generate_vendor_fabric_binding_message(
+      root_public_key_bytes: bytes,
+      fabric_id: int,
+      vendor_id: int) -> bytes:
+
+  assert len(root_public_key_bytes) == MappingsV1.CHIP_CRYPTO_PUBLIC_KEY_SIZE_BYTES
+  assert fabric_id > 0 and fabric_id <= 0xFFFF_FFFF_FFFF_FFFF
+  assert vendor_id > 0 and vendor_id <= 0xFFF4
+
+  fabric_id_bytes = fabric_id.to_bytes(length=8, byteorder='big')
+  vendor_id_bytes = vendor_id.to_bytes(length=2, byteorder='big')
+  vendor_fabric_binding_message = FABRIC_BINDING_VERSION_1.to_bytes(length=1) + root_public_key_bytes + fabric_id_bytes + vendor_id_bytes
+  return vendor_fabric_binding_message
+
+# From Matter spec src/crypto_primitives/vid_verify_payload_test_vector.py
+
+def generate_vendor_id_verification_tbs(fabric_binding_version: int,
+                                        attestation_challenge: bytes,
+                                        client_challenge: bytes,
+                                        fabric_index: int,
+                                        vendor_fabric_binding_message: bytes,
+                                        vid_verification_statement: Optional[bytes]=None) -> bytes:
+  assert len(attestation_challenge) == ATTESTATION_CHALLENGE_SIZE_BYTES
+  assert len(client_challenge) == VID_VERIFICATION_CLIENT_CHALLENGE_SIZE_BYTES
+  assert fabric_index > 0 and fabric_index < 255
+  assert vendor_fabric_binding_message
+  assert fabric_binding_version == FABRIC_BINDING_VERSION_1
+
+  vendor_id_verification_tbs = fabric_binding_version.to_bytes(length=1)
+  vendor_id_verification_tbs += client_challenge + attestation_challenge + fabric_index.to_bytes(length=1)
+  vendor_id_verification_tbs += vendor_fabric_binding_message
+  if vid_verification_statement is not None:
+    vendor_id_verification_tbs += vid_verification_statement
+
+  return vendor_id_verification_tbs
+
+
 class TC_OPCREDS_3_9(MatterBaseTest):
     def desc_TC_OPCREDS_3_9(self):
-        return " [DUTServer]"
-
-    def steps_TC_OPCREDS_3_9(self):
-        """
-        Sketch steps:
-
-        * `NOCs` attribute is readable for all fabrics, even a different one (i.e. check that NOCStruct no longer has fabric-sensitive fields)
-        * If there the VVSC attribute in `NOC` struct is present for a fabric, the certificate format must conform to the requirements as specified in the spec
-        ** If a VVSC does not conform to the specification, the VID cannot be verified for the corresponding fabric
-        * If there is a `VidVerificationStatement` attribute present in the `FabricDescriptorStruct` for a fabric, the format must conform to the requirements as specified in the spec
-        ** If the `VidVerificationStatement` does not conform to the specification, the VID cannot be verified for the corresponding fabric
-        ** If a VVSC cannot be found corresponding to the `vid_verification_signer_skid` in the `VidVerificationStatement`, the fabric cannot be verified
-        * If a Fabric Administrator uses non-global roots for issuing NOCs and desires to have their VID verified by other clients:
-        ** Set the `VidVerificationStatement` for their respective fabric using `SetVidVerificationStatement` command
-        ** If the Fabric Administrator uses VVSC per fabric, set the VVSC attribute in the `NOCStruct` using the `SetVidVerificationStatement` command
-        * When a `verifier` client wishes to validate a `candidate` fabric VID, it needs to read the following attributes for the `candidate` fabric:
-        ** Read the `NOCs` attribute of the Operational Credentials Cluster using a non-fabric-filtered read
-        ** Read the `Fabrics` attribute of the Operational Credentials Cluster using a non-fabric-filtered read
-        ** Read the `TrustedRootCertificates` attribute of the Operational Credentials Cluster using a non-fabric-filtered read
-        ** Select a `candidate` fabric listed in the `Fabrics` attribute whose the `VendorID` field is to be verified
-        ** Validate the `VendorID` for 3 different uses-cases:
-        *** Candidate Fabric has no VidVerificationStatement installed:
-        **** Generate the payload for `SignVidVerificationRequest` as per spec and send to server against the candidate using the `fabric_index` of the entry in `Fabrics` whose `VendorID` is being verified
-        **** Validate signature received as part of `SignVidVerificationResponse` as per the spec
-        **** Obtain the RCAC for the `candidate` fabric corresponding to the `Subject Key ID` for that fabric in the `TrustedRootCertificates`
-        **** Verify that the NOC chain validates against the entire chain obtained using the `Subject Key ID`
-        ***** The `VendorID` is deemed verified only if the chain validates successfully
-        *** Candidate Fabric has VidVerificationStatement installed, but no VVSC:
-        **** Generate the payload for `SignVidVerificationRequest` as per spec and send to server against the candidate using the `fabric_index` of the entry in `Fabrics` whose `VendorID` is being verified
-        **** Validate signature received as part of `SignVidVerificationResponse` as per the spec
-        **** Obtain the VVSC matching the `vid_verification_signer_skid` for the `candidate` `VendorID`
-        **** Validate the path of the VVSC include any intermediates to the root of the VVSC as per requirements written in the spec
-        **** Verify the signature of `VidVerificationStatement` using the VVSC as per the spec.
-        ***** The `VendorID` is deemed verified only if the signature of `VidVerificationStatement` validates successfully
-        ** Fabric has VidVerificationStatement installed, with a VVSC:
-        **** Generate the payload for `SignVidVerificationRequest` as per spec and send to server against the candidate using the `fabric_index` of the entry in `Fabrics` whose `VendorID` is being verified
-        **** Validate signature received as part of `SignVidVerificationResponse` as per the spec
-        **** Obtain the VVSC from the `NOCStruct` attribute entry associated with the `fabric_index` field of the `candidate` fabric
-        **** Obtain the intermediates and root corresponding to the VVSC matching the `vid_verification_signer_skid` for the `candidate` `VendorID`
-        **** Validate the path of the VVSC include any intermediates to the root of the VVSC as per requirements written in the spec
-        **** Verify the signature of `VidVerificationStatement` using the VVSC as per the spec.
-        ***** The `VendorID` is deemed verified only if the signature of `VidVerificationStatement` validates successfully
-        """
-        def verify_SignVIDVerificationResponseSuccess(controller: str) -> str:
-            XXXXXXXXXXXXXXXXXXXXXXXxx
-            return (f"- Verify there is one entry returned. Verify FabricIndex matches `fabric_index_{controller}`.\n"
-                    f"- Verify the RootPublicKey matches the public key for rcac_{controller}.\n"
-                    f"- Verify the VendorID matches the vendor ID for {controller}.\n"
-                    f"- Verify the FabricID matches the fabricID for {controller}")
-
-
-
-        return [TestStep(0, commission_if_required('CR1'), is_commissioning=True),
-                TestStep(1, f"{commission_from_existing('CR1', 'CR2')}\n. - Save the FabricIndex from the NOCResponse as `fabric_index_CR2`.\n -Save the RCAC's subject public key as root_public_key_CR2."),
-                TestStep(2, f"CR1 {read_attribute('NOCs')}",
-                         "Verify that the NOCs associated with CR1 and CR2 have the right fabric ID"),
-                TestStep(3, f"CR1 sends SignVIDVerificationRequest for fabric index of CR2.", verify_SignVIDVerificationResponseSuccess),
-                TestStep(3, remove_fabric('fabric_index_CR2', 'CR1'), verify_success())
-        ]
+        return "[DUTServer] Pre-release TC-OPCREDS-3.9 test case."
 
     @async_test_body
     async def test_TC_OPCREDS_3_9(self):
@@ -130,8 +160,9 @@ class TC_OPCREDS_3_9(MatterBaseTest):
         # it functionally validates the VID Verification parts of Operational Credentials Cluster
 
         opcreds = Clusters.OperationalCredentials
+        dev_ctrl = self.default_controller
 
-        self.step(0)
+        self.print_step(0, "Commission DUT in TH1's fabric.")
 
         # Read fabric index for CR1 after commissioning it.
         cr1_fabric_index = await self.read_single_attribute_check_success(
@@ -141,15 +172,25 @@ class TC_OPCREDS_3_9(MatterBaseTest):
             attribute=opcreds.Attributes.CurrentFabricIndex
         )
 
-        self.step(1)
-        dev_ctrl = self.default_controller
+        root_certs = await self.read_single_attribute_check_success(
+            dev_ctrl=self.default_controller,
+            node_id=self.dut_node_id,
+            cluster=opcreds,
+            attribute=opcreds.Attributes.TrustedRootCertificates,
+            fabric_filtered=True
+        )
+        asserts.assert_true(len(root_certs) == 1, "Could not read TH1's root cert from TrustedRootCertificates")
+        th1_root_parser = MatterCertParser(root_certs[0])
+        cr1_root_public_key = th1_root_parser.get_public_key_bytes()
+
+        self.print_step(1, "Commission DUT in TH2's fabric.")
 
         new_certificate_authority = self.certificate_authority_manager.NewCertificateAuthority()
         cr2_vid = 0xFFF2
         cr2_fabricId = 2222
         cr2_new_fabric_admin = new_certificate_authority.NewFabricAdmin(
             vendorId=cr2_vid, fabricId=cr2_fabricId)
-        cr2_nodeid = self.default_controller.nodeId + 1
+        cr2_nodeid = dev_ctrl.nodeId + 1
         cr2_dut_node_id = self.dut_node_id + 1
 
         cr2_new_admin_ctrl = cr2_new_fabric_admin.NewController(
@@ -166,6 +207,18 @@ class TC_OPCREDS_3_9(MatterBaseTest):
         cr2_rcac = MatterCertParser(rcacResp)
         cr2_root_public_key = cr2_rcac.get_public_key_bytes()
 
+        # Read NOCs and validate that both the entry for CR1 and CR2 are readable
+        # and have the right expected fabricId
+        self.print_step(2, "Read DUT's NOCs attribute and validate both fabrics have expected values extractable from their NOC.")
+        nocs_list = await self.read_single_attribute_check_success(
+            cluster=opcreds,
+            attribute=opcreds.Attributes.NOCs,
+            fabric_filtered=False
+        )
+
+        fabric_ids_from_certs = {}
+        noc_public_keys_from_certs = {}
+
         fabric_indices = {
             "CR1": cr1_fabric_index,
             "CR2": cr2_fabric_index
@@ -176,16 +229,6 @@ class TC_OPCREDS_3_9(MatterBaseTest):
             "CR2": cr2_fabricId
         }
 
-        # Read NOCs and validate that both the entry for CR1 and CR2 are readable
-        # and have the right expected fabricId
-        self.step(2)
-        nocs_list = await self.read_single_attribute_check_success(
-            cluster=opcreds,
-            attribute=opcreds.Attributes.NOCs,
-            fabric_filtered=False
-        )
-
-        fabric_ids_from_certs = {}
         for controller_name, fabric_index in fabric_indices.items():
             for noc_struct in nocs_list:
                 if noc_struct.fabricIndex != fabric_index:
@@ -195,6 +238,7 @@ class TC_OPCREDS_3_9(MatterBaseTest):
                 for tag, value in noc_cert.get_subject_names().items():
                     if tag == noc_cert.SUBJECT_FABRIC_ID_TAG:
                         fabric_ids_from_certs[controller_name] = value
+                noc_public_keys_from_certs[controller_name] = noc_cert.get_public_key_bytes()
 
         logging.info(f"Fabric IDs found: {fabric_ids_from_certs}")
 
@@ -202,7 +246,50 @@ class TC_OPCREDS_3_9(MatterBaseTest):
             asserts.assert_in(controller_name, fabric_ids_from_certs.keys(), f"Did not find {controller_name}'s fabric the NOCs attribute")
             asserts.assert_equal(fabric_ids_from_certs[controller_name], fabric_id, f"Did not find {controller_name}'s fabric ID in the correct NOC")
 
-        self.step(3)
+        self.print_step(3, "Read DUT's Fabrics attribute and validate both fabrics have expected values.")
+
+        fabric_roots = {
+            "CR1": cr1_root_public_key,
+            "CR2": cr2_root_public_key
+        }
+
+        fabric_vendor_ids = {
+            "CR1": 0xfff1,
+            "CR2": cr2_vid
+        }
+
+        fabrics_list = await self.read_single_attribute_check_success(
+            cluster=opcreds,
+            attribute=opcreds.Attributes.Fabrics,
+            fabric_filtered=False
+        )
+
+        for controller_name, fabric_index in fabric_indices.items():
+            for fabric_struct in fabrics_list:
+                if fabric_struct.fabricIndex != fabric_index:
+                    continue
+
+                asserts.assert_equal(fabric_struct.rootPublicKey, fabric_roots[controller_name], f"Did not find matching root public key in Fabrics attribute for {controller_name}")
+                asserts.assert_equal(fabric_struct.vendorID, fabric_vendor_ids[controller_name], f"Did not find matching VendorID in Fabrics attribute for {controller_name}")
+                asserts.assert_equal(fabric_struct.fabricID, fabric_ids[controller_name], f"Did not find matching FabricID in Fabrics attribute for {controller_name}")
+
+        self.print_step(4, "TH1 sends SignVIDVerificationRequest for TH2's fabric. Verify the response and signature.")
+
+        client_challenge = bytes_from_hex("a1:a2:a3:a4:a5:a6:a7:a8:a9:aa:ab:ac:ad:ae:af:b0:b1:b2:b3:b4:b5:b6:b7:b8:b9:ba:bb:bc:bd:be:bf:c0")
+        sign_vid_verification_response = await self.send_single_cmd(cmd=opcreds.Commands.SignVIDVerificationRequest(fabricIndex=cr2_fabric_index, clientChallenge=client_challenge))
+
+        asserts.assert_equal(sign_vid_verification_response.fabricIndex, cr2_fabric_index, "FabricIndex in SignVIDVerificationResponse must match request.")
+
+        # Locally generate the vendor_id_verification_tbs to check the signature.
+        expected_vendor_fabric_binding_message = generate_vendor_fabric_binding_message(root_public_key_bytes=cr2_root_public_key, fabric_id=cr2_fabricId, vendor_id=cr2_vid)
+        attestation_challenge = dev_ctrl.GetConnectedDeviceSync(self.dut_node_id, allowPASE=False).attestationChallenge
+        vendor_id_verification_tbs = generate_vendor_id_verification_tbs(sign_vid_verification_response.fabricBindingVersion, attestation_challenge, client_challenge, sign_vid_verification_response.fabricIndex, expected_vendor_fabric_binding_message, vid_verification_statement=b"")
+
+        # Check signature against vendor_id_verification_tbs
+        noc_cert = MatterCertParser(noc_struct.noc)
+        asserts.assert_true(verify_signature(public_key=noc_public_keys_from_certs["CR2"], message=vendor_id_verification_tbs, signature=sign_vid_verification_response.signature), "VID Verification Signature must validate using DUT's NOC public key")
+
+        self.print_step(5, "Remove TH2's fabric")
         cmd = opcreds.Commands.RemoveFabric(cr2_fabric_index)
         resp = await self.send_single_cmd(cmd=cmd)
         asserts.assert_equal(
