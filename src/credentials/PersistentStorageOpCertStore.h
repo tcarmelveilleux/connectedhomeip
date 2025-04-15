@@ -81,13 +81,11 @@ public:
     CHIP_ERROR AddNewTrustedRootCertForFabric(FabricIndex fabricIndex, const ByteSpan & rcac) override;
     CHIP_ERROR AddNewOpCertsForFabric(FabricIndex fabricIndex, const ByteSpan & noc, const ByteSpan & icac) override;
     CHIP_ERROR UpdateOpCertsForFabric(FabricIndex fabricIndex, const ByteSpan & noc, const ByteSpan & icac) override;
-    CHIP_ERROR UpdateVidVerificationSignerCertForFabric(FabricIndex fabricIndex, const ByteSpan & vvsc) override;
-    CHIP_ERROR UpdateVidVerificationStatemmentForFabric(FabricIndex fabricIndex, const ByteSpan & vidVerificationStatement) override;
+    CHIP_ERROR UpdateVidVerificationSignerCertForFabric(FabricIndex fabricIndex, ByteSpan vvsc) override;
+    CHIP_ERROR UpdateVidVerificationStatementForFabric(FabricIndex fabricIndex, ByteSpan vidVerificationStatement) override;
 
     CHIP_ERROR CommitOpCertsForFabric(FabricIndex fabricIndex) override;
     CHIP_ERROR RemoveOpCertsForFabric(FabricIndex fabricIndex) override;
-
-    CHIP_ERROR CommitVidVerificationForFabric(FabricIndex fabricIndex) override;
 
     void RevertPendingOpCertsExceptRoot() override
     {
@@ -100,25 +98,17 @@ public:
         }
         mStateFlags.Clear(StateFlags::kAddNewOpCertsCalled);
         mStateFlags.Clear(StateFlags::kUpdateOpCertsCalled);
+        RevertVidVerificationStatement();
     }
 
     void RevertPendingOpCerts() override
     {
         RevertPendingOpCertsExceptRoot();
-        RevertVidVerificationStatement();
 
         // Clear the rest statelessly
         mPendingRcac.Free();
         mPendingFabricIndex = kUndefinedFabricIndex;
         mStateFlags.ClearAll();
-    }
-
-    void RevertVidVerificationStatement() override
-    {
-        mPendingVvsc.Free();
-        mPendingVidVerificationStatement.Free();
-        mStateFlags.Clear(StateFlags::kVidVerificationStatementUpdated);
-        mStateFlags.Clear(StateFlags::kVvscUpdated);
     }
 
     CHIP_ERROR GetCertificate(FabricIndex fabricIndex, CertChainElement element, MutableByteSpan & outCertificate) const override;
@@ -150,6 +140,18 @@ protected:
 
     // Returns CHIP_NO_ERROR if all assumptions for VID Verification update operations are OK.
     CHIP_ERROR BasicVidVerificationAssumptionsAreMet(FabricIndex fabricIndex) const;
+
+    // Commits pending VID Verification data (called only from CommitOpCertsForFabric).
+    CHIP_ERROR CommitVidVerificationForFabric(FabricIndex fabricIndex);
+
+    // Reverts pending VID Verification data if any.
+    void RevertVidVerificationStatement()
+    {
+        mPendingVvsc.Free();
+        mPendingVidVerificationStatement.Free();
+        mStateFlags.Clear(StateFlags::kVidVerificationStatementUpdated);
+        mStateFlags.Clear(StateFlags::kVvscUpdated);
+    }
 
     PersistentStorageDelegate * mStorage = nullptr;
 

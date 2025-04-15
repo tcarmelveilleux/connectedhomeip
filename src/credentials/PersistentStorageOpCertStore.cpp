@@ -148,7 +148,7 @@ CHIP_ERROR DeleteCertFromStorage(PersistentStorageDelegate * storage, FabricInde
 }
 
 CHIP_ERROR SaveVidVerificationElementToStorage(PersistentStorageDelegate * storage, FabricIndex fabricIndex, VidVerificationElement element,
-                             const ByteSpan & elementData)
+                             ByteSpan elementData)
 {
     StorageKeyName storageKey = StorageKeyName::FromConst("");
 
@@ -384,13 +384,11 @@ CHIP_ERROR PersistentStorageOpCertStore::BasicVidVerificationAssumptionsAreMet(F
     VerifyOrReturnError(IsValidFabricIndex(fabricIndex), CHIP_ERROR_INVALID_FABRIC_INDEX);
     // Must already have a valid NOC chain.
     VerifyOrReturnError(HasNocChainForFabric(fabricIndex), CHIP_ERROR_INCORRECT_STATE);
-    // If there is a pending fabric, we can only acting on that fabric.
-    VerifyOrReturnError((mPendingFabricIndex == kUndefinedFabricIndex) || (fabricIndex == mPendingFabricIndex), CHIP_ERROR_INCORRECT_STATE);
 
     return CHIP_NO_ERROR;
 }
 
-CHIP_ERROR PersistentStorageOpCertStore::UpdateVidVerificationSignerCertForFabric(FabricIndex fabricIndex, const ByteSpan & vvsc)
+CHIP_ERROR PersistentStorageOpCertStore::UpdateVidVerificationSignerCertForFabric(FabricIndex fabricIndex, ByteSpan vvsc)
 {
     ReturnErrorOnFailure(BasicVidVerificationAssumptionsAreMet(fabricIndex));
     VerifyOrReturnError(vvsc.empty() || vvsc.size() <= Credentials::kMaxCHIPCertLength, CHIP_ERROR_INVALID_ARGUMENT);
@@ -399,43 +397,71 @@ CHIP_ERROR PersistentStorageOpCertStore::UpdateVidVerificationSignerCertForFabri
     bool legalVvscSetting = vvsc.empty() || !HasCertificateForFabric(fabricIndex, CertChainElement::kIcac);
     VerifyOrReturnError(legalVvscSetting, CHIP_ERROR_INCORRECT_STATE);
 
+    CHIP_ERROR vvscErr = CHIP_NO_ERROR;
+
     if (vvsc.empty())
     {
-        mPendingVvsc.Free();
+        if (fabricIndex == mPendingFabricIndex)
+        {
+            mPendingVvsc.Free();
+            mStateFlags.Set(StateFlags::kVvscUpdated);
+        }
+        else
+        {
+            vvscErr = DeleteVidVerificationElementFromStorage(mStorage, fabricIndex, VidVerificationElement::kVvsc);
+        }
     }
     else
     {
-        VerifyOrReturnError(mPendingVvsc.Alloc(vvsc.size()), CHIP_ERROR_NO_MEMORY);
-        memcpy(mPendingVvsc.Get(), vvsc.data(), vvsc.size());
+        if (fabricIndex == mPendingFabricIndex)
+        {
+            VerifyOrReturnError(mPendingVvsc.Alloc(vvsc.size()), CHIP_ERROR_NO_MEMORY);
+            memcpy(mPendingVvsc.Get(), vvsc.data(), vvsc.size());
+            mStateFlags.Set(StateFlags::kVvscUpdated);
+        }
+        else
+        {
+            vvscErr = SaveVidVerificationElementToStorage(mStorage, fabricIndex, VidVerificationElement::kVvsc, vvsc);
+        }
     }
 
-    // Touched the VVSC --> can't update data for other fabrics until committed.
-    mPendingFabricIndex = fabricIndex;
-
-    mStateFlags.Set(StateFlags::kVvscUpdated);
-    return CHIP_NO_ERROR;
+    return vvscErr;
 }
 
-CHIP_ERROR PersistentStorageOpCertStore::UpdateVidVerificationStatemmentForFabric(FabricIndex fabricIndex, const ByteSpan & vidVerificationStatement)
+CHIP_ERROR PersistentStorageOpCertStore::UpdateVidVerificationStatementForFabric(FabricIndex fabricIndex, ByteSpan vidVerificationStatement)
 {
     ReturnErrorOnFailure(BasicVidVerificationAssumptionsAreMet(fabricIndex));
     VerifyOrReturnError(vidVerificationStatement.empty() || vidVerificationStatement.size() <= Crypto::kVendorIdVerificationStatementV1Size, CHIP_ERROR_INVALID_ARGUMENT);
 
+    CHIP_ERROR vvsErr = CHIP_NO_ERROR;
+
     if (vidVerificationStatement.empty())
     {
-        mPendingVidVerificationStatement.Free();
+        if (fabricIndex == mPendingFabricIndex)
+        {
+            mPendingVidVerificationStatement.Free();
+            mStateFlags.Set(StateFlags::kVidVerificationStatementUpdated);
+        }
+        else
+        {
+            vvsErr = DeleteVidVerificationElementFromStorage(mStorage, fabricIndex, VidVerificationElement::kVidVerificationStatement);
+        }
     }
     else
     {
-        VerifyOrReturnError(mPendingVidVerificationStatement.Alloc(vidVerificationStatement.size()), CHIP_ERROR_NO_MEMORY);
-        memcpy(mPendingVidVerificationStatement.Get(), vidVerificationStatement.data(), vidVerificationStatement.size());
+        if (fabricIndex == mPendingFabricIndex)
+        {
+            VerifyOrReturnError(mPendingVidVerificationStatement.Alloc(vidVerificationStatement.size()), CHIP_ERROR_NO_MEMORY);
+            memcpy(mPendingVidVerificationStatement.Get(), vidVerificationStatement.data(), vidVerificationStatement.size());
+            mStateFlags.Set(StateFlags::kVidVerificationStatementUpdated);
+        }
+        else
+        {
+            vvsErr = SaveVidVerificationElementToStorage(mStorage, fabricIndex, VidVerificationElement::kVidVerificationStatement, vidVerificationStatement);
+        }
     }
 
-    // Touched the VidVerificationStatement --> can't update data for other fabrics until committed.
-    mPendingFabricIndex = fabricIndex;
-    mStateFlags.Set(StateFlags::kVidVerificationStatementUpdated);
-
-    return CHIP_NO_ERROR;
+    return vvsErr;
 }
 
 
@@ -470,10 +496,13 @@ CHIP_ERROR PersistentStorageOpCertStore::CommitOpCertsForFabric(FabricIndex fabr
         rcacErr = SaveCertToStorage(mStorage, mPendingFabricIndex, CertChainElement::kRcac, pendingRcacSpan);
     }
 
+    CHIP_ERROR vidVerifyErr = CommitVidVerificationForFabric(mPendingFabricIndex);
+
     // Remember which was the first error, and if any error occurred.
     CHIP_ERROR stickyErr = nocErr;
     stickyErr            = (stickyErr != CHIP_NO_ERROR) ? stickyErr : icacErr;
     stickyErr            = (stickyErr != CHIP_NO_ERROR) ? stickyErr : rcacErr;
+    stickyErr            = (stickyErr != CHIP_NO_ERROR) ? stickyErr : vidVerifyErr;
 
     if (stickyErr != CHIP_NO_ERROR)
     {
@@ -483,6 +512,8 @@ CHIP_ERROR PersistentStorageOpCertStore::CommitOpCertsForFabric(FabricIndex fabr
         {
             (void) DeleteCertFromStorage(mStorage, mPendingFabricIndex, CertChainElement::kNoc);
             (void) DeleteCertFromStorage(mStorage, mPendingFabricIndex, CertChainElement::kIcac);
+            (void) DeleteVidVerificationElementFromStorage(mStorage, mPendingFabricIndex, VidVerificationElement::kVvsc);
+            (void) DeleteVidVerificationElementFromStorage(mStorage, mPendingFabricIndex, VidVerificationElement::kVidVerificationStatement);
         }
         if (mStateFlags.Has(StateFlags::kAddNewTrustedRootCalled))
         {
@@ -523,7 +554,7 @@ bool PersistentStorageOpCertStore::HasVvscForFabric(FabricIndex fabricIndex) con
 {
     VerifyOrReturnError(IsValidFabricIndex(fabricIndex), false);
 
-    if (mStateFlags.Has(StateFlags::kVvscUpdated))
+    if (fabricIndex == mPendingFabricIndex)
     {
         return mPendingVvsc.AllocatedSize() != 0;
     }
@@ -600,17 +631,7 @@ CHIP_ERROR PersistentStorageOpCertStore::CommitVidVerificationForFabric(FabricIn
     CHIP_ERROR stickyErr = vvscErr;
     stickyErr            = (stickyErr != CHIP_NO_ERROR) ? stickyErr : vvsErr;
 
-    if (stickyErr != CHIP_NO_ERROR)
-    {
-        // Whatever partially stuck has to stay. Clients can try to deal with it. At worst
-        // a VID Verification Procedure will fail. Trying to delete existing data is
-        // worse if it was just a failure to add.
-        return stickyErr;
-    }
-
-    // If we got here, we succeeded and can reset the pending certs: next `GetCertificate` will use the stored certs
-    RevertVidVerificationStatement();
-    return CHIP_NO_ERROR;
+    return stickyErr;
 }
 
 CHIP_ERROR PersistentStorageOpCertStore::GetPendingCertificate(FabricIndex fabricIndex, CertChainElement element,

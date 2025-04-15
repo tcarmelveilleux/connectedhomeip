@@ -2246,4 +2246,37 @@ CHIP_ERROR FabricTable::SignVIDVerificationRequest(FabricIndex fabricIndex, Byte
     return CHIP_NO_ERROR;
 }
 
+CHIP_ERROR FabricTable::SetVIDVerificationStatementElements(FabricIndex fabricIndex, Optional<uint16_t> vendorId, Optional<ByteSpan> VIDVerificationStatement, Optional<ByteSpan> VVSC)
+{
+    VerifyOrReturnError(mOpCertStore != nullptr, CHIP_ERROR_INTERNAL);
+    VerifyOrReturnError(IsValidFabricIndex(fabricIndex), CHIP_ERROR_INVALID_ARGUMENT);
+
+    FabricInfo * fabricInfo = GetMutableFabricByIndex(fabricIndex);
+    VerifyOrReturnError(fabricInfo != nullptr, CHIP_ERROR_INVALID_ARGUMENT);
+
+    bool isTargetFabricPending = (GetPendingNewFabricIndex() == fabricIndex) || ((GetShadowPendingFabricEntry() != nullptr) && (GetShadowPendingFabricEntry()->GetFabricIndex() == fabricIndex));
+
+    if (vendorId.HasValue())
+    {
+        fabricInfo->SetVendorId(static_cast<VendorId>(vendorId.Value()));
+        if (!isTargetFabricPending)
+        {
+            // Immediately commit Vendor ID if not a pending fabric.
+            ReturnErrorOnFailure(StoreFabricMetadata(fabricInfo));
+        }
+    }
+
+    if (VIDVerificationStatement.HasValue())
+    {
+        ReturnErrorOnFailure(mOpCertStore->UpdateVidVerificationStatementForFabric(fabricIndex, VIDVerificationStatement.Value()));
+    }
+
+    if (VVSC.HasValue())
+    {
+        ReturnErrorOnFailure(mOpCertStore->UpdateVidVerificationSignerCertForFabric(fabricIndex, VVSC.Value()));
+    }
+
+    return CHIP_NO_ERROR;
+}
+
 } // namespace chip

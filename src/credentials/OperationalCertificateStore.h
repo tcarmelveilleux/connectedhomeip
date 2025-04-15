@@ -57,7 +57,7 @@ public:
     virtual bool HasPendingNocChain() const = 0;
 
     /**
-     * @brief Returns true if either a pending VVSC or vidVerificationStatement exists and is active.
+     * @brief Returns true if either a pending VVSC or VIDVerificationStatement exists and is active.
      */
     virtual bool HasPendingVidVerificationElements() const
     {
@@ -212,25 +212,6 @@ public:
     virtual CHIP_ERROR CommitOpCertsForFabric(FabricIndex fabricIndex) = 0;
 
     /**
-     * @brief Permanently commit the VID Verification data last configured via successful calls to
-     *        legal combinations of `UpdateVidVerificationSignerCertForFabric` or `UpdateVidVerficationStatement`,
-     *        replacing previously committed data, if any.
-     *
-     * This is to be used when CommissioningComplete is successfully received
-     *
-     * @param fabricIndex - FabricIndex for which to commit the the data.
-     *
-     * @retval CHIP_NO_ERROR on success or if nothing is pending to commit.
-     * @retval CHIP_ERROR_INCORRECT_STATE if the certificate store is not properly initialized.
-     * @retval CHIP_ERROR_NOT_IMPLEMENTED if this method is not implemented (e.g. for simple controller-only cases).
-     * @retval other CHIP_ERROR value on internal storage errors
-     */
-    virtual CHIP_ERROR CommitVidVerificationForFabric(FabricIndex fabricIndex)
-    {
-        return CHIP_ERROR_NOT_IMPLEMENTED;
-    }
-
-    /**
      * @brief Permanently remove the certificate chain associated with a fabric.
      *
      * This is to be used for RemoveFabric. Removes both the pending operational cert chain
@@ -262,28 +243,11 @@ public:
     virtual void RevertPendingOpCerts() = 0;
 
     /**
-     * @brief Permanently release VID Verification Statement and/or VVSC, if pending, and
-     *        revert to prior data.
-     *
-     * This is to be used when a fail-safe expires prior to CommissioningComplete.
-     *
-     * This method cannot error-out and must always succeed, even on a no-op. This should
-     * be safe to do given that `CommitOpCertsForFabric` must succeed to make an operation
-     * certificate chain usable.
-     */
-    virtual void RevertVidVerificationStatement()
-    {
-        // Empty implementation to match the CHIP_ERROR_NOT_IMPLEMENTED for default version.
-    }
-
-    /**
      * @brief Update the VidVerificationSigningCertificate (VVSC) for the given fabric, including
      *        possibly removing it (if an empty vvsc buffer is provided).
      *
-     * The certificate is temporary until committed or reverted.
-     * The certificate is committed to storage, or erased, on `CommitVidVerificationForFabric`.
-     * The certificate is reverted to prior storage if `RevertVidVerification` is called
-     * before `CommitVidVerificationForFabric`.
+     * If a fabric was pending, the certificate is temporary until committed by `CommitOpCertsForFabric`
+     * or reverted by `RevertPendingOpCerts`. Otherwise it is immediately commited/erased.
      *
      * Only one pending VVSC certificate is supported at a time and it is illegal
      * to call this method if there was is not already an operational certificate chain
@@ -306,19 +270,17 @@ public:
      * @retval CHIP_ERROR_NOT_IMPLEMENTED if this method is not implemented (e.g. for simple controller-only cases).
      * @retval other CHIP_ERROR value on internal errors
      */
-    virtual CHIP_ERROR UpdateVidVerificationSignerCertForFabric(FabricIndex fabricIndex, const ByteSpan & vvsc)
+    virtual CHIP_ERROR UpdateVidVerificationSignerCertForFabric(FabricIndex fabricIndex, ByteSpan vvsc)
     {
         return CHIP_ERROR_NOT_IMPLEMENTED;
     }
 
-/**
+    /**
      * @brief Update the VidVerificationStatement for the given fabric, including
      *        possibly removing it (if an empty `vidVerificationStatement` buffer is provided).
      *
-     * The statement is temporary until committed or reverted.
-     * The statement is committed to storage, or erased, on `CommitVidVerificationForFabric`.
-     * The statement is reverted to prior storage if `RevertVidVerification` is called
-     * before `CommitVidVerificationForFabric`.
+     * If a fabric was pending, the statement is temporary until committed by `CommitOpCertsForFabric`
+     * or reverted by `RevertPendingOpCerts`. Otherwise it is immediately commited/erased.
      *
      * Only one pending statement is supported at a time and it is illegal
      * to call this method if there was is not already an operational certificate chain
@@ -339,7 +301,7 @@ public:
      * @retval CHIP_ERROR_NOT_IMPLEMENTED if this method is not implemented (e.g. for simple controller-only cases).
      * @retval other CHIP_ERROR value on internal errors
      */
-    virtual CHIP_ERROR UpdateVidVerificationStatemmentForFabric(FabricIndex fabricIndex, const ByteSpan & vidVerificationStatement)
+    virtual CHIP_ERROR UpdateVidVerificationStatementForFabric(FabricIndex fabricIndex, ByteSpan vidVerificationStatement)
     {
         return CHIP_ERROR_NOT_IMPLEMENTED;
     }
