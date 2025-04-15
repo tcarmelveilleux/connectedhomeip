@@ -150,6 +150,14 @@ def generate_vendor_id_verification_tbs(fabric_binding_version: int,
   return vendor_id_verification_tbs
 
 
+def get_unassigned_fabric_index(fabric_indices: list[int]) -> int:
+    for fabric_index in range(1, 255):
+        if fabric_index not in fabric_indices:
+            return fabric_index
+    else:
+        asserts.fail(f"Somehow could not find an unallocated fabric index in {fabric_indices}")
+
+
 class TC_OPCREDS_3_9(MatterBaseTest):
     def desc_TC_OPCREDS_3_9(self):
         return "[DUTServer] Pre-release TC-OPCREDS-3.9 test case."
@@ -289,7 +297,36 @@ class TC_OPCREDS_3_9(MatterBaseTest):
         noc_cert = MatterCertParser(noc_struct.noc)
         asserts.assert_true(verify_signature(public_key=noc_public_keys_from_certs["CR2"], message=vendor_id_verification_tbs, signature=sign_vid_verification_response.signature), "VID Verification Signature must validate using DUT's NOC public key")
 
-        self.print_step(5, "Remove TH2's fabric")
+        self.print_step(5, "Send bad SignVIDVerificationRequest commands and verify failures")
+
+        # Must fail with correct client challenge but non-existent fabric.
+        unassigned_fabric_index = get_unassigned_fabric_index(fabric_indices.values())
+        with asserts.assert_raises(InteractionModelError) as exception_context:
+            await self.send_single_cmd(cmd=opcreds.Commands.SignVIDVerificationRequest(fabricIndex=unassigned_fabric_index, clientChallenge=client_challenge))
+
+        asserts.assert_equal(exception_context.exception.status, Status.ConstraintError, f"Expected CONSTRAINT_ERROR from SignVIDVerificationRequest against fabricIndex {unassigned_fabric_index}")
+
+        # Must fail with correct client challenge but fabricIndex 0.
+        with asserts.assert_raises(InteractionModelError) as exception_context:
+            await self.send_single_cmd(cmd=opcreds.Commands.SignVIDVerificationRequest(fabricIndex=0, clientChallenge=client_challenge))
+
+        asserts.assert_equal(exception_context.exception.status, Status.ConstraintError, f"Expected CONSTRAINT_ERROR from SignVIDVerificationRequest against fabricIndex 0")
+
+        # Must fail with client challenge different than expected length
+        CHALLENGE_TOO_SMALL = b"\x01" * (VID_VERIFICATION_CLIENT_CHALLENGE_SIZE_BYTES - 1)
+        CHALLENGE_TOO_BIG = b"\x02" * (VID_VERIFICATION_CLIENT_CHALLENGE_SIZE_BYTES + 1)
+
+        with asserts.assert_raises(InteractionModelError) as exception_context:
+            await self.send_single_cmd(cmd=opcreds.Commands.SignVIDVerificationRequest(fabricIndex=cr2_fabric_index, clientChallenge=CHALLENGE_TOO_SMALL))
+
+        asserts.assert_equal(exception_context.exception.status, Status.ConstraintError, f"Expected CONSTRAINT_ERROR from SignVIDVerificationRequest with ClientChallenge of length {len(CHALLENGE_TOO_SMALL)}")
+
+        with asserts.assert_raises(InteractionModelError) as exception_context:
+            await self.send_single_cmd(cmd=opcreds.Commands.SignVIDVerificationRequest(fabricIndex=cr2_fabric_index, clientChallenge=CHALLENGE_TOO_BIG))
+
+        asserts.assert_equal(exception_context.exception.status, Status.ConstraintError, f"Expected CONSTRAINT_ERROR from SignVIDVerificationRequest with ClientChallenge of length {len(CHALLENGE_TOO_BIG)}")
+
+        self.print_step(6, "Remove TH2's fabric")
         cmd = opcreds.Commands.RemoveFabric(cr2_fabric_index)
         resp = await self.send_single_cmd(cmd=cmd)
         asserts.assert_equal(
