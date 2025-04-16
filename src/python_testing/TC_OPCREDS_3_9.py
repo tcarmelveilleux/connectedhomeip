@@ -35,7 +35,6 @@
 #     quiet: true
 # === END CI TEST ARGUMENTS ===
 
-import asyncio
 import enum
 import hashlib
 import logging
