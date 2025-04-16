@@ -431,7 +431,7 @@ CHIP_ERROR PersistentStorageOpCertStore::UpdateVidVerificationSignerCertForFabri
 CHIP_ERROR PersistentStorageOpCertStore::UpdateVidVerificationStatementForFabric(FabricIndex fabricIndex, ByteSpan vidVerificationStatement)
 {
     ReturnErrorOnFailure(BasicVidVerificationAssumptionsAreMet(fabricIndex));
-    VerifyOrReturnError(vidVerificationStatement.empty() || vidVerificationStatement.size() <= Crypto::kVendorIdVerificationStatementV1Size, CHIP_ERROR_INVALID_ARGUMENT);
+    VerifyOrReturnError(vidVerificationStatement.empty() || vidVerificationStatement.size() == Crypto::kVendorIdVerificationStatementV1Size, CHIP_ERROR_INVALID_ARGUMENT);
 
     CHIP_ERROR vvsErr = CHIP_NO_ERROR;
 

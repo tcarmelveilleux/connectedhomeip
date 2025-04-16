@@ -1232,8 +1232,43 @@ bool emberAfOperationalCredentialsClusterSetVIDVerificationStatementCallback(
     app::CommandHandler * commandObj, const app::ConcreteCommandPath & commandPath,
     const Commands::SetVIDVerificationStatement::DecodableType & commandData)
 {
-    (void) commandData;
-    commandObj->AddStatus(commandPath, Status::UnsupportedCommand);
+
+    FabricIndex fabricIndex = commandObj->GetAccessingFabricIndex();
+    ChipLogProgress(Zcl, "OpCreds: Received a SetVIDVerificationStatement Command for FabricIndex 0x%x",
+        static_cast<unsigned>(fabricIndex));
+
+    if (!commandData.vendorID.HasValue() && !commandData.VIDVerificationStatement.HasValue() && !commandData.vvsc.HasValue())
+    {
+        commandObj->AddStatus(commandPath, Status::InvalidCommand);
+        return true;
+    }
+
+    auto & fabricTable = Server::GetInstance().GetFabricTable();
+
+    CHIP_ERROR err = fabricTable.SetVIDVerificationStatementElements(fabricIndex, commandData.vendorID, commandData.VIDVerificationStatement, commandData.vvsc);
+    if (err == CHIP_ERROR_INVALID_ARGUMENT)
+    {
+        commandObj->AddStatus(commandPath, Status::ConstraintError);
+    }
+    else if (err == CHIP_ERROR_INCORRECT_STATE)
+    {
+        commandObj->AddStatus(commandPath, Status::InvalidCommand);
+    }
+    else if (err != CHIP_NO_ERROR)
+    {
+        // We have no idea what happened; just report failure.
+        StatusIB status(err);
+        commandObj->AddStatus(commandPath, status.mStatus);
+    }
+    else
+    {
+        commandObj->AddStatus(commandPath, Status::Success);
+    }
+
+    if (err != CHIP_NO_ERROR)
+    {
+        ChipLogError(Zcl, "SetVIDVerificationStatement failed: %" CHIP_ERROR_FORMAT, err.Format());
+    }
     return true;
 }
 
