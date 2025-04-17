@@ -1246,6 +1246,12 @@ bool emberAfOperationalCredentialsClusterSetVIDVerificationStatementCallback(
         return true;
     }
 
+    if (commandData.vendorID.HasValue() && !IsVendorIdValidOperationally(static_cast<VendorId>(commandData.vendorID.Value())))
+    {
+        commandObj->AddStatus(commandPath, Status::ConstraintError);
+        return true;
+    }
+
     auto & fabricTable = Server::GetInstance().GetFabricTable();
 
     bool fabricChangesOccurred = false;

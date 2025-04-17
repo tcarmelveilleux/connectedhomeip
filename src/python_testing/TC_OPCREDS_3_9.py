@@ -276,28 +276,13 @@ class test_step(object):
         self._test_instance.mark_current_step_skipped()
 
 
-class TC_OPCREDS_3_9(MatterBaseTest):
+class TC_OPCREDS_VidVerify(MatterBaseTest):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.is_aggregating_steps: bool = False
         self.aggregated_steps: list[TestStep] = []
         self.current_step_id = 0
         self.reset_steps()
-
-    def desc_TC_OPCREDS_3_9(self):
-        return "[DUTServer] Pre-release TC-OPCREDS-3.9 test case."
-
-    def steps_TC_OPCREDS_3_9(self) -> list[TestStep]:
-        try:
-            self.current_step_id = 0
-            self.is_aggregating_steps = True
-            self.aggregated_steps = []
-            self.test_TC_OPCREDS_3_9()
-        finally:
-            self.is_aggregating_steps = False
-
-        self.current_step_id = 0
-        return self.aggregated_steps
 
     def reset_steps(self):
         self.aggregated_steps = []
@@ -332,6 +317,21 @@ class TC_OPCREDS_3_9(MatterBaseTest):
         )
 
         return updated_fabrics, updated_nocs
+
+    def desc_TC_OPCREDS_3_9(self):
+        return "[DUTServer] Pre-release TC-OPCREDS-3.9 test case."
+
+    def steps_TC_OPCREDS_3_9(self) -> list[TestStep]:
+        try:
+            self.current_step_id = 0
+            self.is_aggregating_steps = True
+            self.aggregated_steps = []
+            self.test_TC_OPCREDS_3_9()
+        finally:
+            self.is_aggregating_steps = False
+
+        self.current_step_id = 0
+        return self.aggregated_steps
 
     @async_test_body
     async def test_TC_OPCREDS_3_9(self):
@@ -601,12 +601,44 @@ class TC_OPCREDS_3_9(MatterBaseTest):
             logging.error("TODO!")
             step.skip()
 
+        with test_step(description="SetVIDVerificationStatement against TH1's fabric with VendorID set to 0xFFF5. Expect a CONSTRAINT_ERROR."):
+            with asserts.assert_raises(InteractionModelError) as exception_context:
+                await self.send_single_cmd(cmd=opcreds.Commands.SetVIDVerificationStatement(vendorID=0xFFF5))
+            asserts.assert_equal(exception_context.exception.status, Status.ConstraintError,
+                                "Expected CONSTRAINT_ERROR for SetVIDVerificationStatement with invalid VendorID 0xFFF5")
+
+        with test_step(description="Invoke SetVIDVerificationStatement with maximum-sized VVSC and VIDVerificationStatement present and setting VID to 0x6a01 on TH2's fabric, outside fail-safe. Expect success."):
+            vvsc = b"\x5a" * 400
+            VIDVerificationStatement = b"\x01" * VID_VERIFICATION_STATEMENT_SIZE_BYTES_V1
+            cr2_vid = 0x6a01
+
+            await self.send_single_cmd(dev_ctrl=cr2_dev_ctrl, node_id=cr2_dut_node_id, cmd=opcreds.Commands.SetVIDVerificationStatement(VIDVerificationStatement=VIDVerificationStatement, vvsc=vvsc, vendorID=cr2_vid))
+
+        with test_step(description="TH1 sends SignVIDVerificationRequest for TH2's fabric (which has a VIDVerificationStatement). Verify the response and signature."):
+            client_challenge = bytes_from_hex(
+                "a1:a2:a3:a4:a5:a6:a7:a8:a9:aa:ab:ac:ad:ae:af:b0:b1:b2:b3:b4:b5:b6:b7:b8:b9:ba:bb:bc:bd:be:bf:c1")
+            sign_vid_verification_response = await self.send_single_cmd(cmd=opcreds.Commands.SignVIDVerificationRequest(fabricIndex=cr2_fabric_index, clientChallenge=client_challenge))
+
+            asserts.assert_equal(sign_vid_verification_response.fabricIndex, cr2_fabric_index,
+                                "FabricIndex in SignVIDVerificationResponse must match request.")
+
+            # Locally generate the vendor_id_verification_tbs to check the signature.
+            expected_vendor_fabric_binding_message = generate_vendor_fabric_binding_message(
+                root_public_key_bytes=cr2_root_public_key, fabric_id=cr2_fabricId, vendor_id=cr2_vid)
+            attestation_challenge = dev_ctrl.GetConnectedDeviceSync(self.dut_node_id, allowPASE=False).attestationChallenge
+            vendor_id_verification_tbs = generate_vendor_id_verification_tbs(sign_vid_verification_response.fabricBindingVersion, attestation_challenge,
+                                                                            client_challenge, sign_vid_verification_response.fabricIndex, expected_vendor_fabric_binding_message, vid_verification_statement=VIDVerificationStatement)
+
+            # Check signature against vendor_id_verification_tbs
+            noc_cert = MatterCertParser(noc_struct.noc)
+            asserts.assert_true(verify_signature(public_key=noc_public_keys_from_certs["CR2"], message=vendor_id_verification_tbs,
+                                signature=sign_vid_verification_response.signature), "VID Verification Signature must validate using DUT's NOC public key")
+
         with test_step(description="Remove TH2's fabric"):
             cmd = opcreds.Commands.RemoveFabric(cr2_fabric_index)
             resp = await self.send_single_cmd(cmd=cmd)
             asserts.assert_equal(
                 resp.statusCode, opcreds.Enums.NodeOperationalCertStatusEnum.kOk)
-
 
 if __name__ == "__main__":
     default_matter_test_main()
