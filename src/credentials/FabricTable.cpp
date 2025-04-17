@@ -2180,22 +2180,14 @@ CHIP_ERROR FabricTable::SetShouldAdvertiseIdentity(FabricIndex fabricIndex, Adve
 CHIP_ERROR FabricTable::FetchVIDVerificationStatement(FabricIndex fabricIndex, MutableByteSpan & outVIDVerificationStatement) const
 {
     VerifyOrReturnError(mOpCertStore != nullptr, CHIP_ERROR_INCORRECT_STATE);
-    VerifyOrReturnError(outVIDVerificationStatement.size() >= kVendorIdVerificationStatementV1Size, CHIP_ERROR_BUFFER_TOO_SMALL);
-
-    // TODO(#38308): Add VIDVerificationStatement loading support. Empty for now since setting is still
-    // to be done and the result will be correct with more of the actual code running.
-    outVIDVerificationStatement.reduce_size(0);
-    return CHIP_NO_ERROR;
+    return mOpCertStore->GetVidVerificationElement(fabricIndex, OperationalCertificateStore::VidVerificationElement::kVidVerificationStatement, outVIDVerificationStatement);
 }
 
 CHIP_ERROR FabricTable::FetchVVSC(FabricIndex fabricIndex, MutableByteSpan & outVVSC) const
 {
     VerifyOrReturnError(mOpCertStore != nullptr, CHIP_ERROR_INCORRECT_STATE);
-    VerifyOrReturnError(outVVSC.size() >= kMaxCHIPCertLength, CHIP_ERROR_BUFFER_TOO_SMALL);
 
-    // TODO(#38308): Add VVSC loading support. Empty for now since setting is still
-    // to be done and the result will be correct with more of the actual code running.
-    outVVSC.reduce_size(0);
+    return mOpCertStore->GetVidVerificationElement(fabricIndex, OperationalCertificateStore::VidVerificationElement::kVvsc, outVVSC);
     return CHIP_NO_ERROR;
 }
 
@@ -2246,7 +2238,7 @@ CHIP_ERROR FabricTable::SignVIDVerificationRequest(FabricIndex fabricIndex, Byte
     return CHIP_NO_ERROR;
 }
 
-CHIP_ERROR FabricTable::SetVIDVerificationStatementElements(FabricIndex fabricIndex, Optional<uint16_t> vendorId, Optional<ByteSpan> VIDVerificationStatement, Optional<ByteSpan> VVSC)
+CHIP_ERROR FabricTable::SetVIDVerificationStatementElements(FabricIndex fabricIndex, Optional<uint16_t> vendorId, Optional<ByteSpan> VIDVerificationStatement, Optional<ByteSpan> VVSC, bool & outFabricTableWasChanged)
 {
     VerifyOrReturnError(mOpCertStore != nullptr, CHIP_ERROR_INTERNAL);
     VerifyOrReturnError(IsValidFabricIndex(fabricIndex), CHIP_ERROR_INVALID_ARGUMENT);
@@ -2256,24 +2248,44 @@ CHIP_ERROR FabricTable::SetVIDVerificationStatementElements(FabricIndex fabricIn
 
     bool isTargetFabricPending = (GetPendingNewFabricIndex() == fabricIndex) || ((GetShadowPendingFabricEntry() != nullptr) && (GetShadowPendingFabricEntry()->GetFabricIndex() == fabricIndex));
 
-    if (vendorId.HasValue())
+    outFabricTableWasChanged = false;
+
+    // Start with VVSC first as it's the most likely to fail.
+    if (VVSC.HasValue())
     {
-        fabricInfo->SetVendorId(static_cast<VendorId>(vendorId.Value()));
-        if (!isTargetFabricPending)
-        {
-            // Immediately commit Vendor ID if not a pending fabric.
-            ReturnErrorOnFailure(StoreFabricMetadata(fabricInfo));
-        }
+        ReturnErrorOnFailure(mOpCertStore->UpdateVidVerificationSignerCertForFabric(fabricIndex, VVSC.Value()));
     }
 
     if (VIDVerificationStatement.HasValue())
     {
-        ReturnErrorOnFailure(mOpCertStore->UpdateVidVerificationStatementForFabric(fabricIndex, VIDVerificationStatement.Value()));
+        bool wasVvsEqual = false;
+        {
+            // This is in a scope to save stack space from getting too deep.
+            uint8_t vidVerificationStatementBuffer[Crypto::kVendorIdVerificationStatementV1Size];
+            MutableByteSpan vidVerificationStatementSpan{vidVerificationStatementBuffer};
+            ReturnErrorOnFailure(mOpCertStore->GetVidVerificationElement(fabricIndex, OperationalCertificateStore::VidVerificationElement::kVidVerificationStatement, vidVerificationStatementSpan));
+            wasVvsEqual = vidVerificationStatementSpan.data_equal(VIDVerificationStatement.Value());
+        }
+
+        if (!wasVvsEqual)
+        {
+            ReturnErrorOnFailure(mOpCertStore->UpdateVidVerificationStatementForFabric(fabricIndex, VIDVerificationStatement.Value()));
+            outFabricTableWasChanged = true;
+        }
     }
 
-    if (VVSC.HasValue())
+    if (vendorId.HasValue())
     {
-        ReturnErrorOnFailure(mOpCertStore->UpdateVidVerificationSignerCertForFabric(fabricIndex, VVSC.Value()));
+        if (static_cast<uint16_t>(fabricInfo->GetVendorId()) != vendorId.Value())
+        {
+            fabricInfo->SetVendorId(static_cast<VendorId>(vendorId.Value()));
+            if (!isTargetFabricPending)
+            {
+                // Immediately commit Vendor ID if not a pending fabric.
+                ReturnErrorOnFailure(StoreFabricMetadata(fabricInfo));
+                outFabricTableWasChanged = true;
+            }
+        }
     }
 
     return CHIP_NO_ERROR;

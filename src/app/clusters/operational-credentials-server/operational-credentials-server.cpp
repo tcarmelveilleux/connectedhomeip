@@ -63,12 +63,12 @@ using namespace chip::Protocols::InteractionModel;
 
 namespace {
 
+constexpr auto kDACCertificate = CertificateChainTypeEnum::kDACCertificate;
+constexpr auto kPAICertificate = CertificateChainTypeEnum::kPAICertificate;
+
 void SendNOCResponse(app::CommandHandler * commandObj, const ConcreteCommandPath & path, NodeOperationalCertStatusEnum status,
                      uint8_t index, const CharSpan & debug_text);
 NodeOperationalCertStatusEnum ConvertToNOCResponseStatus(CHIP_ERROR err);
-
-constexpr auto kDACCertificate = CertificateChainTypeEnum::kDACCertificate;
-constexpr auto kPAICertificate = CertificateChainTypeEnum::kPAICertificate;
 
 CHIP_ERROR CreateAccessControlEntryForNewFabricAdministrator(const Access::SubjectDescriptor & subjectDescriptor,
                                                              FabricIndex fabricIndex, uint64_t subject)
@@ -247,10 +247,13 @@ OperationalCredentialsAttrAccess gAttrAccess;
 
 CHIP_ERROR OperationalCredentialsAttrAccess::Read(const ConcreteReadAttributePath & aPath, AttributeValueEncoder & aEncoder)
 {
-    VerifyOrDie(aPath.mClusterId == Clusters::OperationalCredentials::Id);
+    static constexpr uint16_t kCurrentClusterRevision = 2u;
 
     switch (aPath.mAttributeId)
     {
+    case Attributes::ClusterRevision::Id: {
+        return aEncoder.Encode(kCurrentClusterRevision);
+    }
     case Attributes::NOCs::Id: {
         return ReadNOCs(aPath.mEndpointId, aEncoder);
     }
@@ -1245,7 +1248,8 @@ bool emberAfOperationalCredentialsClusterSetVIDVerificationStatementCallback(
 
     auto & fabricTable = Server::GetInstance().GetFabricTable();
 
-    CHIP_ERROR err = fabricTable.SetVIDVerificationStatementElements(fabricIndex, commandData.vendorID, commandData.VIDVerificationStatement, commandData.vvsc);
+    bool fabricChangesOccurred = false;
+    CHIP_ERROR err = fabricTable.SetVIDVerificationStatementElements(fabricIndex, commandData.vendorID, commandData.VIDVerificationStatement, commandData.vvsc, fabricChangesOccurred);
     if (err == CHIP_ERROR_INVALID_ARGUMENT)
     {
         commandObj->AddStatus(commandPath, Status::ConstraintError);
@@ -1263,6 +1267,13 @@ bool emberAfOperationalCredentialsClusterSetVIDVerificationStatementCallback(
     else
     {
         commandObj->AddStatus(commandPath, Status::Success);
+    }
+
+    // Handle dirty-marking if anything changed.
+    if (fabricChangesOccurred)
+    {
+        MatterReportingAttributeChangeCallback(commandPath.mEndpointId, OperationalCredentials::Id,
+          OperationalCredentials::Attributes::Fabrics::Id);
     }
 
     if (err != CHIP_NO_ERROR)

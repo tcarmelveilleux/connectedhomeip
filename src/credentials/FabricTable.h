@@ -1111,11 +1111,13 @@ public:
      * @param[in] vendorID - New VendorID to set on the Fabric (ignored if missing)
      * @param[in] VIDVerificationStatement - VID Verification Statement to add/remove (ignored if missing)
      * @param[in] VVSC - VID Verification Signing Certificate to add/remove (ignored if missing)
+     * @param[out] outFabricTableWasChanged - This is set to true if FabricTable saw a change from prior value, even if
+     *                                        method returns an error (appies to VIDVerificationStatement and VendorID)
      * @retval CHIP_NO_ERROR on success
      * @retval CHIP_ERROR_INVALID_ARGUMENT if vendorID, VVSC or VIDVerificationStatement are not correct (maps to CONSTRAINT_ERROR)
      * @retval CHIP_ERROR_INCORRECT_STATE if VVSC cannot be set due to ICAC presence (maps to INVALID_COMMAND)
      */
-    CHIP_ERROR SetVIDVerificationStatementElements(FabricIndex fabricIndex, Optional<uint16_t> vendorId, Optional<ByteSpan> VIDVerificationStatement, Optional<ByteSpan> VVSC);
+    CHIP_ERROR SetVIDVerificationStatementElements(FabricIndex fabricIndex, Optional<uint16_t> vendorId, Optional<ByteSpan> VIDVerificationStatement, Optional<ByteSpan> VVSC, bool & outFabricTableWasChanged);
 
 private:
     enum class StateFlags : uint16_t

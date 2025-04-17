@@ -737,6 +737,12 @@ CHIP_ERROR PersistentStorageOpCertStore::GetVidVerificationElement(FabricIndex f
     static_assert(kMaxCHIPCertLength > (2 * (Crypto::kVendorIdVerificationStatementV1Size)), "Assuming that at least two VidVerificationStatement fit in a CHIP Cert to give space for future growth and upgrade/downgrade scenarios.");
 
     CHIP_ERROR err = mStorage->SyncGetKeyValue(keyName.KeyName(), &storageBuffer[0], keySize);
+    if ((err == CHIP_ERROR_PERSISTED_STORAGE_VALUE_NOT_FOUND) || (err == CHIP_ERROR_NOT_FOUND))
+    {
+        outElement.reduce_size(0);
+        return CHIP_NO_ERROR;
+    }
+
     if (err == CHIP_NO_ERROR)
     {
         return CopySpanToMutableSpan(ByteSpan{&storageBuffer[0], static_cast<size_t>(keySize)}, outElement);

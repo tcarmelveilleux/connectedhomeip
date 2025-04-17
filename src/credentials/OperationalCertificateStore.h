@@ -341,6 +341,8 @@ public:
      *        data depending on prior `UpdateVidVerificationSignerCertForFabric`, or
      *        `UpdateVidVerificationStatemmentForFabric` calls.
      *
+     * If element is not found, outElement is resized to 0 bytes (empty).
+     *
      * On success, the `outElement` span is resized to the size of the actual element read-back.
      *
      * @param fabricIndex - fabricIndex for which to get the certificate
@@ -350,7 +352,6 @@ public:
      * @retval CHIP_NO_ERROR on success.
      * @retval CHIP_ERROR_BUFFER_TOO_SMALL if `outElement` is too small to fit the certificate found.
      * @retval CHIP_ERROR_INCORRECT_STATE if the certificate store is not properly initialized.
-     * @retval CHIP_ERROR_NOT_FOUND if the element cannot be found.
      * @retval CHIP_ERROR_INVALID_FABRIC_INDEX if the fabricIndex is invalid.
      * @retval CHIP_ERROR_NOT_IMPLEMENTED if this method is not implemented (e.g. for simple controller-only cases).
      * @retval other CHIP_ERROR value on internal storage errors.
