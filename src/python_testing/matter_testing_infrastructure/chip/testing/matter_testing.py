@@ -314,6 +314,30 @@ class AttributeMatcher:
         return AttributeMatcherFromCallable(description, matcher)
 
 
+class AttributeMatcher:
+    def __init__(self, description: str):
+        self._description: str = description
+
+    def matches(self, report: AttributeValue) -> bool:
+        pass
+
+    @property
+    def description(self):
+        return self._description
+
+    @staticmethod
+    def from_callable(description: str, matcher: Callable[[AttributeValue], bool]) -> "AttributeMatcher":
+        class AttributeMatcherFromCallable(AttributeMatcher):
+            def __init__(self, description, matcher: Callable[[AttributeValue], bool]):
+                super().__init__(description)
+                self._matcher = matcher
+
+            def matches(self, report: AttributeValue) -> bool:
+                return self._matcher(report)
+
+        return AttributeMatcherFromCallable(description, matcher)
+
+
 def await_sequence_of_reports(report_queue: queue.Queue, endpoint_id: int, attribute: TypedAttributePath, sequence: list[Any], timeout_sec: float) -> None:
     """Given a queue.Queue hooked-up to an attribute change accumulator, await a given expected sequence of attribute reports.
 
