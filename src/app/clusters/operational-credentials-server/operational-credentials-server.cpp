@@ -36,6 +36,7 @@
 #include <clusters/OperationalCredentials/Attributes.h>
 #include <clusters/OperationalCredentials/Commands.h>
 #include <clusters/OperationalCredentials/Events.h>
+#include <clusters/OperationalCredentials/Metadata.h>
 #include <clusters/OperationalCredentials/Structs.h>
 #include <credentials/CHIPCert.h>
 #include <credentials/CertificationDeclaration.h>
@@ -247,12 +248,10 @@ OperationalCredentialsAttrAccess gAttrAccess;
 
 CHIP_ERROR OperationalCredentialsAttrAccess::Read(const ConcreteReadAttributePath & aPath, AttributeValueEncoder & aEncoder)
 {
-    static constexpr uint16_t kCurrentClusterRevision = 2u;
-
     switch (aPath.mAttributeId)
     {
     case Attributes::ClusterRevision::Id: {
-        return aEncoder.Encode(kCurrentClusterRevision);
+        return aEncoder.Encode(kRevision);
     }
     case Attributes::NOCs::Id: {
         return ReadNOCs(aPath.mEndpointId, aEncoder);
@@ -1253,7 +1252,7 @@ bool emberAfOperationalCredentialsClusterSetVIDVerificationStatementCallback(
         return true;
     }
 
-    if (commandData.vendorID.HasValue() && !IsVendorIdValidOperationally(static_cast<VendorId>(commandData.vendorID.Value())))
+    if (commandData.vendorID.HasValue() && !IsVendorIdValidOperationally(commandData.vendorID.Value()))
     {
         commandObj->AddStatus(commandPath, Status::ConstraintError);
         return true;
@@ -1283,7 +1282,8 @@ bool emberAfOperationalCredentialsClusterSetVIDVerificationStatementCallback(
         commandObj->AddStatus(commandPath, Status::Success);
     }
 
-    // Handle dirty-marking if anything changed.
+    // Handle dirty-marking if anything changed. Only `Fabrics` attribute is reported since `NOCs`
+    // is not reportable (`C` quality).
     if (fabricChangesOccurred)
     {
         auto & failSafeContext = Server::GetInstance().GetFailSafeContext();
