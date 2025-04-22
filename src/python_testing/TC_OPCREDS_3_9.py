@@ -565,6 +565,8 @@ class TC_OPCREDS_VidVerify(MatterBaseTest):
             asserts.assert_equal(cr2_fabrics_entry.vendorID, vendorID,
                                  "Did not get the expected value set for VendorID field of Fabrics list for TH2's fabric.")
 
+            previous_cr2_dut_vvsc = cr2_nocs_entry.vvsc
+
         with test_step(description="Invoke SetVIDVerificationStatement with maximum-sized VVSC on TH1's fabric, outside fail-safe. Verify INVALID_COMMAND due to presence of ICAC."):
             vvsc = b"\xaa" * 400
 
@@ -589,35 +591,126 @@ class TC_OPCREDS_VidVerify(MatterBaseTest):
             asserts.assert_equal(cr2_fabrics_entry.vendorID, vendorID,
                                  "Did not get the expected value set for VendorID field of Fabrics list for TH2's fabric.")
 
-        with test_step(description="Arm a fail safe for 60s.") as step:
-            logging.error("TODO!")
-            step.skip()
+            previous_cr2_dut_vendorID = cr2_fabrics_entry.vendorID
+            previous_cr2_dut_VIDVerificationStatement = cr2_fabrics_entry.VIDVerificationStatement
 
-        with test_step(description="Invoke SetVIDVerificationStatement with VVSC and VIDVerificationStatement to empty, and VID set to 0xFFF3 on TH2's fabric, inside fail-safe. Verify VVSC, VIDVerificationStamtement are now empty and VID is 0xFFF3 for that fabric.") as step:
-            logging.error("TODO!")
-            step.skip()
+        with test_step(description="Arm a fail safe for 300s from TH2 on dut_node_id2 with breadcrumb set to 10.") as step:
+            await self.send_single_cmd(dev_ctrl=cr2_dev_ctrl, node_id=cr2_dut_node_id, cmd=Clusters.GeneralCommissioning.Commands.ArmFailSafe(expiryLengthSeconds=60, breadcrumb=10))
 
-        with test_step(description="Disarm fail safe with ArmFailSafe(0s). Verify VVSC and VIDVerificatioStatement for TH1's fabric are still empty, and VID is still 0xFFF3.") as step:
-            logging.error("TODO!")
-            step.skip()
+        with test_step(description="Invoke SetVIDVerificationStatement with VVSC and VIDVerificationStatement to empty, and VID set to 0xFFF3 on TH2's fabric, inside fail-safe. Verify VVSC, VIDVerificationStatement are now empty and VID is 0xFFF3 for that fabric.") as step:
+            vvsc = b""
+            VIDVerificationStatement = b""
+            vendorID = 0xFFF3
 
-        with test_step(description="Create a new fabric under TH2's root with fabric ID 0x3333 by invoking ArmFailSafe(600s), CSRRequest, AddTrustedRootCertificate and AddNOC. Do not disarm failsafe, do not execute commissioning complete.") as step:
-            logging.error("TODO!")
-            step.skip()
+            attrib_listener.reset()
+            await self.send_single_cmd(dev_ctrl=cr2_dev_ctrl, node_id=cr2_dut_node_id, cmd=opcreds.Commands.SetVIDVerificationStatement(VIDVerificationStatement=VIDVerificationStatement, vvsc=vvsc, vendorID=vendorID))
+            attrib_listener.await_all_expected_report_matches(expected_matchers=[make_vid_matcher(
+                cr2_fabric_index, vendorID), make_vvs_matcher(cr2_fabric_index, None)], timeout_sec=30.0)
 
-        with test_step(description="Invoke SetVIDVerificationStatement with VVSC and VIDVerificationStatement present and setting VID to on fabric ID 0x3333 under TH2's root, inside fail-safe. Verify VIDVerificationStatement, VVSC and VID values match values set.") as step:
-            logging.error("TODO!")
-            step.skip()
+            updated_fabrics, updated_nocs = await self.read_updated_fabrics(dev_ctrl=cr2_dev_ctrl, node_id=cr2_dut_node_id)
 
-        with test_step(description="Disarm failsafe with ArmFailSafe(0s). Verify that fabric table no longer has VVSC and VIDVerificatioNStatement for the pending fabric that was dropped.") as step:
-            logging.error("TODO!")
-            step.skip()
+            cr2_fabrics_entry = get_entry_for_fabric(cr2_fabric_index, updated_fabrics)
+            asserts.assert_is_not_none(
+                cr2_fabrics_entry, f"Could not find Fabrics list entry for TH2's fabric index {cr2_fabric_index}")
+
+            cr2_nocs_entry = get_entry_for_fabric(cr2_fabric_index, updated_nocs)
+            asserts.assert_is_not_none(cr2_nocs_entry, f"Could not find NOCs list entry for TH2's fabric index {cr2_fabric_index}")
+
+            asserts.assert_equal(cr2_nocs_entry.vvsc, None,
+                                 "Expected VVSC to be missing")
+            asserts.assert_equal(cr2_fabrics_entry.VIDVerificationStatement, None,
+                                 "Did not get the expected value set for VIDVerificationStatement field of Fabrics list for TH2's fabric.")
+            asserts.assert_equal(cr2_fabrics_entry.vendorID, 0xFFF3,
+                                 "Did not get the expected value set for VendorID field of Fabrics list for TH2's fabric.")
+
+        with test_step(description="Disarm fail safe with ArmFailSafe(0s). Verify VVS, VendorID are not reverted, since there had been no AddNOC/UpdateNOC") as step:
+            await self.send_single_cmd(dev_ctrl=cr2_dev_ctrl, node_id=cr2_dut_node_id, cmd=Clusters.GeneralCommissioning.Commands.ArmFailSafe(expiryLengthSeconds=0, breadcrumb=11))
+            updated_fabrics, updated_nocs = await self.read_updated_fabrics(dev_ctrl=cr2_dev_ctrl, node_id=cr2_dut_node_id)
+
+            cr2_fabrics_entry = get_entry_for_fabric(cr2_fabric_index, updated_fabrics)
+            asserts.assert_is_not_none(
+                cr2_fabrics_entry, f"Could not find Fabrics list entry for TH2's fabric index {cr2_fabric_index}")
+
+            cr2_nocs_entry = get_entry_for_fabric(cr2_fabric_index, updated_nocs)
+            asserts.assert_is_not_none(cr2_nocs_entry, f"Could not find NOCs list entry for TH2's fabric index {cr2_fabric_index}")
+
+            asserts.assert_equal(cr2_nocs_entry.vvsc, None,
+                                 "Did not get the expected value set for VVSC field of NOCs list for TH2's fabric.")
+            asserts.assert_equal(cr2_fabrics_entry.VIDVerificationStatement, None,
+                                 "Did not get the expected value set for VIDVerificationStatement field of Fabrics list for TH2's fabric.")
+            asserts.assert_equal(cr2_fabrics_entry.vendorID, 0xFFF3,
+                                 "Did not get the expected value set for VendorID field of Fabrics list for TH2's fabric.")
+
+        with test_step(description="Create a new fabric under TH2's root with fabric ID 0x3333, node ID 0x33333333, VendorID 0xFFF2, by invoking ArmFailSafe(600s), CSRRequest, AddTrustedRootCertificate and AddNOC. Do not disarm failsafe, do not execute commissioning complete.") as step:
+            cr3_dut_node_id = 0x33333333
+
+            cr3_vid = 0xFFF2
+            cr3_fabricId = 0x3333
+            cr3_new_fabric_admin = new_certificate_authority.NewFabricAdmin(
+                vendorId=cr3_vid, fabricId=cr3_fabricId)
+            cr3_nodeid = cr2_nodeid + 1
+            cr3_dut_node_id = cr2_dut_node_id + 1
+
+            cr3_dev_ctrl = cr3_new_fabric_admin.NewController(
+                nodeId=cr3_nodeid)
+
+            success, nocResp, chain = await CommissioningBuildingBlocks.AddNOCForNewFabricFromExisting(
+                commissionerDevCtrl=cr2_dev_ctrl, newFabricDevCtrl=cr3_dev_ctrl,
+                existingNodeId=cr2_dut_node_id, newNodeId=cr3_dut_node_id,
+                omitCommissioningComplete=True, failSafeDurationSeconds=600
+            )
+
+            cr3_fabric_index = nocResp.fabricIndex
+            asserts.assert_true(success, "Commissioning DUT into CR3's fabrics must succeed.")
+
+        with test_step(description="Invoke SetVIDVerificationStatement with VVSC and VIDVerificationStatement present and setting VID to 0xFFF1 on fabric ID 0x3333 under TH2's root, inside fail-safe. Verify VIDVerificationStatement, VVSC and VID values match values set.") as step:
+            vvsc = b"\xcc" * 400
+            VIDVerificationStatement = b"\x01" * VID_VERIFICATION_STATEMENT_SIZE_BYTES_V1
+            vendorID = 0xFFF1
+
+            attrib_listener.reset()
+            await self.send_single_cmd(dev_ctrl=cr3_dev_ctrl, node_id=cr3_dut_node_id, cmd=opcreds.Commands.SetVIDVerificationStatement(VIDVerificationStatement=VIDVerificationStatement, vvsc=vvsc, vendorID=vendorID))
+            attrib_listener.await_all_expected_report_matches(expected_matchers=[make_vid_matcher(
+                cr3_fabric_index, vendorID), make_vvs_matcher(cr3_fabric_index, VIDVerificationStatement)], timeout_sec=30.0)
+
+            updated_fabrics, updated_nocs = await self.read_updated_fabrics(dev_ctrl=cr3_dev_ctrl, node_id=cr3_dut_node_id)
+
+            cr3_fabrics_entry = get_entry_for_fabric(cr3_fabric_index, updated_fabrics)
+            asserts.assert_is_not_none(
+                cr3_fabrics_entry, f"Could not find Fabrics list entry for TH3's fabric index {cr3_fabric_index}")
+
+            cr3_nocs_entry = get_entry_for_fabric(cr3_fabric_index, updated_nocs)
+            asserts.assert_is_not_none(cr3_nocs_entry, f"Could not find NOCs list entry for TH3's fabric index {cr3_fabric_index}")
+
+            asserts.assert_equal(cr3_nocs_entry.vvsc, vvsc,
+                                 "Expected VVSC to be missing")
+            asserts.assert_equal(cr3_fabrics_entry.VIDVerificationStatement, VIDVerificationStatement,
+                                 "Did not get the expected value set for VIDVerificationStatement field of Fabrics list for TH2's fabric.")
+            asserts.assert_equal(cr3_fabrics_entry.vendorID, vendorID,
+                                 "Did not get the expected value set for VendorID field of Fabrics list for TH2's fabric.")
+
+        with test_step(description="Disarm failsafe with ArmFailSafe(0s) from TH3 client. Verify that fabric table no longer has VVSC and VIDVerificationStatement for the pending fabric that was dropped.") as step:
+            attrib_listener.reset()
+
+            await self.send_single_cmd(dev_ctrl=cr3_dev_ctrl, node_id=cr3_dut_node_id, cmd=Clusters.GeneralCommissioning.Commands.ArmFailSafe(expiryLengthSeconds=0, breadcrumb=12))
+
+            updated_fabrics, updated_nocs = await self.read_updated_fabrics(dev_ctrl=cr2_dev_ctrl, node_id=cr2_dut_node_id)
+
+            cr3_fabrics_entry = get_entry_for_fabric(cr3_fabric_index, updated_fabrics)
+            asserts.assert_is_none(
+                cr3_fabrics_entry, f"Expected to see no more data for TH3's fabric in Fabrics attribute, but found some anyway: {cr3_fabrics_entry}")
+
+            cr3_nocs_entry = get_entry_for_fabric(cr3_fabric_index, updated_nocs)
+            asserts.assert_is_none(
+                cr3_nocs_entry, f"Expected to see no more data for TH3's fabric in NOCs attribute, but found some anyway: {cr3_nocs_entry}")
 
         with test_step(description="SetVIDVerificationStatement against TH1's fabric with VendorID set to 0xFFF5. Expect a CONSTRAINT_ERROR."):
             with asserts.assert_raises(InteractionModelError) as exception_context:
                 await self.send_single_cmd(cmd=opcreds.Commands.SetVIDVerificationStatement(vendorID=0xFFF5))
             asserts.assert_equal(exception_context.exception.status, Status.ConstraintError,
                                  "Expected CONSTRAINT_ERROR for SetVIDVerificationStatement with invalid VendorID 0xFFF5")
+
+        # TODO: Add coverage for UpdateNOC failsafe expiry.
 
         with test_step(description="Invoke SetVIDVerificationStatement with maximum-sized VVSC and VIDVerificationStatement present and setting VID to 0x6a01 on TH2's fabric, outside fail-safe. Expect success."):
             vvsc = b"\x5a" * 400
@@ -652,114 +745,6 @@ class TC_OPCREDS_VidVerify(MatterBaseTest):
             asserts.assert_equal(
                 resp.statusCode, opcreds.Enums.NodeOperationalCertStatusEnum.kOk)
 
-        with test_step(description="Establish a subscription to Operational Credentials cluster on endpoint 0 from TH1 fabric client, with MinIntervalFloor=0, MaxIntervalCeiling=30"):
-            attrib_listener = ClusterAttributeChangeAccumulator(opcreds)
-            await attrib_listener.start(cr1_dev_ctrl, cr1_dut_node_id, endpoint=0, min_interval_sec=0, max_interval_sec=30)
-
-        with test_step(description="Invoke SetVIDVerificationStatement with maximum-sized VVSC and VIDVerificationStatement present and setting VID to 0x6a01 on TH2's fabric, outside fail-safe. Verify VIDVerificationStatement, VVSC and VID updates are correct. Verify subscription received the updated values."):
-            vvsc = b"\xaa" * 400
-            VIDVerificationStatement = b"\x01" * VID_VERIFICATION_STATEMENT_SIZE_BYTES_V1
-            vendorID = 0x6a01
-
-            attrib_listener.reset()
-            await self.send_single_cmd(dev_ctrl=cr2_dev_ctrl, node_id=cr2_dut_node_id, cmd=opcreds.Commands.SetVIDVerificationStatement(VIDVerificationStatement=VIDVerificationStatement, vvsc=vvsc, vendorID=vendorID))
-            attrib_listener.await_all_expected_report_matches(expected_matchers=[make_vid_matcher(cr2_fabric_index, vendorID), make_vvs_matcher(cr2_fabric_index, VIDVerificationStatement)], timeout_sec=30.0)
-
-            updated_fabrics, updated_nocs = await self.read_updated_fabrics(dev_ctrl=cr1_dev_ctrl, node_id=cr1_dut_node_id)
-
-            cr2_fabrics_entry = get_entry_for_fabric(cr2_fabric_index, updated_fabrics)
-            asserts.assert_is_not_none(cr2_fabrics_entry, f"Could not find Fabrics list entry for TH2's fabric index {cr2_fabric_index}")
-
-            cr2_nocs_entry = get_entry_for_fabric(cr2_fabric_index, updated_nocs)
-            asserts.assert_is_not_none(cr2_nocs_entry, f"Could not find NOCs list entry for TH2's fabric index {cr2_fabric_index}")
-
-            asserts.assert_equal(cr2_nocs_entry.vvsc, vvsc, "Did not get the expected value set for VVSC field of NOCs list for TH2's fabric.")
-            asserts.assert_equal(cr2_fabrics_entry.VIDVerificationStatement, VIDVerificationStatement, "Did not get the expected value set for VIDVerificationStatement field of Fabrics list for TH2's fabric.")
-            asserts.assert_equal(cr2_fabrics_entry.vendorID, vendorID, "Did not get the expected value set for VendorID field of Fabrics list for TH2's fabric.")
-
-        with test_step(description="Invoke SetVIDVerificationStatement with maximum-sized VVSC on TH1's fabric, outside fail-safe. Verify INVALID_COMMAND due to presence of ICAC."):
-            vvsc = b"\xaa" * 400
-
-            with asserts.assert_raises(InteractionModelError) as exception_context:
-                await self.send_single_cmd(dev_ctrl=cr1_dev_ctrl, node_id=cr1_dut_node_id, cmd=opcreds.Commands.SetVIDVerificationStatement(vvsc=vvsc))
-            asserts.assert_equal(exception_context.exception.status, Status.InvalidCommand,
-                                "Expected INVALID_COMMAND for SetVIDVerificationStatement with VVSC present against DUT on TH1's fabric due to presence of ICAC.")
-
-        with test_step(description="Invoke SetVIDVerificationStatement with setting VID to 0xFFF1 on TH2's fabric, outside fail-safe. Verify VID is now 0xFFF1."):
-            vendorID = 0xFFF1
-
-            attrib_listener.reset()
-            await self.send_single_cmd(dev_ctrl=cr2_dev_ctrl, node_id=cr2_dut_node_id, cmd=opcreds.Commands.SetVIDVerificationStatement(vendorID=vendorID))
-            attrib_listener.await_all_expected_report_matches(expected_matchers=[make_vid_matcher(cr2_fabric_index, vendorID)], timeout_sec=30.0)
-
-            updated_fabrics, _ = await self.read_updated_fabrics(dev_ctrl=cr1_dev_ctrl, node_id=cr1_dut_node_id)
-
-            cr2_fabrics_entry = get_entry_for_fabric(cr2_fabric_index, updated_fabrics)
-            asserts.assert_is_not_none(cr2_fabrics_entry, f"Could not find Fabrics list entry for TH2's fabric index {cr2_fabric_index}")
-            asserts.assert_equal(cr2_fabrics_entry.vendorID, vendorID, "Did not get the expected value set for VendorID field of Fabrics list for TH2's fabric.")
-
-        with test_step(description="Arm a fail safe for 60s.") as step:
-            logging.error("TODO!")
-            step.skip()
-
-        with test_step(description="Invoke SetVIDVerificationStatement with VVSC and VIDVerificationStatement to empty, and VID set to 0xFFF3 on TH2's fabric, inside fail-safe. Verify VVSC, VIDVerificationStamtement are now empty and VID is 0xFFF3 for that fabric.") as step:
-            logging.error("TODO!")
-            step.skip()
-
-        with test_step(description="Disarm fail safe with ArmFailSafe(0s). Verify VVSC and VIDVerificatioStatement for TH1's fabric are still empty, and VID is still 0xFFF3.") as step:
-            logging.error("TODO!")
-            step.skip()
-
-        with test_step(description="Create a new fabric under TH2's root with fabric ID 0x3333 by invoking ArmFailSafe(600s), CSRRequest, AddTrustedRootCertificate and AddNOC. Do not disarm failsafe, do not execute commissioning complete.") as step:
-            logging.error("TODO!")
-            step.skip()
-
-        with test_step(description="Invoke SetVIDVerificationStatement with VVSC and VIDVerificationStatement present and setting VID to on fabric ID 0x3333 under TH2's root, inside fail-safe. Verify VIDVerificationStatement, VVSC and VID values match values set.") as step:
-            logging.error("TODO!")
-            step.skip()
-
-        with test_step(description="Disarm failsafe with ArmFailSafe(0s). Verify that fabric table no longer has VVSC and VIDVerificatioNStatement for the pending fabric that was dropped.") as step:
-            logging.error("TODO!")
-            step.skip()
-
-        with test_step(description="SetVIDVerificationStatement against TH1's fabric with VendorID set to 0xFFF5. Expect a CONSTRAINT_ERROR."):
-            with asserts.assert_raises(InteractionModelError) as exception_context:
-                await self.send_single_cmd(cmd=opcreds.Commands.SetVIDVerificationStatement(vendorID=0xFFF5))
-            asserts.assert_equal(exception_context.exception.status, Status.ConstraintError,
-                                "Expected CONSTRAINT_ERROR for SetVIDVerificationStatement with invalid VendorID 0xFFF5")
-
-        with test_step(description="Invoke SetVIDVerificationStatement with maximum-sized VVSC and VIDVerificationStatement present and setting VID to 0x6a01 on TH2's fabric, outside fail-safe. Expect success."):
-            vvsc = b"\x5a" * 400
-            VIDVerificationStatement = b"\x01" * VID_VERIFICATION_STATEMENT_SIZE_BYTES_V1
-            cr2_vid = 0x6a01
-
-            await self.send_single_cmd(dev_ctrl=cr2_dev_ctrl, node_id=cr2_dut_node_id, cmd=opcreds.Commands.SetVIDVerificationStatement(VIDVerificationStatement=VIDVerificationStatement, vvsc=vvsc, vendorID=cr2_vid))
-
-        with test_step(description="TH1 sends SignVIDVerificationRequest for TH2's fabric (which has a VIDVerificationStatement). Verify the response and signature."):
-            client_challenge = bytes_from_hex(
-                "a1:a2:a3:a4:a5:a6:a7:a8:a9:aa:ab:ac:ad:ae:af:b0:b1:b2:b3:b4:b5:b6:b7:b8:b9:ba:bb:bc:bd:be:bf:c1")
-            sign_vid_verification_response = await self.send_single_cmd(cmd=opcreds.Commands.SignVIDVerificationRequest(fabricIndex=cr2_fabric_index, clientChallenge=client_challenge))
-
-            asserts.assert_equal(sign_vid_verification_response.fabricIndex, cr2_fabric_index,
-                                "FabricIndex in SignVIDVerificationResponse must match request.")
-
-            # Locally generate the vendor_id_verification_tbs to check the signature.
-            expected_vendor_fabric_binding_message = generate_vendor_fabric_binding_message(
-                root_public_key_bytes=cr2_root_public_key, fabric_id=cr2_fabricId, vendor_id=cr2_vid)
-            attestation_challenge = dev_ctrl.GetConnectedDeviceSync(self.dut_node_id, allowPASE=False).attestationChallenge
-            vendor_id_verification_tbs = generate_vendor_id_verification_tbs(sign_vid_verification_response.fabricBindingVersion, attestation_challenge,
-                                                                            client_challenge, sign_vid_verification_response.fabricIndex, expected_vendor_fabric_binding_message, vid_verification_statement=VIDVerificationStatement)
-
-            # Check signature against vendor_id_verification_tbs
-            noc_cert = MatterCertParser(noc_struct.noc)
-            asserts.assert_true(verify_signature(public_key=noc_public_keys_from_certs["CR2"], message=vendor_id_verification_tbs,
-                                signature=sign_vid_verification_response.signature), "VID Verification Signature must validate using DUT's NOC public key")
-
-        with test_step(description="Remove TH2's fabric"):
-            cmd = opcreds.Commands.RemoveFabric(cr2_fabric_index)
-            resp = await self.send_single_cmd(cmd=cmd)
-            asserts.assert_equal(
-                resp.statusCode, opcreds.Enums.NodeOperationalCertStatusEnum.kOk)
 
 if __name__ == "__main__":
     default_matter_test_main()
