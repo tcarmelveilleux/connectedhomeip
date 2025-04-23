@@ -342,7 +342,9 @@ class TC_OPCREDS_VidVerify(MatterBaseTest):
         # TODO(test_plans#5046): actually make the test follow final test plan. For now
         # it functionally validates the VID Verification parts of Operational Credentials Cluster
 
-        with test_step(description="Commission DUT in TH1's fabric. Cert chain must include ICAC.", is_commissioning=True):
+        with test_step(0, description="Commission DUT in TH1's fabric. Cert chain must include ICAC.", is_commissioning=True):
+            # Commissioning with ICAC was implicit due to the commissioning method passed on command line.
+
             opcreds = Clusters.OperationalCredentials
             dev_ctrl = self.default_controller
             th1_dev_ctrl = self.default_controller
@@ -368,7 +370,7 @@ class TC_OPCREDS_VidVerify(MatterBaseTest):
             th1_root_parser = MatterCertParser(root_certs[0])
             th1_root_public_key = th1_root_parser.get_public_key_bytes()
 
-        with test_step(description="Commission DUT in TH2's fabric. Cert chain must NOT include ICAC"):
+        with test_step(1, description="Commission DUT in TH2's fabric. Cert chain must NOT include ICAC"):
             new_certificate_authority = self.certificate_authority_manager.NewCertificateAuthority()
             new_certificate_authority.alwaysOmitIcac = True
             th2_vid = 0xFFF2
@@ -394,7 +396,7 @@ class TC_OPCREDS_VidVerify(MatterBaseTest):
 
         # Read NOCs and validate that both the entry for TH1 and TH2 are readable
         # and have the right expected fabricId
-        with test_step(description="Read DUT's NOCs attribute and validate both fabrics have expected values extractable from their NOC."):
+        with test_step(2, description="Read DUT's NOCs attribute and validate both fabrics have expected values extractable from their NOC."):
             nocs_list = await self.read_single_attribute_check_success(
                 dev_ctrl=th1_dev_ctrl,
                 node_id=th1_dut_node_id,
@@ -435,7 +437,7 @@ class TC_OPCREDS_VidVerify(MatterBaseTest):
                 asserts.assert_equal(fabric_ids_from_certs[controller_name], fabric_id,
                                      f"Did not find {controller_name}'s fabric ID in the correct NOC")
 
-        with test_step(description="Read DUT's Fabrics attribute and validate both fabrics have expected values."):
+        with test_step(3, description="Read DUT's Fabrics attribute and validate both fabrics have expected values."):
             fabric_roots = {
                 "TH1": th1_root_public_key,
                 "TH2": th2_root_public_key
@@ -464,7 +466,7 @@ class TC_OPCREDS_VidVerify(MatterBaseTest):
                     asserts.assert_equal(
                         fabric_struct.fabricID, fabric_ids[controller_name], f"Did not find matching FabricID in Fabrics attribute for {controller_name}")
 
-        with test_step(description="TH1 sends SignVIDVerificationRequest for TH2's fabric. Verify the response and signature."):
+        with test_step(4, description="TH1 sends SignVIDVerificationRequest for TH2's fabric. Verify the response and signature."):
 
             client_challenge = bytes_from_hex(
                 "a1:a2:a3:a4:a5:a6:a7:a8:a9:aa:ab:ac:ad:ae:af:b0:b1:b2:b3:b4:b5:b6:b7:b8:b9:ba:bb:bc:bd:be:bf:c0")
