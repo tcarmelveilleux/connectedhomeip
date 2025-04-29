@@ -15,15 +15,11 @@
  *    limitations under the License.
  */
 #include <app/reporting/reporting.h>
+#include <app/util/af-types.h>
 #include <app/util/attribute-storage.h>
 #include <app/util/attribute-table.h>
 
 using chip::Protocols::InteractionModel::Status;
-
-void MatterReportingAttributeChangeCallback(const chip::app::ConcreteAttributePath & aPath)
-{
-    // NOOP currently, exists to satisfy linker only
-}
 
 Status emAfReadOrWriteAttribute(const EmberAfAttributeSearchRecord * attRecord, const EmberAfAttributeMetadata ** metadata,
                                 uint8_t * buffer, uint16_t readLength, bool write)
@@ -41,8 +37,13 @@ Status emAfWriteAttributeExternal(const chip::app::ConcreteAttributePath & path,
 }
 
 Status emberAfWriteAttribute(chip::EndpointId endpoint, chip::ClusterId cluster, chip::AttributeId attributeID, uint8_t * dataPtr,
-                             EmberAfAttributeType dataType)
+                             EmberAfAttributeType dataType, chip::app::MarkAttributeDirty markDirty)
 {
     return emAfWriteAttributeExternal(chip::app::ConcreteAttributePath(endpoint, cluster, attributeID),
                                       EmberAfWriteDataInput(dataPtr, dataType));
+}
+
+Status emberAfWriteAttribute(const chip::app::ConcreteAttributePath & path, const EmberAfWriteDataInput & input)
+{
+    return emAfWriteAttributeExternal(path, input);
 }

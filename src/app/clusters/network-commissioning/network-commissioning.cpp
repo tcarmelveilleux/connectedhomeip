@@ -233,7 +233,7 @@ private:
 CHIP_ERROR ThreadScanResponseToTLV::LoadResponses(Platform::ScopedMemoryBuffer<ThreadScanResponse> & scanResponseArray,
                                                   Span<ThreadScanResponse> & validResponses) const
 {
-    VerifyOrReturnError(scanResponseArray.Alloc(chip::min(mNetworks->Count(), kMaxNetworksInScanResponse)), CHIP_ERROR_NO_MEMORY);
+    VerifyOrReturnError(scanResponseArray.Alloc(std::min(mNetworks->Count(), kMaxNetworksInScanResponse)), CHIP_ERROR_NO_MEMORY);
 
     ThreadScanResponse scanResponse;
     size_t scanResponseArrayLength = 0;
@@ -1448,3 +1448,4 @@ void MatterNetworkCommissioningPluginServerInitCallback()
 {
     // Nothing to do, the server init routine will be done in Instance::Init()
 }
+void MatterNetworkCommissioningPluginServerShutdownCallback() {}

@@ -37,15 +37,19 @@
 #endif // QR_CODE_ENABLED
 #endif // DISPLAY_ENABLED
 
-#if CHIP_CONFIG_ENABLE_ICD_SERVER == 1
+#if CHIP_CONFIG_ENABLE_ICD_SERVER
 #include <app/icd/server/ICDNotifier.h> // nogncheck
-#endif
-#include <ProvisionManager.h>
-#include <app/server/OnboardingCodesUtil.h>
+#ifdef ENABLE_CHIP_SHELL
+#include <ICDShellCommands.h>
+#endif // ENABLE_CHIP_SHELL
+#endif // CHIP_CONFIG_ENABLE_ICD_SERVER
+
 #include <app/util/attribute-storage.h>
 #include <assert.h>
+#include <headers/ProvisionManager.h>
 #include <lib/support/CodeUtils.h>
 #include <platform/CHIPDeviceLayer.h>
+#include <setup_payload/OnboardingCodesUtil.h>
 #include <setup_payload/QRCodeSetupPayloadGenerator.h>
 #include <setup_payload/SetupPayload.h>
 #include <sl_cmsis_os2_common.h>
@@ -60,9 +64,14 @@
 #include <platform/silabs/platformAbstraction/SilabsPlatform.h>
 
 #ifdef SL_WIFI
-#include "wfx_host_events.h"
 #include <app/clusters/network-commissioning/network-commissioning.h>
 #include <platform/silabs/NetworkCommissioningWiFiDriver.h>
+#include <platform/silabs/wifi/WifiInterface.h>
+
+#if CHIP_CONFIG_ENABLE_ICD_SERVER
+#include <platform/silabs/wifi/icd/WifiSleepManager.h> // nogncheck
+
+#endif // CHIP_CONFIG_ENABLE_ICD_SERVER
 #endif // SL_WIFI
 
 #ifdef DIC_ENABLE
@@ -121,7 +130,7 @@ app::Clusters::NetworkCommissioning::Instance
 bool sIsEnabled  = false;
 bool sIsAttached = false;
 
-#if !(defined(CHIP_CONFIG_ENABLE_ICD_SERVER) && CHIP_CONFIG_ENABLE_ICD_SERVER)
+#if !(CHIP_CONFIG_ENABLE_ICD_SERVER)
 bool sHaveBLEConnections = false;
 #endif // CHIP_CONFIG_ENABLE_ICD_SERVER
 
@@ -171,25 +180,32 @@ BaseApplicationDelegate BaseApplication::sAppDelegate = BaseApplicationDelegate(
 void BaseApplicationDelegate::OnCommissioningSessionStarted()
 {
     isComissioningStarted = true;
+
+#if SL_WIFI && CHIP_CONFIG_ENABLE_ICD_SERVER
+    WifiSleepManager::GetInstance().HandleCommissioningSessionStarted();
+#endif // SL_WIFI && CHIP_CONFIG_ENABLE_ICD_SERVER
 }
 
 void BaseApplicationDelegate::OnCommissioningSessionStopped()
 {
     isComissioningStarted = false;
+
+#if SL_WIFI && CHIP_CONFIG_ENABLE_ICD_SERVER
+    WifiSleepManager::GetInstance().HandleCommissioningSessionStopped();
+#endif // SL_WIFI && CHIP_CONFIG_ENABLE_ICD_SERVER
+}
+
+void BaseApplicationDelegate::OnCommissioningSessionEstablishmentError(CHIP_ERROR err)
+{
+    isComissioningStarted = false;
+
+#if SL_WIFI && CHIP_CONFIG_ENABLE_ICD_SERVER
+    WifiSleepManager::GetInstance().HandleCommissioningSessionStopped();
+#endif // SL_WIFI && CHIP_CONFIG_ENABLE_ICD_SERVER
 }
 
 void BaseApplicationDelegate::OnCommissioningWindowClosed()
 {
-#if CHIP_CONFIG_ENABLE_ICD_SERVER && SLI_SI917
-    if (!BaseApplication::GetProvisionStatus() && !isComissioningStarted)
-    {
-        int32_t status = wfx_power_save(RSI_SLEEP_MODE_8, STANDBY_POWER_SAVE_WITH_RAM_RETENTION);
-        if (status != SL_STATUS_OK)
-        {
-            ChipLogError(AppServer, "Failed to enable the TA Deep Sleep");
-        }
-    }
-#endif // CHIP_CONFIG_ENABLE_ICD_SERVER && SLI_SI917
     if (BaseApplication::GetProvisionStatus())
     {
         // After the device is provisioned and the commissioning passed
@@ -250,16 +266,41 @@ CHIP_ERROR BaseApplication::StartAppTask(osThreadFunc_t taskFunction)
 
 CHIP_ERROR BaseApplication::Init()
 {
+    CHIP_ERROR err = BaseInit();
+    if (err != CHIP_NO_ERROR)
+    {
+        SILABS_LOG("BaseInit() failed");
+        appError(err);
+        return err;
+    }
+
+    err = AppInit();
+    if (err != CHIP_NO_ERROR)
+    {
+        SILABS_LOG("AppInit() failed");
+        appError(err);
+        return err;
+    }
+
+    return err;
+}
+
+CHIP_ERROR BaseApplication::BaseInit()
+{
     CHIP_ERROR err = CHIP_NO_ERROR;
+
+#ifdef DISPLAY_ENABLED
+    GetLCD().Init((uint8_t *) APP_TASK_NAME);
+#endif
 
 #ifdef SL_WIFI
     /*
      * Wait for the WiFi to be initialized
      */
     ChipLogProgress(AppServer, "APP: Wait WiFi Init");
-    while (!wfx_hw_ready())
+    while (!WifiInterface::GetInstance().IsStationReady())
     {
-        vTaskDelay(pdMS_TO_TICKS(10));
+        osDelay(pdMS_TO_TICKS(10));
     }
     ChipLogProgress(AppServer, "APP: Done WiFi Init");
     /* We will init server when we get IP */
@@ -305,6 +346,12 @@ CHIP_ERROR BaseApplication::Init()
     sStatusLED.Init(SYSTEM_STATE_LED);
 #endif // ENABLE_WSTK_LEDS
 
+#ifdef ENABLE_CHIP_SHELL
+#if CHIP_CONFIG_ENABLE_ICD_SERVER
+    ICDCommands::RegisterCommands();
+#endif // CHIP_CONFIG_ENABLE_ICD_SERVER
+#endif // ENABLE_CHIP_SHELL
+
 #ifdef PERFORMANCE_TEST_ENABLED
     RegisterPerfTestCommands();
 #endif // PERFORMANCE_TEST_ENABLED
@@ -342,7 +389,7 @@ void BaseApplication::FunctionEventHandler(AppEvent * aEvent)
     {
         // The factory reset sequence was in motion. The cancellation window expired.
         // Factory Reset the device now.
-#if CHIP_CONFIG_ENABLE_ICD_SERVER == 1
+#if CHIP_CONFIG_ENABLE_ICD_SERVER
         StopStatusLEDTimer();
 #endif // CHIP_CONFIG_ENABLE_ICD_SERVER
 
@@ -400,7 +447,7 @@ bool BaseApplication::ActivateStatusLedPatterns()
     }
 #endif // MATTER_DM_PLUGIN_IDENTIFY_SERVER
 
-#if !(defined(CHIP_CONFIG_ENABLE_ICD_SERVER) && CHIP_CONFIG_ENABLE_ICD_SERVER)
+#if !(CHIP_CONFIG_ENABLE_ICD_SERVER)
     // Identify Patterns have priority over Status patterns
     if (!isPatternSet)
     {
@@ -456,7 +503,7 @@ void BaseApplication::LightEventHandler()
     // locked while these values are queried.  However we use a non-blocking
     // lock request (TryLockCHIPStack()) to avoid blocking other UI activities
     // when the CHIP task is busy (e.g. with a long crypto operation).
-#if !(defined(CHIP_CONFIG_ENABLE_ICD_SERVER) && CHIP_CONFIG_ENABLE_ICD_SERVER)
+#if !(CHIP_CONFIG_ENABLE_ICD_SERVER)
     if (PlatformMgr().TryLockChipStack())
     {
 #ifdef SL_WIFI
@@ -599,7 +646,7 @@ void BaseApplication::StartFactoryResetSequence()
     StartFunctionTimer(FACTORY_RESET_CANCEL_WINDOW_TIMEOUT);
 
     sIsFactoryResetTriggered = true;
-#if CHIP_CONFIG_ENABLE_ICD_SERVER == 1
+#if CHIP_CONFIG_ENABLE_ICD_SERVER
     StartStatusLEDTimer();
 #endif // CHIP_CONFIG_ENABLE_ICD_SERVER
 
@@ -615,7 +662,7 @@ void BaseApplication::CancelFactoryResetSequence()
 {
     CancelFunctionTimer();
 
-#if CHIP_CONFIG_ENABLE_ICD_SERVER == 1
+#if CHIP_CONFIG_ENABLE_ICD_SERVER
     StopStatusLEDTimer();
 #endif
     if (sIsFactoryResetTriggered)
@@ -652,7 +699,7 @@ void BaseApplication::OnIdentifyStart(Identify * identify)
 {
     ChipLogProgress(Zcl, "onIdentifyStart");
 
-#if CHIP_CONFIG_ENABLE_ICD_SERVER == 1
+#if CHIP_CONFIG_ENABLE_ICD_SERVER
     StartStatusLEDTimer();
 #endif
 }
@@ -661,7 +708,7 @@ void BaseApplication::OnIdentifyStop(Identify * identify)
 {
     ChipLogProgress(Zcl, "onIdentifyStop");
 
-#if CHIP_CONFIG_ENABLE_ICD_SERVER == 1
+#if CHIP_CONFIG_ENABLE_ICD_SERVER
     StopStatusLEDTimer();
 #endif
 }
@@ -671,7 +718,7 @@ void BaseApplication::OnTriggerIdentifyEffectCompleted(chip::System::Layer * sys
     ChipLogProgress(Zcl, "Trigger Identify Complete");
     sIdentifyEffect = Clusters::Identify::EffectIdentifierEnum::kStopEffect;
 
-#if CHIP_CONFIG_ENABLE_ICD_SERVER == 1
+#if CHIP_CONFIG_ENABLE_ICD_SERVER
     StopStatusLEDTimer();
 #endif
 }
@@ -685,7 +732,7 @@ void BaseApplication::OnTriggerIdentifyEffect(Identify * identify)
         ChipLogDetail(AppServer, "Identify Effect Variant unsupported. Using default");
     }
 
-#if CHIP_CONFIG_ENABLE_ICD_SERVER == 1
+#if CHIP_CONFIG_ENABLE_ICD_SERVER
     StartStatusLEDTimer();
 #endif
 
@@ -878,6 +925,10 @@ void BaseApplication::OnPlatformEvent(const ChipDeviceEvent * event, intptr_t)
         {
 #if SL_WIFI
             chip::app::DnssdServer::Instance().StartServer();
+
+#if CHIP_CONFIG_ENABLE_ICD_SERVER
+            WifiSleepManager::GetInstance().VerifyAndTransitionToLowPowerMode(WifiSleepManager::PowerEvent::kConnectivityChange);
+#endif // CHIP_CONFIG_ENABLE_ICD_SERVER
 #endif // SL_WIFI
 
 #if SILABS_OTA_ENABLED
@@ -885,37 +936,23 @@ void BaseApplication::OnPlatformEvent(const ChipDeviceEvent * event, intptr_t)
             chip::DeviceLayer::SystemLayer().StartTimer(chip::System::Clock::Seconds32(OTAConfig::kInitOTARequestorDelaySec),
                                                         InitOTARequestorHandler, nullptr);
 #endif // SILABS_OTA_ENABLED
-#if (CHIP_CONFIG_ENABLE_ICD_SERVER && RS911X_WIFI)
-            // on power cycle, let the device go to sleep after connection is established
-            if (BaseApplication::sAppDelegate.isCommissioningInProgress() == false)
-            {
-#if SLI_SI917
-                sl_status_t err = wfx_power_save(RSI_SLEEP_MODE_2, ASSOCIATED_POWER_SAVE);
-#else
-                sl_status_t err = wfx_power_save();
-#endif /* SLI_SI917 */
-                if (err != SL_STATUS_OK)
-                {
-                    ChipLogError(AppServer, "wfx_power_save failed: 0x%lx", err);
-                }
-            }
-#endif /* CHIP_CONFIG_ENABLE_ICD_SERVER && RS911X_WIFI */
         }
     }
     break;
 
+    case DeviceEventType::kDnssdInitialized: {
+#if SILABS_OTA_ENABLED
+        ChipLogProgress(AppServer, "DNS-SD initialized, scheduling OTA Requestor initialization");
+        chip::DeviceLayer::SystemLayer().StartTimer(chip::System::Clock::Seconds32(OTAConfig::kInitOTARequestorDelaySec),
+                                                    InitOTARequestorHandler, nullptr);
+#endif // SILABS_OTA_ENABLED
+    }
+    break;
+
     case DeviceEventType::kCommissioningComplete: {
-#if (CHIP_CONFIG_ENABLE_ICD_SERVER && RS911X_WIFI)
-#if SLI_SI917
-        sl_status_t err = wfx_power_save(RSI_SLEEP_MODE_2, ASSOCIATED_POWER_SAVE);
-#else
-        sl_status_t err = wfx_power_save();
-#endif /* SLI_SI917 */
-        if (err != SL_STATUS_OK)
-        {
-            ChipLogError(AppServer, "wfx_power_save failed: 0x%lx", err);
-        }
-#endif /* CHIP_CONFIG_ENABLE_ICD_SERVER && RS911X_WIFI */
+#if SL_WIFI && CHIP_CONFIG_ENABLE_ICD_SERVER
+        WifiSleepManager::GetInstance().VerifyAndTransitionToLowPowerMode(WifiSleepManager::PowerEvent::kCommissioningComplete);
+#endif // SL_WIFI && CHIP_CONFIG_ENABLE_ICD_SERVER
     }
     break;
     default:

@@ -160,8 +160,9 @@ namespace {
 static void OnRegister(DNSServiceRef sdRef, DNSServiceFlags flags, DNSServiceErrorType err, const char * name, const char * type,
                        const char * domain, void * context)
 {
-    ChipLogProgress(Discovery, "Mdns: %s name: %s, type: %s, domain: %s, flags: %d", __func__, StringOrNullMarker(name),
-                    StringOrNullMarker(type), StringOrNullMarker(domain), flags);
+    ChipLogProgress(Discovery, "Mdns: %s name: %s, type: %s, domain: %s, flags: %d, err: %" PRIi32 " (%s)", __func__,
+                    StringOrNullMarker(name), StringOrNullMarker(type), StringOrNullMarker(domain), flags, err,
+                    Error::ToString(err));
 
     auto sdCtx = reinterpret_cast<RegisterContext *>(context);
     sdCtx->Finalize(err);
@@ -188,12 +189,17 @@ CHIP_ERROR Register(void * context, DnssdPublishCallback callback, uint32_t inte
     auto err = sdCtx->mHostNameRegistrar.Init(hostname, addressType, interfaceId);
     VerifyOrReturnError(kDNSServiceErr_NoError == err, sdCtx->Finalize(err));
 
-    DNSServiceRef sdRef;
-    err = DNSServiceRegister(&sdRef, registerFlags, interfaceId, name, type, kLocalDot, hostname, htons(port), record.size(),
-                             record.data(), OnRegister, sdCtx);
-    VerifyOrReturnError(kDNSServiceErr_NoError == err, sdCtx->Finalize(err));
+    err = DNSServiceRegister(&sdCtx->serviceRef, registerFlags, interfaceId, name, type, kLocalDot, hostname, htons(port),
+                             record.size(), record.data(), OnRegister, sdCtx);
+    if (err != kDNSServiceErr_NoError)
+    {
+        // Just in case DNSServiceCreateConnection put garbage in the outparam
+        // on failure.
+        sdCtx->serviceRef = nullptr;
+        return sdCtx->Finalize(err);
+    }
 
-    return MdnsContexts::GetInstance().Add(sdCtx, sdRef);
+    return MdnsContexts::GetInstance().Add(sdCtx);
 }
 
 static void OnBrowse(DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t interfaceId, DNSServiceErrorType err, const char * name,
@@ -216,16 +222,23 @@ CHIP_ERROR BrowseOnDomain(BrowseHandler * sdCtx, uint32_t interfaceId, const cha
 CHIP_ERROR Browse(BrowseHandler * sdCtx, uint32_t interfaceId, const char * type)
 {
     auto err = DNSServiceCreateConnection(&sdCtx->serviceRef);
-    VerifyOrReturnError(kDNSServiceErr_NoError == err, sdCtx->Finalize(err));
+    if (err != kDNSServiceErr_NoError)
+    {
+        // Just in case DNSServiceCreateConnection put garbage in the outparam
+        // on failure.
+        sdCtx->serviceRef = nullptr;
+        return sdCtx->Finalize(err);
+    }
 
     // We will browse on both the local domain and the SRP domain.
+    // BrowseOnDomain guarantees it will Finalize() on failure.
     ChipLogProgress(Discovery, "Browsing for: %s on local domain", StringOrNullMarker(type));
     ReturnErrorOnFailure(BrowseOnDomain(sdCtx, interfaceId, type, kLocalDot));
 
     ChipLogProgress(Discovery, "Browsing for: %s on %s domain", StringOrNullMarker(type), kSRPDot);
     ReturnErrorOnFailure(BrowseOnDomain(sdCtx, interfaceId, type, kSRPDot));
 
-    return MdnsContexts::GetInstance().Add(sdCtx, sdCtx->serviceRef);
+    return MdnsContexts::GetInstance().Add(sdCtx);
 }
 
 CHIP_ERROR Browse(void * context, DnssdBrowseCallback callback, uint32_t interfaceId, const char * type,
@@ -250,8 +263,8 @@ CHIP_ERROR Browse(DnssdBrowseDelegate * delegate, uint32_t interfaceId, const ch
 static void OnGetAddrInfo(DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t interfaceId, DNSServiceErrorType err,
                           const char * hostname, const struct sockaddr * address, uint32_t ttl, void * context)
 {
-    ChipLogProgress(Discovery, "Mdns: %s flags: %d, interface: %u, hostname: %s", __func__, flags, (unsigned) interfaceId,
-                    StringOrNullMarker(hostname));
+    ChipLogProgress(Discovery, "Mdns: %s flags: %d, interface: %u, hostname: %s, err: %" PRIi32 " (%s)", __func__, flags,
+                    (unsigned) interfaceId, StringOrNullMarker(hostname), err, Error::ToString(err));
 
     auto contextWithType = reinterpret_cast<ResolveContextWithType *>(context);
     VerifyOrReturn(contextWithType != nullptr, ChipLogError(Discovery, "ResolveContextWithType is null"));
@@ -340,8 +353,9 @@ static void OnResolve(DNSServiceRef sdRef, DNSServiceFlags flags, uint32_t inter
                       const char * fullname, const char * hostname, uint16_t port, uint16_t txtLen, const unsigned char * txtRecord,
                       void * context)
 {
-    ChipLogProgress(Discovery, "Mdns: %s flags: %d, interface: %u, fullname: %s, hostname: %s, port: %u", __func__, flags,
-                    (unsigned) interfaceId, StringOrNullMarker(fullname), StringOrNullMarker(hostname), ntohs(port));
+    ChipLogProgress(Discovery, "Mdns: %s flags: %d, interface: %u, fullname: %s, hostname: %s, port: %u, err: %" PRIi32 " (%s)",
+                    __func__, flags, (unsigned) interfaceId, StringOrNullMarker(fullname), StringOrNullMarker(hostname),
+                    ntohs(port), err, Error::ToString(err));
 
     auto contextWithType = reinterpret_cast<ResolveContextWithType *>(context);
     VerifyOrReturn(contextWithType != nullptr, ChipLogError(Discovery, "ResolveContextWithType is null"));
@@ -380,10 +394,17 @@ static CHIP_ERROR Resolve(ResolveContext * sdCtx, uint32_t interfaceId, chip::In
                     StringOrNullMarker(name), StringOrNullMarker(domain), interfaceId);
 
     auto err = DNSServiceCreateConnection(&sdCtx->serviceRef);
-    VerifyOrReturnError(kDNSServiceErr_NoError == err, sdCtx->Finalize(err));
+    if (err != kDNSServiceErr_NoError)
+    {
+        // Just in case DNSServiceCreateConnection put garbage in the outparam
+        // on failure.
+        sdCtx->serviceRef = nullptr;
+        return sdCtx->Finalize(err);
+    }
 
     // If we have a single domain from a browse, we will use that for the Resolve.
     // Otherwise we will try to resolve using both the local domain and the SRP domain.
+    // ResolveWithContext guarantees it will Finalize() on failure.
     if (domain != nullptr)
     {
         ReturnErrorOnFailure(ResolveWithContext(sdCtx, interfaceId, type, name, domain, &sdCtx->resolveContextWithNonSRPType));
@@ -400,7 +421,7 @@ static CHIP_ERROR Resolve(ResolveContext * sdCtx, uint32_t interfaceId, chip::In
         sdCtx->shouldStartSRPTimerForResolve = true;
     }
 
-    auto retval = MdnsContexts::GetInstance().Add(sdCtx, sdCtx->serviceRef);
+    auto retval = MdnsContexts::GetInstance().Add(sdCtx);
     if (retval == CHIP_NO_ERROR)
     {
         (*(sdCtx->consumerCounter))++;

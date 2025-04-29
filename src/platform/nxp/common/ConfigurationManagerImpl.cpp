@@ -1,6 +1,6 @@
 /*
  *
- *    Copyright (c) 2020-2022 Project CHIP Authors
+ *    Copyright (c) 2020-2022, 2025 Project CHIP Authors
  *    Copyright (c) 2020 Nest Labs, Inc.
  *    All rights reserved.
  *
@@ -38,7 +38,7 @@
 #endif
 
 #if CONFIG_CHIP_PLAT_LOAD_REAL_FACTORY_DATA
-#include "FactoryDataProvider.h"
+#include <platform/nxp/common/factory_data/legacy/FactoryDataProvider.h>
 #endif
 
 #if CHIP_DEVICE_CONFIG_ENABLE_WPA
@@ -58,9 +58,9 @@ ConfigurationManagerImpl & ConfigurationManagerImpl::GetDefaultInstance()
     return sInstance;
 }
 
-#if CONFIG_BOOT_REASON_SDK_SUPPORT
 CHIP_ERROR ConfigurationManagerImpl::DetermineBootReason(uint8_t rebootCause)
 {
+#if CONFIG_BOOT_REASON_SDK_SUPPORT
     /*
     With current implementation kBrownOutReset couldn't be catched
     */
@@ -93,8 +93,10 @@ CHIP_ERROR ConfigurationManagerImpl::DetermineBootReason(uint8_t rebootCause)
     }
 
     return StoreBootReason(to_underlying(bootReason));
-}
+#else
+    return CHIP_ERROR_UNSUPPORTED_CHIP_FEATURE;
 #endif
+}
 
 CHIP_ERROR ConfigurationManagerImpl::StoreSoftwareUpdateCompleted()
 {
@@ -177,8 +179,8 @@ CHIP_ERROR ConfigurationManagerImpl::GetUniqueId(char * buf, size_t bufSize)
 
     ReturnErrorOnFailure(err);
 
-    ReturnErrorCodeIf(uniqueIdLen >= bufSize, CHIP_ERROR_BUFFER_TOO_SMALL);
-    ReturnErrorCodeIf(buf[uniqueIdLen] != 0, CHIP_ERROR_INVALID_STRING_LENGTH);
+    VerifyOrReturnError(uniqueIdLen < bufSize, CHIP_ERROR_BUFFER_TOO_SMALL);
+    VerifyOrReturnError(buf[uniqueIdLen] == 0, CHIP_ERROR_INVALID_STRING_LENGTH);
 
     return err;
 }

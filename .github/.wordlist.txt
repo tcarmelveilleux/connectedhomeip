@@ -41,11 +41,15 @@ AFL
 AIDL
 algs
 alloc
+allocator
+allocators
+Ambrose
 Ameba
 amebad
 amebaiot
 AmebaZ
 amebaz2
+ANC
 announcementReason
 AnnounceOTAProvider
 AnnounceOTAProviderRequest
@@ -82,6 +86,7 @@ ASR
 AssertionError
 AST
 ASYNC
+ATL
 ATLs
 atomics
 att
@@ -111,6 +116,7 @@ avahi
 avL
 AwaitNextAction
 AXXXF
+Axxxx
 AYNJV
 babaf
 backend
@@ -312,11 +318,13 @@ CPROTO
 cpuapp
 cpython
 CQM
+CRL
 crypto
 cryptographic
 CSA
 csg
 csrrequest
+cstdint
 csu
 csv
 ctl
@@ -326,6 +334,7 @@ CurrentHue
 CurrentLevel
 CurrentSaturation
 customAcl
+customizable
 customizations
 cvfJ
 cxx
@@ -440,6 +449,7 @@ DNSStubListener
 docbuild
 Dockerfile
 Dockerfiles
+docstrings
 Don'ts
 DoorLock
 DoorState
@@ -462,6 +472,7 @@ DV
 DVK
 dynload
 eabi
+EAF
 EB
 ECC
 ECD
@@ -501,6 +512,7 @@ entrypoint
 enum
 Enums
 env
+EP
 epochKey
 epochStartTime
 eq
@@ -532,6 +544,7 @@ ExtendedPAN
 ExtensionEntry
 extern
 extpanid
+Exx
 FabricId
 fabricIdx
 fabricIndex
@@ -552,6 +565,7 @@ feff
 ffaa
 ffeebaefa
 FFF
+FFFFFFFFFFFF0102
 fffe
 fffff
 Fi
@@ -563,6 +577,8 @@ FlowMeasurement
 FluorideConcentrationMeasurement
 focusable
 forkpty
+formatter
+formatters
 FOTA
 FreeRTOS
 FreeRTOSConfig
@@ -576,6 +592,7 @@ fuzzer
 fuzzers
 fuzztest
 FW
+Fxx
 gbl
 gcloud
 GDB
@@ -675,6 +692,7 @@ ICMP
 IDF
 IDL
 IDLs
+IDM
 idt
 idx
 ifconfig
@@ -729,16 +747,20 @@ IPython
 ISCAN
 isHexString
 isLowerCase
+isort
 isUpperCase
 itemName
 iterable
 itsfoss
+IW
 JDK
 jinja
+JCM
 JLink
 JLinkExe
 JLinkRTTClient
 JN
+jf
 jni
 jpg
 jre
@@ -875,6 +897,7 @@ MediaPlayback
 MediaTek
 MEI
 mem
+memcpy
 memdf
 MemMonitoring
 menuconfig
@@ -891,6 +914,7 @@ microcontroller
 microcontrollers
 MicroSD
 middleware
+MIMXRT
 minApplicableSoftwareVersion
 Minicom
 MinInterval
@@ -922,12 +946,14 @@ Multicast
 multilib
 Multiprotocol
 multithreaded
+Murata
 mutex
 mutexes
 mv
 MX
 mydir
 MyPASSWORD
+mypy
 MySSID
 NAMESERVER
 NAMESPACE
@@ -1004,6 +1030,7 @@ OpenThreadDemo
 openweave
 OperationalCredentials
 operationalDataset
+operationalstate
 opkg
 OPTIGA
 optionMask
@@ -1037,6 +1064,7 @@ otatesting
 otaURL
 OTBR
 otcli
+OU
 outform
 outgoingCommands
 overridable
@@ -1146,8 +1174,10 @@ PyFunction
 pylint
 PyObject
 pypi
+pyproject
 PyRun
 pytest
+PYTHONPATH
 QEMU
 Qorvo
 QPG
@@ -1175,10 +1205,12 @@ READMEs
 readonly
 readthedocs
 Reag
+Realtek
 rebase
 recommand
 recommanded
 recurse
+refrigeratoralarm
 regen
 registerAttributeAccessOverride
 RegisterCommandHandler
@@ -1218,6 +1250,7 @@ RPi's
 RPis
 RSA
 rsn
+Rsp
 RSSI
 RST
 rsync
@@ -1324,6 +1357,7 @@ SRP
 SRV
 SSBL
 SSID
+SSL
 startoffset
 StartScan
 startsWith
@@ -1436,6 +1470,7 @@ toJson
 tokenization
 tokenized
 tokenizer
+toml
 toolchain
 toolchains
 topologies
@@ -1449,6 +1484,8 @@ trackFree
 TransferSession
 transitionTime
 TransportMgrBase
+triaged
+triaging
 TriggerEffect
 TRNG
 trustm
@@ -1488,6 +1525,7 @@ unfocus
 Unicast
 UniFlash
 UnitLocalization
+unittest
 unpair
 unprovisioned
 Unsecure
@@ -1601,6 +1639,8 @@ xFFF
 xFFFF
 xfffff
 xFFFFFFEFFFFFFFFF
+XMLPICSValidator
+XMLs
 xtensa
 xvzf
 xwayland
@@ -1628,3 +1668,4 @@ Zigbee
 zigbeealliance
 zigbeethread
 zsdk
+TBR

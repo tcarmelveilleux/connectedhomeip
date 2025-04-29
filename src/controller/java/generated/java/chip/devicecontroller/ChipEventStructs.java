@@ -3836,6 +3836,52 @@ public static class WaterHeaterManagementClusterBoostEndedEvent {
     return output.toString();
   }
 }
+public static class CommodityPriceClusterPriceChangeEvent {
+  public @Nullable ChipStructs.CommodityPriceClusterCommodityPriceStruct currentPrice;
+  private static final long CURRENT_PRICE_ID = 0L;
+
+  public CommodityPriceClusterPriceChangeEvent(
+    @Nullable ChipStructs.CommodityPriceClusterCommodityPriceStruct currentPrice
+  ) {
+    this.currentPrice = currentPrice;
+  }
+
+  public StructType encodeTlv() {
+    ArrayList<StructElement> values = new ArrayList<>();
+    values.add(new StructElement(CURRENT_PRICE_ID, currentPrice != null ? currentPrice.encodeTlv() : new NullType()));
+
+    return new StructType(values);
+  }
+
+  public static CommodityPriceClusterPriceChangeEvent decodeTlv(BaseTLVType tlvValue) {
+    if (tlvValue == null || tlvValue.type() != TLVType.Struct) {
+      return null;
+    }
+    @Nullable ChipStructs.CommodityPriceClusterCommodityPriceStruct currentPrice = null;
+    for (StructElement element: ((StructType)tlvValue).value()) {
+      if (element.contextTagNum() == CURRENT_PRICE_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.Struct) {
+          StructType castingValue = element.value(StructType.class);
+          currentPrice = ChipStructs.CommodityPriceClusterCommodityPriceStruct.decodeTlv(castingValue);
+        }
+      }
+    }
+    return new CommodityPriceClusterPriceChangeEvent(
+      currentPrice
+    );
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("CommodityPriceClusterPriceChangeEvent {\n");
+    output.append("\tcurrentPrice: ");
+    output.append(currentPrice);
+    output.append("\n");
+    output.append("}\n");
+    return output.toString();
+  }
+}
 public static class DemandResponseLoadControlClusterLoadControlEventStatusChangeEvent {
   public byte[] eventID;
   public @Nullable Integer transitionIndex;
@@ -4864,6 +4910,52 @@ public static class EnergyEvseClusterRFIDEvent {
     return output.toString();
   }
 }
+public static class ElectricalGridConditionsClusterCurrentConditionsChangedEvent {
+  public @Nullable ChipStructs.ElectricalGridConditionsClusterElectricalGridConditionsStruct currentConditions;
+  private static final long CURRENT_CONDITIONS_ID = 0L;
+
+  public ElectricalGridConditionsClusterCurrentConditionsChangedEvent(
+    @Nullable ChipStructs.ElectricalGridConditionsClusterElectricalGridConditionsStruct currentConditions
+  ) {
+    this.currentConditions = currentConditions;
+  }
+
+  public StructType encodeTlv() {
+    ArrayList<StructElement> values = new ArrayList<>();
+    values.add(new StructElement(CURRENT_CONDITIONS_ID, currentConditions != null ? currentConditions.encodeTlv() : new NullType()));
+
+    return new StructType(values);
+  }
+
+  public static ElectricalGridConditionsClusterCurrentConditionsChangedEvent decodeTlv(BaseTLVType tlvValue) {
+    if (tlvValue == null || tlvValue.type() != TLVType.Struct) {
+      return null;
+    }
+    @Nullable ChipStructs.ElectricalGridConditionsClusterElectricalGridConditionsStruct currentConditions = null;
+    for (StructElement element: ((StructType)tlvValue).value()) {
+      if (element.contextTagNum() == CURRENT_CONDITIONS_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.Struct) {
+          StructType castingValue = element.value(StructType.class);
+          currentConditions = ChipStructs.ElectricalGridConditionsClusterElectricalGridConditionsStruct.decodeTlv(castingValue);
+        }
+      }
+    }
+    return new ElectricalGridConditionsClusterCurrentConditionsChangedEvent(
+      currentConditions
+    );
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("ElectricalGridConditionsClusterCurrentConditionsChangedEvent {\n");
+    output.append("\tcurrentConditions: ");
+    output.append(currentConditions);
+    output.append("\n");
+    output.append("}\n");
+    return output.toString();
+  }
+}
 public static class DoorLockClusterDoorLockAlarmEvent {
   public Integer alarmCode;
   private static final long ALARM_CODE_ID = 0L;
@@ -5344,6 +5436,172 @@ public static class DoorLockClusterLockUserChangeEvent {
     output.append("\n");
     output.append("\tdataIndex: ");
     output.append(dataIndex);
+    output.append("\n");
+    output.append("}\n");
+    return output.toString();
+  }
+}
+public static class ClosureControlClusterOperationalErrorEvent {
+  public ArrayList<Integer> errorState;
+  private static final long ERROR_STATE_ID = 0L;
+
+  public ClosureControlClusterOperationalErrorEvent(
+    ArrayList<Integer> errorState
+  ) {
+    this.errorState = errorState;
+  }
+
+  public StructType encodeTlv() {
+    ArrayList<StructElement> values = new ArrayList<>();
+    values.add(new StructElement(ERROR_STATE_ID, ArrayType.generateArrayType(errorState, (elementerrorState) -> new UIntType(elementerrorState))));
+
+    return new StructType(values);
+  }
+
+  public static ClosureControlClusterOperationalErrorEvent decodeTlv(BaseTLVType tlvValue) {
+    if (tlvValue == null || tlvValue.type() != TLVType.Struct) {
+      return null;
+    }
+    ArrayList<Integer> errorState = null;
+    for (StructElement element: ((StructType)tlvValue).value()) {
+      if (element.contextTagNum() == ERROR_STATE_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.Array) {
+          ArrayType castingValue = element.value(ArrayType.class);
+          errorState = castingValue.map((elementcastingValue) -> elementcastingValue.value(Integer.class));
+        }
+      }
+    }
+    return new ClosureControlClusterOperationalErrorEvent(
+      errorState
+    );
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("ClosureControlClusterOperationalErrorEvent {\n");
+    output.append("\terrorState: ");
+    output.append(errorState);
+    output.append("\n");
+    output.append("}\n");
+    return output.toString();
+  }
+}
+public static class ClosureControlClusterMovementCompletedEvent {
+
+  public ClosureControlClusterMovementCompletedEvent(
+  ) {
+  }
+
+  public StructType encodeTlv() {
+    ArrayList<StructElement> values = new ArrayList<>();
+
+    return new StructType(values);
+  }
+
+  public static ClosureControlClusterMovementCompletedEvent decodeTlv(BaseTLVType tlvValue) {
+    if (tlvValue == null || tlvValue.type() != TLVType.Struct) {
+      return null;
+    }
+    return new ClosureControlClusterMovementCompletedEvent(
+    );
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("ClosureControlClusterMovementCompletedEvent {\n");
+    output.append("}\n");
+    return output.toString();
+  }
+}
+public static class ClosureControlClusterEngageStateChangedEvent {
+  public Boolean engageValue;
+  private static final long ENGAGE_VALUE_ID = 0L;
+
+  public ClosureControlClusterEngageStateChangedEvent(
+    Boolean engageValue
+  ) {
+    this.engageValue = engageValue;
+  }
+
+  public StructType encodeTlv() {
+    ArrayList<StructElement> values = new ArrayList<>();
+    values.add(new StructElement(ENGAGE_VALUE_ID, new BooleanType(engageValue)));
+
+    return new StructType(values);
+  }
+
+  public static ClosureControlClusterEngageStateChangedEvent decodeTlv(BaseTLVType tlvValue) {
+    if (tlvValue == null || tlvValue.type() != TLVType.Struct) {
+      return null;
+    }
+    Boolean engageValue = null;
+    for (StructElement element: ((StructType)tlvValue).value()) {
+      if (element.contextTagNum() == ENGAGE_VALUE_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.Boolean) {
+          BooleanType castingValue = element.value(BooleanType.class);
+          engageValue = castingValue.value(Boolean.class);
+        }
+      }
+    }
+    return new ClosureControlClusterEngageStateChangedEvent(
+      engageValue
+    );
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("ClosureControlClusterEngageStateChangedEvent {\n");
+    output.append("\tengageValue: ");
+    output.append(engageValue);
+    output.append("\n");
+    output.append("}\n");
+    return output.toString();
+  }
+}
+public static class ClosureControlClusterSecureStateChangedEvent {
+  public Boolean secureValue;
+  private static final long SECURE_VALUE_ID = 0L;
+
+  public ClosureControlClusterSecureStateChangedEvent(
+    Boolean secureValue
+  ) {
+    this.secureValue = secureValue;
+  }
+
+  public StructType encodeTlv() {
+    ArrayList<StructElement> values = new ArrayList<>();
+    values.add(new StructElement(SECURE_VALUE_ID, new BooleanType(secureValue)));
+
+    return new StructType(values);
+  }
+
+  public static ClosureControlClusterSecureStateChangedEvent decodeTlv(BaseTLVType tlvValue) {
+    if (tlvValue == null || tlvValue.type() != TLVType.Struct) {
+      return null;
+    }
+    Boolean secureValue = null;
+    for (StructElement element: ((StructType)tlvValue).value()) {
+      if (element.contextTagNum() == SECURE_VALUE_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.Boolean) {
+          BooleanType castingValue = element.value(BooleanType.class);
+          secureValue = castingValue.value(Boolean.class);
+        }
+      }
+    }
+    return new ClosureControlClusterSecureStateChangedEvent(
+      secureValue
+    );
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("ClosureControlClusterSecureStateChangedEvent {\n");
+    output.append("\tsecureValue: ");
+    output.append(secureValue);
     output.append("\n");
     output.append("}\n");
     return output.toString();
@@ -6115,17 +6373,22 @@ public static class MediaPlaybackClusterStateChangedEvent {
 }
 public static class AccountLoginClusterLoggedOutEvent {
   public Optional<Long> node;
+  public Integer fabricIndex;
   private static final long NODE_ID = 0L;
+  private static final long FABRIC_INDEX_ID = 254L;
 
   public AccountLoginClusterLoggedOutEvent(
-    Optional<Long> node
+    Optional<Long> node,
+    Integer fabricIndex
   ) {
     this.node = node;
+    this.fabricIndex = fabricIndex;
   }
 
   public StructType encodeTlv() {
     ArrayList<StructElement> values = new ArrayList<>();
     values.add(new StructElement(NODE_ID, node.<BaseTLVType>map((nonOptionalnode) -> new UIntType(nonOptionalnode)).orElse(new EmptyType())));
+    values.add(new StructElement(FABRIC_INDEX_ID, new UIntType(fabricIndex)));
 
     return new StructType(values);
   }
@@ -6135,16 +6398,23 @@ public static class AccountLoginClusterLoggedOutEvent {
       return null;
     }
     Optional<Long> node = Optional.empty();
+    Integer fabricIndex = null;
     for (StructElement element: ((StructType)tlvValue).value()) {
       if (element.contextTagNum() == NODE_ID) {
         if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
           UIntType castingValue = element.value(UIntType.class);
           node = Optional.of(castingValue.value(Long.class));
         }
+      } else if (element.contextTagNum() == FABRIC_INDEX_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+          UIntType castingValue = element.value(UIntType.class);
+          fabricIndex = castingValue.value(Integer.class);
+        }
       }
     }
     return new AccountLoginClusterLoggedOutEvent(
-      node
+      node,
+      fabricIndex
     );
   }
 
@@ -6154,6 +6424,9 @@ public static class AccountLoginClusterLoggedOutEvent {
     output.append("AccountLoginClusterLoggedOutEvent {\n");
     output.append("\tnode: ");
     output.append(node);
+    output.append("\n");
+    output.append("\tfabricIndex: ");
+    output.append(fabricIndex);
     output.append("\n");
     output.append("}\n");
     return output.toString();
@@ -6183,6 +6456,280 @@ public static class ContentControlClusterRemainingScreenTimeExpiredEvent {
   public String toString() {
     StringBuilder output = new StringBuilder();
     output.append("ContentControlClusterRemainingScreenTimeExpiredEvent {\n");
+    output.append("}\n");
+    return output.toString();
+  }
+}
+public static class ZoneManagementClusterZoneTriggeredEvent {
+  public ArrayList<Integer> zones;
+  public Integer reason;
+  private static final long ZONES_ID = 0L;
+  private static final long REASON_ID = 1L;
+
+  public ZoneManagementClusterZoneTriggeredEvent(
+    ArrayList<Integer> zones,
+    Integer reason
+  ) {
+    this.zones = zones;
+    this.reason = reason;
+  }
+
+  public StructType encodeTlv() {
+    ArrayList<StructElement> values = new ArrayList<>();
+    values.add(new StructElement(ZONES_ID, ArrayType.generateArrayType(zones, (elementzones) -> new UIntType(elementzones))));
+    values.add(new StructElement(REASON_ID, new UIntType(reason)));
+
+    return new StructType(values);
+  }
+
+  public static ZoneManagementClusterZoneTriggeredEvent decodeTlv(BaseTLVType tlvValue) {
+    if (tlvValue == null || tlvValue.type() != TLVType.Struct) {
+      return null;
+    }
+    ArrayList<Integer> zones = null;
+    Integer reason = null;
+    for (StructElement element: ((StructType)tlvValue).value()) {
+      if (element.contextTagNum() == ZONES_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.Array) {
+          ArrayType castingValue = element.value(ArrayType.class);
+          zones = castingValue.map((elementcastingValue) -> elementcastingValue.value(Integer.class));
+        }
+      } else if (element.contextTagNum() == REASON_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+          UIntType castingValue = element.value(UIntType.class);
+          reason = castingValue.value(Integer.class);
+        }
+      }
+    }
+    return new ZoneManagementClusterZoneTriggeredEvent(
+      zones,
+      reason
+    );
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("ZoneManagementClusterZoneTriggeredEvent {\n");
+    output.append("\tzones: ");
+    output.append(zones);
+    output.append("\n");
+    output.append("\treason: ");
+    output.append(reason);
+    output.append("\n");
+    output.append("}\n");
+    return output.toString();
+  }
+}
+public static class ZoneManagementClusterZoneStoppedEvent {
+  public ArrayList<Integer> zones;
+  public Integer reason;
+  private static final long ZONES_ID = 0L;
+  private static final long REASON_ID = 1L;
+
+  public ZoneManagementClusterZoneStoppedEvent(
+    ArrayList<Integer> zones,
+    Integer reason
+  ) {
+    this.zones = zones;
+    this.reason = reason;
+  }
+
+  public StructType encodeTlv() {
+    ArrayList<StructElement> values = new ArrayList<>();
+    values.add(new StructElement(ZONES_ID, ArrayType.generateArrayType(zones, (elementzones) -> new UIntType(elementzones))));
+    values.add(new StructElement(REASON_ID, new UIntType(reason)));
+
+    return new StructType(values);
+  }
+
+  public static ZoneManagementClusterZoneStoppedEvent decodeTlv(BaseTLVType tlvValue) {
+    if (tlvValue == null || tlvValue.type() != TLVType.Struct) {
+      return null;
+    }
+    ArrayList<Integer> zones = null;
+    Integer reason = null;
+    for (StructElement element: ((StructType)tlvValue).value()) {
+      if (element.contextTagNum() == ZONES_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.Array) {
+          ArrayType castingValue = element.value(ArrayType.class);
+          zones = castingValue.map((elementcastingValue) -> elementcastingValue.value(Integer.class));
+        }
+      } else if (element.contextTagNum() == REASON_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+          UIntType castingValue = element.value(UIntType.class);
+          reason = castingValue.value(Integer.class);
+        }
+      }
+    }
+    return new ZoneManagementClusterZoneStoppedEvent(
+      zones,
+      reason
+    );
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("ZoneManagementClusterZoneStoppedEvent {\n");
+    output.append("\tzones: ");
+    output.append(zones);
+    output.append("\n");
+    output.append("\treason: ");
+    output.append(reason);
+    output.append("\n");
+    output.append("}\n");
+    return output.toString();
+  }
+}
+public static class PushAvStreamTransportClusterPushTransportBeginEvent {
+  public Integer connectionID;
+  public Integer triggerType;
+  public Optional<Integer> activationReason;
+  private static final long CONNECTION_ID_ID = 0L;
+  private static final long TRIGGER_TYPE_ID = 1L;
+  private static final long ACTIVATION_REASON_ID = 2L;
+
+  public PushAvStreamTransportClusterPushTransportBeginEvent(
+    Integer connectionID,
+    Integer triggerType,
+    Optional<Integer> activationReason
+  ) {
+    this.connectionID = connectionID;
+    this.triggerType = triggerType;
+    this.activationReason = activationReason;
+  }
+
+  public StructType encodeTlv() {
+    ArrayList<StructElement> values = new ArrayList<>();
+    values.add(new StructElement(CONNECTION_ID_ID, new UIntType(connectionID)));
+    values.add(new StructElement(TRIGGER_TYPE_ID, new UIntType(triggerType)));
+    values.add(new StructElement(ACTIVATION_REASON_ID, activationReason.<BaseTLVType>map((nonOptionalactivationReason) -> new UIntType(nonOptionalactivationReason)).orElse(new EmptyType())));
+
+    return new StructType(values);
+  }
+
+  public static PushAvStreamTransportClusterPushTransportBeginEvent decodeTlv(BaseTLVType tlvValue) {
+    if (tlvValue == null || tlvValue.type() != TLVType.Struct) {
+      return null;
+    }
+    Integer connectionID = null;
+    Integer triggerType = null;
+    Optional<Integer> activationReason = Optional.empty();
+    for (StructElement element: ((StructType)tlvValue).value()) {
+      if (element.contextTagNum() == CONNECTION_ID_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+          UIntType castingValue = element.value(UIntType.class);
+          connectionID = castingValue.value(Integer.class);
+        }
+      } else if (element.contextTagNum() == TRIGGER_TYPE_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+          UIntType castingValue = element.value(UIntType.class);
+          triggerType = castingValue.value(Integer.class);
+        }
+      } else if (element.contextTagNum() == ACTIVATION_REASON_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+          UIntType castingValue = element.value(UIntType.class);
+          activationReason = Optional.of(castingValue.value(Integer.class));
+        }
+      }
+    }
+    return new PushAvStreamTransportClusterPushTransportBeginEvent(
+      connectionID,
+      triggerType,
+      activationReason
+    );
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("PushAvStreamTransportClusterPushTransportBeginEvent {\n");
+    output.append("\tconnectionID: ");
+    output.append(connectionID);
+    output.append("\n");
+    output.append("\ttriggerType: ");
+    output.append(triggerType);
+    output.append("\n");
+    output.append("\tactivationReason: ");
+    output.append(activationReason);
+    output.append("\n");
+    output.append("}\n");
+    return output.toString();
+  }
+}
+public static class PushAvStreamTransportClusterPushTransportEndEvent {
+  public Integer connectionID;
+  public Integer triggerType;
+  public Optional<Integer> activationReason;
+  private static final long CONNECTION_ID_ID = 0L;
+  private static final long TRIGGER_TYPE_ID = 1L;
+  private static final long ACTIVATION_REASON_ID = 2L;
+
+  public PushAvStreamTransportClusterPushTransportEndEvent(
+    Integer connectionID,
+    Integer triggerType,
+    Optional<Integer> activationReason
+  ) {
+    this.connectionID = connectionID;
+    this.triggerType = triggerType;
+    this.activationReason = activationReason;
+  }
+
+  public StructType encodeTlv() {
+    ArrayList<StructElement> values = new ArrayList<>();
+    values.add(new StructElement(CONNECTION_ID_ID, new UIntType(connectionID)));
+    values.add(new StructElement(TRIGGER_TYPE_ID, new UIntType(triggerType)));
+    values.add(new StructElement(ACTIVATION_REASON_ID, activationReason.<BaseTLVType>map((nonOptionalactivationReason) -> new UIntType(nonOptionalactivationReason)).orElse(new EmptyType())));
+
+    return new StructType(values);
+  }
+
+  public static PushAvStreamTransportClusterPushTransportEndEvent decodeTlv(BaseTLVType tlvValue) {
+    if (tlvValue == null || tlvValue.type() != TLVType.Struct) {
+      return null;
+    }
+    Integer connectionID = null;
+    Integer triggerType = null;
+    Optional<Integer> activationReason = Optional.empty();
+    for (StructElement element: ((StructType)tlvValue).value()) {
+      if (element.contextTagNum() == CONNECTION_ID_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+          UIntType castingValue = element.value(UIntType.class);
+          connectionID = castingValue.value(Integer.class);
+        }
+      } else if (element.contextTagNum() == TRIGGER_TYPE_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+          UIntType castingValue = element.value(UIntType.class);
+          triggerType = castingValue.value(Integer.class);
+        }
+      } else if (element.contextTagNum() == ACTIVATION_REASON_ID) {
+        if (element.value(BaseTLVType.class).type() == TLVType.UInt) {
+          UIntType castingValue = element.value(UIntType.class);
+          activationReason = Optional.of(castingValue.value(Integer.class));
+        }
+      }
+    }
+    return new PushAvStreamTransportClusterPushTransportEndEvent(
+      connectionID,
+      triggerType,
+      activationReason
+    );
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("PushAvStreamTransportClusterPushTransportEndEvent {\n");
+    output.append("\tconnectionID: ");
+    output.append(connectionID);
+    output.append("\n");
+    output.append("\ttriggerType: ");
+    output.append(triggerType);
+    output.append("\n");
+    output.append("\tactivationReason: ");
+    output.append(activationReason);
+    output.append("\n");
     output.append("}\n");
     return output.toString();
   }

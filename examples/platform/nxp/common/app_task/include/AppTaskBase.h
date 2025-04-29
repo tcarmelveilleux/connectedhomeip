@@ -102,7 +102,7 @@ public:
      * This function can be overridden in order to implement a specific disallow mechanism.
      *
      */
-    virtual void AppMatter_DisallowDeviceToSleep(void) {}
+    virtual void AppMatter_DisallowDeviceToSleep(void);
 
     /**
      * \brief Allow entering low power mode.
@@ -110,7 +110,7 @@ public:
      * This function can be overridden in order to implement a specific allow mechanism.
      *
      */
-    virtual void AppMatter_AllowDeviceToSleep(void) {}
+    virtual void AppMatter_AllowDeviceToSleep(void);
 
     /**
      * \brief Print onboarding information.
@@ -149,6 +149,8 @@ public:
      */
 #if CONFIG_CHIP_WIFI || CHIP_DEVICE_CONFIG_ENABLE_WPA
     virtual chip::DeviceLayer::NetworkCommissioning::WiFiDriver * GetWifiDriverInstance(void) = 0;
+#elif CONFIG_CHIP_ETHERNET
+    virtual chip::DeviceLayer::NetworkCommissioning::EthernetDriver * GetEthernetDriverInstance(void) = 0;
 #endif
 
     /**
@@ -166,6 +168,17 @@ public:
      *
      */
     static void InitServer(intptr_t arg);
+
+#if CHIP_DEVICE_CONFIG_ENABLE_TBR
+    /**
+     * \brief Initialize the Thread Border Router management cluster.
+     *
+     * Called when the border router function is up and running. This cluster stays disabled
+     * when the application is used as a Matter over Thread device.
+     *
+     */
+    void EnableTbrManagementCluster();
+#endif
 
     /**
      * Commissioning handlers
@@ -191,6 +204,11 @@ private:
     static void StartCommissioning(intptr_t arg);
     static void StopCommissioning(intptr_t arg);
     static void SwitchCommissioningState(intptr_t arg);
+
+#if CHIP_DEVICE_CONFIG_ENABLE_TBR
+    static constexpr EndpointId kThreadBRMgmtEndpoint = 2;
+    bool mTbrmClusterEnabled                          = false;
+#endif
 };
 
 /**

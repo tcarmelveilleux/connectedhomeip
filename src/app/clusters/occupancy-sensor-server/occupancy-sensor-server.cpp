@@ -159,18 +159,23 @@ CHIP_ERROR Instance::Read(const ConcreteReadAttributePath & aPath, AttributeValu
 
     switch (aPath.mAttributeId)
     {
-    case Attributes::ClusterRevision::Id: {
-        return aEncoder.Encode(kLatestClusterRevision);
-    }
-    case Attributes::FeatureMap::Id: {
-        return aEncoder.Encode(mFeatures);
-    }
+    case Attributes::FeatureMap::Id:
+        ReturnErrorOnFailure(aEncoder.Encode(mFeature));
+        break;
     case Attributes::HoldTime::Id:
     case Attributes::PIROccupiedToUnoccupiedDelay::Id:
     case Attributes::UltrasonicOccupiedToUnoccupiedDelay::Id:
     case Attributes::PhysicalContactOccupiedToUnoccupiedDelay::Id: {
-        // Both attributes have to track.
-        return aEncoder.Encode(mHoldTimeSeconds);
+        // HoldTime is equivalent to the legacy *OccupiedToUnoccupiedDelay attributes.
+        // The AAI will read/write these attributes at the same storage for one endpoint.
+        uint16_t * holdTime = GetHoldTimeForEndpoint(aPath.mEndpointId);
+
+        if (holdTime == nullptr)
+        {
+            return CHIP_ERROR_NOT_FOUND;
+        }
+
+        return aEncoder.Encode(*holdTime);
     }
     case Attributes::HoldTimeLimits::Id: {
         Structs::HoldTimeLimitsStruct::Type holdTimeLimitsStruct = mDelegate->GetHoldTimeLimits();
@@ -248,19 +253,12 @@ CHIP_ERROR Instance::HandleWriteHoldTime(uint16_t newHoldTimeSeconds)
         return CHIP_NO_ERROR;
     }
 
-    mHoldTimeSeconds = newHoldTimeSeconds;
-
-    mDelegate->OnHoldTimeWrite(newHoldTimeSeconds);
-
-    auto holdTimePath = ConcreteAttributePath{mEndpointId, OccupancySensing::Id,  Attributes::HoldTime::Id};
-    CHIP_ERROR err = persister->WriteScalarValue(holdTimePath, newHoldTimeSeconds);
-    if (err != CHIP_NO_ERROR)
+    if (index >= MATTER_ARRAY_SIZE(sHoldTimeLimitsStructs))
     {
         ChipLogError(Zcl, "Failed HoldTime storage on EP %u: %" CHIP_ERROR_FORMAT, static_cast<unsigned>(mEndpointId), err.Format());
     }
 
-    MatterReportingAttributeChangeCallback(mEndpointId, OccupancySensing::Id, Attributes::HoldTime::Id);
-    if (mHasPirOccupiedToUnoccupiedDelaySeconds)
+    if (index >= MATTER_ARRAY_SIZE(sHoldTimeLimitsStructs))
     {
         MatterReportingAttributeChangeCallback(mEndpointId, OccupancySensing::Id, Attributes::PIROccupiedToUnoccupiedDelay::Id);
     }
@@ -384,9 +382,79 @@ void emberAfOccupancySensingClusterServerInitCallback(chip::EndpointId endpointI
         MatterReportingAttributeChangeCallback(endpointId, OccupancySensing::Id, Attributes::HoldTime::Id);
     }
 
-    // Blindly try to write RAM-backed legacy attributes (will fail silently if absent)
-    // to keep them in sync.
-    (void) Attributes::PIROccupiedToUnoccupiedDelay::Set(endpointId, newHoldTime);
-    (void) Attributes::UltrasonicOccupiedToUnoccupiedDelay::Set(endpointId, newHoldTime);
-    (void) Attributes::PhysicalContactOccupiedToUnoccupiedDelay::Set(endpointId, newHoldTime);
-#endif
+    return CHIP_NO_ERROR;
+}
+
+} // namespace OccupancySensing
+} // namespace Clusters
+} // namespace app
+} // namespace chip
+
+using namespace chip;
+using namespace chip::app;
+using namespace chip::app::Clusters;
+using namespace chip::app::Clusters::OccupancySensing;
+
+//******************************************************************************
+// Plugin init function
+//******************************************************************************
+void emberAfOccupancySensingClusterServerInitCallback(EndpointId endpoint)
+{
+    auto deviceType = halOccupancyGetSensorType(endpoint);
+
+    chip::BitMask<OccupancySensorTypeBitmap> deviceTypeBitmap = 0;
+    switch (deviceType)
+    {
+    case HAL_OCCUPANCY_SENSOR_TYPE_PIR:
+        deviceTypeBitmap.Set(OccupancySensorTypeBitmap::kPir);
+        Attributes::OccupancySensorType::Set(endpoint, OccupancySensorTypeEnum::kPir);
+        break;
+
+    case HAL_OCCUPANCY_SENSOR_TYPE_ULTRASONIC:
+        deviceTypeBitmap.Set(OccupancySensorTypeBitmap::kUltrasonic);
+        Attributes::OccupancySensorType::Set(endpoint, OccupancySensorTypeEnum::kUltrasonic);
+        break;
+
+    case HAL_OCCUPANCY_SENSOR_TYPE_PIR_AND_ULTRASONIC:
+        deviceTypeBitmap.Set(OccupancySensorTypeBitmap::kPir);
+        deviceTypeBitmap.Set(OccupancySensorTypeBitmap::kUltrasonic);
+        Attributes::OccupancySensorType::Set(endpoint, OccupancySensorTypeEnum::kPIRAndUltrasonic);
+        break;
+
+    case HAL_OCCUPANCY_SENSOR_TYPE_PHYSICAL:
+        deviceTypeBitmap.Set(OccupancySensorTypeBitmap::kPhysicalContact);
+        Attributes::OccupancySensorType::Set(endpoint, OccupancySensorTypeEnum::kPhysicalContact);
+        break;
+
+    default:
+        break;
+    }
+    Attributes::OccupancySensorTypeBitmap::Set(endpoint, deviceTypeBitmap);
+}
+
+//******************************************************************************
+// Notification callback from the HAL plugin
+//******************************************************************************
+void halOccupancyStateChangedCallback(EndpointId endpoint, HalOccupancyState occupancyState)
+{
+    chip::BitMask<OccupancyBitmap> mappedOccupancyState;
+    if (occupancyState & HAL_OCCUPANCY_STATE_OCCUPIED)
+    {
+        mappedOccupancyState.Set(OccupancyBitmap::kOccupied);
+        ChipLogProgress(Zcl, "Occupancy detected");
+    }
+    else
+    {
+        ChipLogProgress(Zcl, "Occupancy no longer detected");
+    }
+
+    Attributes::Occupancy::Set(endpoint, occupancyState);
+}
+
+HalOccupancySensorType __attribute__((weak)) halOccupancyGetSensorType(EndpointId endpoint)
+{
+    return HAL_OCCUPANCY_SENSOR_TYPE_PIR;
+}
+
+void MatterOccupancySensingPluginServerInitCallback() {}
+void MatterOccupancySensingPluginServerShutdownCallback() {}

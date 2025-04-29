@@ -54,6 +54,7 @@ enum class Type : uint8_t
     kBle,
     kTcp,
     kWiFiPAF,
+    kLast = kWiFiPAF, // This is not an actual transport type, it just refers to the last transport type
 };
 
 /**
@@ -216,7 +217,7 @@ public:
         return TCP(addr).SetPort(port).SetInterface(interface);
     }
 
-    static PeerAddress WiFiPAF(NodeId remoteId) { return PeerAddress(Type::kWiFiPAF); }
+    static PeerAddress WiFiPAF(NodeId remoteId) { return PeerAddress(Type::kWiFiPAF, remoteId); }
 
     static PeerAddress Multicast(chip::FabricId fabric, chip::GroupId group)
     {
