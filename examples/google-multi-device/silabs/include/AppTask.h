@@ -83,11 +83,11 @@ private:
     static AppTask sAppTask;
 
     /**
-     * @brief AppTask initialisation function
+     * @brief Override of BaseApplication::AppInit() virtual method, called by BaseApplication::Init()
      *
      * @return CHIP_ERROR
      */
-    CHIP_ERROR Init();
+    CHIP_ERROR AppInit() override;
 
     /**
      * @brief PB0 Button event processing function
@@ -97,4 +97,12 @@ private:
      * @param aEvent button event being processed
      */
     static void ButtonHandler(AppEvent * aEvent);
+
+    /**
+     * @brief PB1 Button event processing function
+     *        Function triggers a switch action sent to the CHIP task
+     *
+     * @param aEvent button event being processed
+     */
+    static void SwitchActionEventHandler(AppEvent * aEvent);
 };

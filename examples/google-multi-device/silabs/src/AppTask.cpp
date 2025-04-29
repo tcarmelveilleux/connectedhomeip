@@ -23,9 +23,10 @@
 
 #include "LEDWidget.h"
 
-#include <app/server/OnboardingCodesUtil.h>
+
 #include <app/server/Server.h>
 #include <app/util/attribute-storage.h>
+#include <setup_payload/OnboardingCodesUtil.h>
 
 #include <assert.h>
 
@@ -58,7 +59,6 @@ using namespace ::chip::DeviceLayer;
 using namespace ::chip::DeviceLayer::Silabs;
 
 namespace {
-LEDWidget sLightLED;
 
 // WARNING: CALLED FROM ISR CONTEXT
 void MultiDeviceDriverEvent(HardwareEvent event)
@@ -126,7 +126,7 @@ using namespace ::chip::DeviceLayer;
 
 AppTask AppTask::sAppTask;
 
-CHIP_ERROR AppTask::Init()
+CHIP_ERROR AppTask::AppInit()
 {
     CHIP_ERROR err = CHIP_NO_ERROR;
     chip::DeviceLayer::Silabs::GetPlatform().SetButtonsCb(AppTask::ButtonEventHandler);
@@ -141,8 +141,8 @@ CHIP_ERROR AppTask::Init()
         appError(err);
     }
 
-    sLightLED.Init(LIGHT_LED);
-    sLightLED.Set(false);
+    // sLightLED.Init(LIGHT_LED);
+    // sLightLED.Set(false);
 
     return err;
 }
@@ -253,13 +253,13 @@ void ::google::matter::GoogleMultiDeviceIntegration::EmitDebugCode(uint8_t code)
 {
     auto & driver = GmdSilabsDriver::GetInstance();
     driver.EmitDebugCode(code);
-}
+    }
 
 uint8_t ::google::matter::GoogleMultiDeviceIntegration::GetEp4LatchInitialPosition()
 {
     auto & driver = GmdSilabsDriver::GetInstance();
     if (driver.IsSwitchButtonPressed(GmdSilabsDriver::ButtonId::kLatch1))
-    {
+{
         return 0;
     }
     else if (driver.IsSwitchButtonPressed(GmdSilabsDriver::ButtonId::kLatch2))
