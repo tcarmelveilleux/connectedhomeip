@@ -134,13 +134,6 @@ CHIP_ERROR AppTask::AppInit()
     GmdSilabsDriver::GetInstance().Init();
     GmdSilabsDriver::GetInstance().SetHardwareEventCallback(MultiDeviceDriverEvent);
 
-    err = BaseApplication::Init();
-    if (err != CHIP_NO_ERROR)
-    {
-        SILABS_LOG("BaseApplication::Init() failed");
-        appError(err);
-    }
-
     // sLightLED.Init(LIGHT_LED);
     // sLightLED.Set(false);
 
