@@ -3312,49 +3312,68 @@ TEST_F(TestFabricTable, SettingVvsFailsWithIcacAndSucceedWithout)
   }
 }
 
-TEST_F(TestFabricTable, SettingUpdateNocWithIcacFailsWithVvsSucceedsWithout)
+TEST_F(TestFabricTable, UpdateNocWithIcacFailsWithVvscSucceedsWithout)
 {
-
-    Credentials::TestOnlyLocalCertificateAuthority fabric11CertAuthority;
+    //Credentials::TestOnlyLocalCertificateAuthority fabric11CertAuthority;
     Credentials::TestOnlyLocalCertificateAuthority fabric44CertAuthority;
-
-    chip::TestPersistentStorageDelegate storage;
-
-    // Uncomment the next line for superior debugging powers if you blow-up this test
-    // storage.SetLoggingLevel(chip::TestPersistentStorageDelegate::LoggingLevel::kLogMutation);
-
-    // Initialize test CA and a Fabric 11 externally owned key
-    EXPECT_TRUE(fabric11CertAuthority.Init().IsSuccess());
     EXPECT_TRUE(fabric44CertAuthority.Init().IsSuccess());
 
-    constexpr uint16_t kVendorId = 0xFFF1u;
-
-    chip::Crypto::P256Keypair fabric11Node55Keypair; // Fabric ID 11,
-    EXPECT_EQ(fabric11Node55Keypair.Initialize(Crypto::ECPKeyTarget::ECDSA), CHIP_NO_ERROR);
-
     // Initialize a fabric table.
+    chip::TestPersistentStorageDelegate storage;
     ScopedFabricTable fabricTableHolder;
     EXPECT_EQ(fabricTableHolder.Init(&storage), CHIP_NO_ERROR);
     FabricTable & fabricTable = fabricTableHolder.GetFabricTable();
 
-    EXPECT_EQ(fabricTable.FabricCount(), 0);
-    EXPECT_EQ(fabricTable.GetPendingNewFabricIndex(), kUndefinedFabricIndex);
+    constexpr uint16_t kVendorId = 0xFFF1u;
+    FabricIndex newFabricIndex = kUndefinedFabricIndex;
 
+    // VVSC contents is not checked, so can be just zero bytes.
+    uint8_t vvsc[kMaxCHIPCertLength];
+    memset(&vvsc[0], 0x00, sizeof(vvsc));
+    ByteSpan vvscSpan{vvsc};
+
+    uint8_t csrBuf[chip::Crypto::kMIN_CSR_Buffer_Size];
+
+    // Fabric Index 1: Add node ID 33 on fabric 44, using operational keystore and no ICAC. Set a default VVSC.
     {
-        FabricIndex nextFabricIndex = kUndefinedFabricIndex;
-        EXPECT_EQ(fabricTable.PeekFabricIndexForNextAddition(nextFabricIndex), CHIP_NO_ERROR);
-        EXPECT_EQ(nextFabricIndex, 1);
+      FabricId fabricId = 44;
+      NodeId nodeId     = 333;
+
+      MutableByteSpan csrSpan{ csrBuf };
+      EXPECT_EQ(fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan), CHIP_NO_ERROR);
+
+      EXPECT_EQ(fabric44CertAuthority.SetIncludeIcac(false).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus(),
+                CHIP_NO_ERROR);
+      ByteSpan rcac = fabric44CertAuthority.GetRcac();
+      ByteSpan noc  = fabric44CertAuthority.GetNoc();
+      EXPECT_EQ(fabricTable.AddNewPendingTrustedRootCert(rcac), CHIP_NO_ERROR);
+      EXPECT_EQ(fabricTable.AddNewPendingFabricWithOperationalKeystore(noc, /*icac = */ ByteSpan{}, kVendorId, &newFabricIndex), CHIP_NO_ERROR);
+      EXPECT_EQ(newFabricIndex, 1u);
+      EXPECT_EQ(fabricTable.CommitPendingFabricData(), CHIP_NO_ERROR);
+      EXPECT_EQ(fabricTable.FabricCount(), 1);
+
+      bool fabricTableWasChanged = false;
+      EXPECT_EQ(fabricTable.SetVIDVerificationStatementElements(newFabricIndex, NullOptional, NullOptional, MakeOptional(vvscSpan), fabricTableWasChanged), CHIP_NO_ERROR);
+      // Changing VVSC doesn't change Fabrics table itself.
+      EXPECT_EQ(fabricTableWasChanged, false);
+
+      // Make sure VVSC was stored.
+      {
+          uint8_t readBackVvscBuf[kMaxCHIPCertLength];
+          memset(&readBackVvscBuf[0], 0x11, sizeof(readBackVvscBuf));
+          MutableByteSpan readBackVvscSpan{readBackVvscBuf};
+
+          EXPECT_EQ(fabricTableHolder.GetOpCertStore().GetVidVerificationElement(newFabricIndex, OperationalCertificateStore::VidVerificationElement::kVvsc, readBackVvscSpan), CHIP_NO_ERROR);
+          EXPECT_TRUE(readBackVvscSpan.data_equal(vvscSpan));
+      }
     }
 
-    size_t numFabricsIterated = 0;
-
-    size_t numStorageKeysAtStart = storage.GetNumKeys();
-
-    // Sequence 2: Add node ID 999 on fabric 44, using operational keystore and ICAC --> Yield fabricIndex 2
+#if 0
+    // FabricIndex 2: Add node ID 999 on fabric 44, using operational keystore and ICAC.
     {
       FabricId fabricId = 44;
       NodeId nodeId     = 999;
-XXXXXXXXXXXx
+
       uint8_t csrBuf[chip::Crypto::kMIN_CSR_Buffer_Size];
       MutableByteSpan csrSpan{ csrBuf };
       EXPECT_EQ(fabricTable.AllocatePendingOperationalKey(chip::NullOptional, csrSpan), CHIP_NO_ERROR);
@@ -3364,65 +3383,158 @@ XXXXXXXXXXXx
       ByteSpan rcac = fabric44CertAuthority.GetRcac();
       ByteSpan icac = fabric44CertAuthority.GetIcac();
       ByteSpan noc  = fabric44CertAuthority.GetNoc();
-
-      EXPECT_EQ(fabricTable.FabricCount(), 1);
-
-      // Next fabric index should still be the same as before.
-      {
-          FabricIndex nextFabricIndex = kUndefinedFabricIndex;
-          EXPECT_EQ(fabricTable.PeekFabricIndexForNextAddition(nextFabricIndex), CHIP_NO_ERROR);
-          EXPECT_EQ(nextFabricIndex, 2);
-      }
-
       EXPECT_EQ(fabricTable.AddNewPendingTrustedRootCert(rcac), CHIP_NO_ERROR);
-      EXPECT_EQ(fabricTable.GetPendingNewFabricIndex(), kUndefinedFabricIndex);
-
-      FabricIndex newFabricIndex = kUndefinedFabricIndex;
-
-      EXPECT_EQ(fabricTable.FabricCount(), 1);
       EXPECT_EQ(fabricTable.AddNewPendingFabricWithOperationalKeystore(noc, icac, kVendorId, &newFabricIndex), CHIP_NO_ERROR);
-      EXPECT_EQ(fabricTable.FabricCount(), 2);
-      EXPECT_EQ(newFabricIndex, 2);
-      EXPECT_EQ(fabricTable.GetPendingNewFabricIndex(), 2);
-
-      // No storage yet
-      EXPECT_EQ(storage.GetNumKeys(), numStorageAfterFirstAdd);
-      // Next fabric index has not been updated yet.
-      {
-          FabricIndex nextFabricIndex = kUndefinedFabricIndex;
-          EXPECT_EQ(fabricTable.PeekFabricIndexForNextAddition(nextFabricIndex), CHIP_NO_ERROR);
-          EXPECT_EQ(nextFabricIndex, 2);
-      }
-
-      // Commit, now storage should have keys
+      EXPECT_EQ(newFabricIndex, 2u);
       EXPECT_EQ(fabricTable.CommitPendingFabricData(), CHIP_NO_ERROR);
       EXPECT_EQ(fabricTable.FabricCount(), 2);
+    }
+#endif
 
-
+  // Fabric Index 1: Try to update node ID to 33 on fabric 44 WITHOUT ICAC. Must succeed even if VVSC present.
+  // Then try to remove VVSC, and update NOC chain to include ICAC, and this should work.
+  // Then revert state and original ICAC and original NodeID/FabricID should be present.
   {
-      FabricId fabricId       = 44;
-      NodeId nodeId           = 1000;
-      FabricIndex fabricIndex = 2;
+      // Update to NodeID 33 with ICAC
+      {
+          FabricId fabricId = 44;
+          NodeId nodeId     = 33;
 
-      uint8_t csrBuf[chip::Crypto::kMIN_CSR_Buffer_Size];
+          MutableByteSpan csrSpan{ csrBuf };
+          FabricIndex existingFabricIndex = 1u;
+          EXPECT_EQ(fabricTable.AllocatePendingOperationalKey(MakeOptional(existingFabricIndex), csrSpan), CHIP_NO_ERROR);
+
+          EXPECT_EQ(fabric44CertAuthority.SetIncludeIcac(false).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus(),
+                    CHIP_NO_ERROR);
+          ByteSpan noc  = fabric44CertAuthority.GetNoc();
+
+          EXPECT_EQ(fabricTable.UpdatePendingFabricWithOperationalKeystore(existingFabricIndex, noc, ByteSpan{}, FabricTable::AdvertiseIdentity::No),
+                    CHIP_NO_ERROR);
+          ASSERT_NE(fabricTable.FindFabricWithIndex(newFabricIndex), nullptr);
+          EXPECT_EQ(fabricTable.FindFabricWithIndex(newFabricIndex)->GetFabricId(), fabricId);
+          EXPECT_EQ(fabricTable.FindFabricWithIndex(newFabricIndex)->GetNodeId(), nodeId);
+          EXPECT_EQ(fabricTable.FabricCount(), 1);
+      }
+
+      // Remove VVSC (pending) and update to NodeID 66 WITH ICAC
+      {
+          {
+              bool fabricTableWasChanged = false;
+              EXPECT_EQ(fabricTable.SetVIDVerificationStatementElements(newFabricIndex, NullOptional, NullOptional, MakeOptional(ByteSpan{}), fabricTableWasChanged), CHIP_NO_ERROR);
+              // Changing VVSC doesn't change Fabrics table itself.
+              EXPECT_EQ(fabricTableWasChanged, false);
+
+              // Make sure VVSC appears removed.
+              {
+                uint8_t readBackVvscBuf[kMaxCHIPCertLength];
+                memset(&readBackVvscBuf[0], 0x11, sizeof(readBackVvscBuf));
+                MutableByteSpan readBackVvscSpan{readBackVvscBuf};
+
+                EXPECT_EQ(fabricTableHolder.GetOpCertStore().GetVidVerificationElement(newFabricIndex, OperationalCertificateStore::VidVerificationElement::kVvsc, readBackVvscSpan), CHIP_NO_ERROR);
+                EXPECT_TRUE(readBackVvscSpan.empty());
+              }
+          }
+
+          FabricId fabricId = 44;
+          NodeId nodeId     = 66;
+
+          MutableByteSpan csrSpan{ csrBuf };
+          FabricIndex existingFabricIndex = 1u;
+          EXPECT_EQ(fabricTable.AllocatePendingOperationalKey(MakeOptional(existingFabricIndex), csrSpan), CHIP_NO_ERROR);
+
+          EXPECT_EQ(fabric44CertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus(),
+                    CHIP_NO_ERROR);
+          ByteSpan icac = fabric44CertAuthority.GetIcac();
+          ByteSpan noc  = fabric44CertAuthority.GetNoc();
+
+          EXPECT_EQ(fabricTable.UpdatePendingFabricWithOperationalKeystore(existingFabricIndex, noc, icac, FabricTable::AdvertiseIdentity::No),
+                    CHIP_NO_ERROR);
+          ASSERT_NE(fabricTable.FindFabricWithIndex(newFabricIndex), nullptr);
+          EXPECT_EQ(fabricTable.FindFabricWithIndex(newFabricIndex)->GetFabricId(), fabricId);
+          EXPECT_EQ(fabricTable.FindFabricWithIndex(newFabricIndex)->GetNodeId(), nodeId);
+          EXPECT_EQ(fabricTable.FabricCount(), 1);
+      }
+
+      // Revert pending data and validate previous fabric present, VVSC still original.
+      {
+          fabricTable.RevertPendingFabricData();
+
+          EXPECT_EQ(fabricTable.FabricCount(), 1);
+          ASSERT_NE(fabricTable.FindFabricWithIndex(newFabricIndex), nullptr);
+          EXPECT_EQ(fabricTable.FindFabricWithIndex(newFabricIndex)->GetFabricId(), 44u);
+          EXPECT_EQ(fabricTable.FindFabricWithIndex(newFabricIndex)->GetNodeId(), 33u);
+
+          // Make sure VVSC got reverted.
+          {
+              uint8_t readBackVvscBuf[kMaxCHIPCertLength];
+              memset(&readBackVvscBuf[0], 0x11, sizeof(readBackVvscBuf));
+              MutableByteSpan readBackVvscSpan{readBackVvscBuf};
+
+              EXPECT_EQ(fabricTableHolder.GetOpCertStore().GetVidVerificationElement(newFabricIndex, OperationalCertificateStore::VidVerificationElement::kVvsc, readBackVvscSpan), CHIP_NO_ERROR);
+              EXPECT_TRUE(readBackVvscSpan.data_equal(vvscSpan));
+          }
+      }
+  }
+
+  // Fabric Index 1: Try to update node ID to 55 on fabric 44. Must fail due to VVSC present.
+  {
+      FabricId fabricId = 44;
+      NodeId nodeId     = 55;
+
       MutableByteSpan csrSpan{ csrBuf };
+      FabricIndex existingFabricIndex = 1u;
+      EXPECT_EQ(fabricTable.AllocatePendingOperationalKey(MakeOptional(existingFabricIndex), csrSpan), CHIP_NO_ERROR);
 
-      // Make sure to tag fabric index to pending opkey: otherwise the UpdateNOC fails
-      EXPECT_EQ(fabricTable.AllocatePendingOperationalKey(chip::MakeOptional(static_cast<FabricIndex>(2)), csrSpan),
+      EXPECT_EQ(fabric44CertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus(),
                 CHIP_NO_ERROR);
-
-      EXPECT_EQ(fabric44CertAuthority.SetIncludeIcac(false).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus(),
-                CHIP_NO_ERROR);
-      ByteSpan rcac = fabric44CertAuthority.GetRcac();
+      ByteSpan icac = fabric44CertAuthority.GetIcac();
       ByteSpan noc  = fabric44CertAuthority.GetNoc();
 
-      EXPECT_EQ(fabricTable.FabricCount(), 2);
-      EXPECT_EQ(fabricTable.UpdatePendingFabricWithOperationalKeystore(2, noc, ByteSpan{}, FabricTable::AdvertiseIdentity::No),
-                CHIP_NO_ERROR);
-      EXPECT_EQ(fabricTable.FabricCount(), 2);
-
-      // No storage yet
+      EXPECT_EQ(fabricTable.UpdatePendingFabricWithOperationalKeystore(existingFabricIndex, noc, icac, FabricTable::AdvertiseIdentity::No),
+                CHIP_ERROR_INCORRECT_STATE);
+      fabricTable.RevertPendingFabricData();
+      EXPECT_EQ(fabricTable.FabricCount(), 1);
   }
+
+    // Remove VVSC before then attempting to UpdateNOC again.
+    {
+      bool fabricTableWasChanged = false;
+      EXPECT_EQ(fabricTable.SetVIDVerificationStatementElements(newFabricIndex, NullOptional, NullOptional, MakeOptional(ByteSpan{}), fabricTableWasChanged), CHIP_NO_ERROR);
+      // Changing VVSC doesn't change Fabrics table itself.
+      EXPECT_EQ(fabricTableWasChanged, false);
+
+      // Make sure VVSC was removed.
+      {
+        uint8_t readBackVvscBuf[kMaxCHIPCertLength];
+        memset(&readBackVvscBuf[0], 0x11, sizeof(readBackVvscBuf));
+        MutableByteSpan readBackVvscSpan{readBackVvscBuf};
+
+        EXPECT_EQ(fabricTableHolder.GetOpCertStore().GetVidVerificationElement(newFabricIndex, OperationalCertificateStore::VidVerificationElement::kVvsc, readBackVvscSpan), CHIP_NO_ERROR);
+        EXPECT_TRUE(readBackVvscSpan.empty());
+      }
+    }
+
+    // Fabric Index 1: Try to update node ID to 55 on fabric 11 WITH ICAC. Should succeed due to lack of VVSC.
+    {
+      FabricId fabricId = 11;
+      NodeId nodeId     = 55;
+
+      MutableByteSpan csrSpan{ csrBuf };
+      FabricIndex existingFabricIndex = 1u;
+      EXPECT_EQ(fabricTable.AllocatePendingOperationalKey(MakeOptional(existingFabricIndex), csrSpan), CHIP_NO_ERROR);
+
+      EXPECT_EQ(fabric44CertAuthority.SetIncludeIcac(true).GenerateNocChain(fabricId, nodeId, csrSpan).GetStatus(),
+                CHIP_NO_ERROR);
+      ByteSpan icac = fabric44CertAuthority.GetIcac();
+      ByteSpan noc  = fabric44CertAuthority.GetNoc();
+
+      EXPECT_EQ(fabricTable.UpdatePendingFabricWithOperationalKeystore(existingFabricIndex, noc, icac, FabricTable::AdvertiseIdentity::No),
+                CHIP_NO_ERROR);
+      EXPECT_EQ(fabricTable.FabricCount(), 1);
+    }
+
+    // Update Fabric Index 1 to remove ICAC again, set to original NodeID.
+
 
 }
 
