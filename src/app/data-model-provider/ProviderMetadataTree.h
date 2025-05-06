@@ -49,9 +49,46 @@ namespace DataModel {
 class ProviderMetadataTree
 {
 public:
+    // TODO: Move NodeWideDataModelConfiguration* to a different separate file for structs/interface
+
+    struct NodeWideDataModelConfiguration
+    {
+        // TODO: Check types
+        uint32_t configurationVersion;
+        uint8_t maxPathPerInvoke;
+        uint32_t dataModelVersion;
+        uint32_t specVersion;
+    };
+
+    enum NodeWideConfigurationElements : uint16_t
+    {
+      kConfigurationVersion = (1u << 0),
+      kMaxPathPerInvoke = (1u << 1),
+      kDataModelVersion = (1u << 2),
+      kSpecVersion = (1u << 3),
+    }
+
+    typedef BitMask<NodeWideConfigurationElements> NodeWideConfigurationChanges;
+
+    class NodeWideConfigurationListener
+    {
+        virtual OnNodeWideConfigurationChanges(DataModel::Provider & provider, NodeWideConfigurationChanges changedElements) = 0;
+    };
+
     virtual ~ProviderMetadataTree() = default;
 
     using SemanticTag = Clusters::Descriptor::Structs::SemanticTagStruct::Type;
+
+    virtual CHIP_ERROR BumpConfigurationVersion() = 0;
+
+    virtual CHIP_ERROR GetNodeWideDataModelConfiguration(NodeWideDataModelConfiguration & outConfig) = 0;
+    // THIS HAS:
+    // - ConfigurationVersion
+    // - MaxPathPerInvoke
+    // - DataModelVersion
+    // - SpecVersion
+    virtual CHIP_ERROR RegisterNodeWideConfigurationListener(NodeWideConfigurationListener * listener);
+    virtual void UnregisterNodeWideConfigurationListener(NodeWideConfigurationListener * listener);
 
     virtual CHIP_ERROR Endpoints(ReadOnlyBufferBuilder<EndpointEntry> & builder) = 0;
 
