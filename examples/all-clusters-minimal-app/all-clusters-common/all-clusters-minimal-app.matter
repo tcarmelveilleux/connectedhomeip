@@ -6937,11 +6937,11 @@ endpoint 1 {
   }
 
   server cluster OccupancySensing {
-    callback attribute occupancy;
-    callback attribute occupancySensorType;
-    callback attribute occupancySensorTypeBitmap;
+    ram      attribute occupancy;
+    ram      attribute occupancySensorType;
+    ram      attribute occupancySensorTypeBitmap;
     callback attribute featureMap;
-    callback attribute clusterRevision;
+    ram      attribute clusterRevision default = 5;
   }
 
   server cluster WakeOnLan {
@@ -7283,11 +7283,11 @@ endpoint 2 {
   }
 
   server cluster OccupancySensing {
-    callback attribute occupancy;
-    callback attribute occupancySensorType;
-    callback attribute occupancySensorTypeBitmap;
+    ram      attribute occupancy;
+    ram      attribute occupancySensorType;
+    ram      attribute occupancySensorTypeBitmap;
     callback attribute featureMap;
-    callback attribute clusterRevision;
+    ram      attribute clusterRevision default = 5;
   }
 }
 endpoint 65534 {

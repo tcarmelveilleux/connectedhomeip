@@ -14,6 +14,7 @@
 #include "GoogleMultiDeviceDishwasherOpstate.h"
 
 #include <app-common/zap-generated/cluster-enums.h>
+#include <app/util/endpoint-config-api.h>
 #include <include/platform/DeviceInstanceInfoProvider.h>
 #include <lib/support/CodeUtils.h>
 #include <lib/core/CHIPError.h>
@@ -22,6 +23,7 @@
 
 #include <system/SystemClock.h>
 #include <system/SystemLayer.h>
+
 
 #include <platform/CHIPDeviceLayer.h>
 
@@ -195,6 +197,13 @@ void GoogleMultiDeviceIntegration::InitializeProduct()
 
     mOpStateInstanceEp6->SetOperationalState(to_underlying(OperationalState::OperationalStateEnum::kStopped));
     mOpStateInstanceEp6->Init();
+
+    // ============= Set application endpoints enables =============
+    emberAfEndpointEnableDisable(2, false);
+    emberAfEndpointEnableDisable(3, false);
+    emberAfEndpointEnableDisable(4, false);
+    emberAfEndpointEnableDisable(5, true);
+    emberAfEndpointEnableDisable(6, false);
 }
 
 void GoogleMultiDeviceIntegration::HandleButtonPress(ButtonId buttonId)
