@@ -1846,6 +1846,18 @@ endpoint 2 {
   device type ma_genericswitch = 15, version 3;
 
 
+  server cluster Identify {
+    ram      attribute identifyTime default = 0x0;
+    ram      attribute identifyType default = 0x0;
+    callback attribute generatedCommandList;
+    callback attribute acceptedCommandList;
+    callback attribute attributeList;
+    ram      attribute featureMap default = 0;
+    ram      attribute clusterRevision default = 0x0005;
+
+    handle command Identify;
+  }
+
   server cluster Descriptor {
     callback attribute deviceTypeList;
     callback attribute serverList;
@@ -1882,6 +1894,18 @@ endpoint 3 {
   device type ma_genericswitch = 15, version 3;
 
 
+  server cluster Identify {
+    ram      attribute identifyTime default = 0x0;
+    ram      attribute identifyType default = 0x0;
+    callback attribute generatedCommandList;
+    callback attribute acceptedCommandList;
+    callback attribute attributeList;
+    ram      attribute featureMap default = 0;
+    ram      attribute clusterRevision default = 0x0005;
+
+    handle command Identify;
+  }
+
   server cluster Descriptor {
     callback attribute deviceTypeList;
     callback attribute serverList;
@@ -1917,6 +1941,18 @@ endpoint 4 {
   device type ma_bridgednode = 19, version 3;
   device type ma_genericswitch = 15, version 3;
 
+
+  server cluster Identify {
+    ram      attribute identifyTime default = 0x0;
+    ram      attribute identifyType default = 0x0;
+    callback attribute generatedCommandList;
+    callback attribute acceptedCommandList;
+    callback attribute attributeList;
+    ram      attribute featureMap default = 0;
+    ram      attribute clusterRevision default = 0x0005;
+
+    handle command Identify;
+  }
 
   server cluster Descriptor {
     callback attribute deviceTypeList;
