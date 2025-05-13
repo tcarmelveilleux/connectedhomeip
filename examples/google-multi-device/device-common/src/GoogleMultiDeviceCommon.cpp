@@ -199,11 +199,11 @@ void GoogleMultiDeviceIntegration::InitializeProduct()
     mOpStateInstanceEp6->Init();
 
     // ============= Set application endpoints enables =============
-    emberAfEndpointEnableDisable(2, false);
-    emberAfEndpointEnableDisable(3, false);
-    emberAfEndpointEnableDisable(4, false);
-    emberAfEndpointEnableDisable(5, true);
-    emberAfEndpointEnableDisable(6, false);
+    // emberAfEndpointEnableDisable(2, false);
+    // emberAfEndpointEnableDisable(3, false);
+    // emberAfEndpointEnableDisable(4, false);
+    // emberAfEndpointEnableDisable(5, true);
+    // emberAfEndpointEnableDisable(6, false);
 }
 
 void GoogleMultiDeviceIntegration::HandleButtonPress(ButtonId buttonId)
