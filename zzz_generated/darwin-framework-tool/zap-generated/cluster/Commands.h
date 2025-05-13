@@ -168327,11 +168327,7 @@ public:
 
         dispatch_queue_t callbackQueue = dispatch_queue_create("com.chip.command", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
         __auto_type * cluster = [[MTRBaseClusterJointFabricDatastore alloc] initWithDevice:device endpointID:@(endpointId) queue:callbackQueue];
-        __auto_type * params = [[MTRReadParams alloc] init];
-        if (mFabricFiltered.HasValue()) {
-            params.filterByFabric = mFabricFiltered.Value();
-        }
-        [cluster readAttributeGroupListWithParams:params completion:^(NSArray * _Nullable value, NSError * _Nullable error) {
+        [cluster readAttributeGroupListWithCompletion:^(NSArray * _Nullable value, NSError * _Nullable error) {
             NSLog(@"JointFabricDatastore.GroupList response %@", [value description]);
             if (error == nil) {
                 RemoteDataModelLogger::LogAttributeAsJSON(@(endpointId), @(clusterId), @(attributeId), value);
@@ -168416,11 +168412,7 @@ public:
 
         dispatch_queue_t callbackQueue = dispatch_queue_create("com.chip.command", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
         __auto_type * cluster = [[MTRBaseClusterJointFabricDatastore alloc] initWithDevice:device endpointID:@(endpointId) queue:callbackQueue];
-        __auto_type * params = [[MTRReadParams alloc] init];
-        if (mFabricFiltered.HasValue()) {
-            params.filterByFabric = mFabricFiltered.Value();
-        }
-        [cluster readAttributeNodeListWithParams:params completion:^(NSArray * _Nullable value, NSError * _Nullable error) {
+        [cluster readAttributeNodeListWithCompletion:^(NSArray * _Nullable value, NSError * _Nullable error) {
             NSLog(@"JointFabricDatastore.NodeList response %@", [value description]);
             if (error == nil) {
                 RemoteDataModelLogger::LogAttributeAsJSON(@(endpointId), @(clusterId), @(attributeId), value);
@@ -168505,11 +168497,7 @@ public:
 
         dispatch_queue_t callbackQueue = dispatch_queue_create("com.chip.command", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
         __auto_type * cluster = [[MTRBaseClusterJointFabricDatastore alloc] initWithDevice:device endpointID:@(endpointId) queue:callbackQueue];
-        __auto_type * params = [[MTRReadParams alloc] init];
-        if (mFabricFiltered.HasValue()) {
-            params.filterByFabric = mFabricFiltered.Value();
-        }
-        [cluster readAttributeAdminListWithParams:params completion:^(NSArray * _Nullable value, NSError * _Nullable error) {
+        [cluster readAttributeAdminListWithCompletion:^(NSArray * _Nullable value, NSError * _Nullable error) {
             NSLog(@"JointFabricDatastore.AdminList response %@", [value description]);
             if (error == nil) {
                 RemoteDataModelLogger::LogAttributeAsJSON(@(endpointId), @(clusterId), @(attributeId), value);
@@ -168594,11 +168582,7 @@ public:
 
         dispatch_queue_t callbackQueue = dispatch_queue_create("com.chip.command", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
         __auto_type * cluster = [[MTRBaseClusterJointFabricDatastore alloc] initWithDevice:device endpointID:@(endpointId) queue:callbackQueue];
-        __auto_type * params = [[MTRReadParams alloc] init];
-        if (mFabricFiltered.HasValue()) {
-            params.filterByFabric = mFabricFiltered.Value();
-        }
-        [cluster readAttributeStatusWithParams:params completion:^(MTRJointFabricDatastoreClusterDatastoreStatusStruct * _Nullable value, NSError * _Nullable error) {
+        [cluster readAttributeStatusWithCompletion:^(MTRJointFabricDatastoreClusterDatastoreStatusEntryStruct * _Nullable value, NSError * _Nullable error) {
             NSLog(@"JointFabricDatastore.Status response %@", [value description]);
             if (error == nil) {
                 RemoteDataModelLogger::LogAttributeAsJSON(@(endpointId), @(clusterId), @(attributeId), value);
@@ -168643,7 +168627,7 @@ public:
         }
         [cluster subscribeAttributeStatusWithParams:params
             subscriptionEstablished:^() { mSubscriptionEstablished = YES; }
-            reportHandler:^(MTRJointFabricDatastoreClusterDatastoreStatusStruct * _Nullable value, NSError * _Nullable error) {
+            reportHandler:^(MTRJointFabricDatastoreClusterDatastoreStatusEntryStruct * _Nullable value, NSError * _Nullable error) {
                 NSLog(@"JointFabricDatastore.Status response %@", [value description]);
                 if (error == nil) {
                     RemoteDataModelLogger::LogAttributeAsJSON(@(endpointId), @(clusterId), @(attributeId), value);
@@ -168683,11 +168667,7 @@ public:
 
         dispatch_queue_t callbackQueue = dispatch_queue_create("com.chip.command", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
         __auto_type * cluster = [[MTRBaseClusterJointFabricDatastore alloc] initWithDevice:device endpointID:@(endpointId) queue:callbackQueue];
-        __auto_type * params = [[MTRReadParams alloc] init];
-        if (mFabricFiltered.HasValue()) {
-            params.filterByFabric = mFabricFiltered.Value();
-        }
-        [cluster readAttributeEndpointGroupIDListWithParams:params completion:^(NSArray * _Nullable value, NSError * _Nullable error) {
+        [cluster readAttributeEndpointGroupIDListWithCompletion:^(NSArray * _Nullable value, NSError * _Nullable error) {
             NSLog(@"JointFabricDatastore.EndpointGroupIDList response %@", [value description]);
             if (error == nil) {
                 RemoteDataModelLogger::LogAttributeAsJSON(@(endpointId), @(clusterId), @(attributeId), value);
@@ -168772,11 +168752,7 @@ public:
 
         dispatch_queue_t callbackQueue = dispatch_queue_create("com.chip.command", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
         __auto_type * cluster = [[MTRBaseClusterJointFabricDatastore alloc] initWithDevice:device endpointID:@(endpointId) queue:callbackQueue];
-        __auto_type * params = [[MTRReadParams alloc] init];
-        if (mFabricFiltered.HasValue()) {
-            params.filterByFabric = mFabricFiltered.Value();
-        }
-        [cluster readAttributeEndpointBindingListWithParams:params completion:^(NSArray * _Nullable value, NSError * _Nullable error) {
+        [cluster readAttributeEndpointBindingListWithCompletion:^(NSArray * _Nullable value, NSError * _Nullable error) {
             NSLog(@"JointFabricDatastore.EndpointBindingList response %@", [value description]);
             if (error == nil) {
                 RemoteDataModelLogger::LogAttributeAsJSON(@(endpointId), @(clusterId), @(attributeId), value);
@@ -168861,11 +168837,7 @@ public:
 
         dispatch_queue_t callbackQueue = dispatch_queue_create("com.chip.command", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
         __auto_type * cluster = [[MTRBaseClusterJointFabricDatastore alloc] initWithDevice:device endpointID:@(endpointId) queue:callbackQueue];
-        __auto_type * params = [[MTRReadParams alloc] init];
-        if (mFabricFiltered.HasValue()) {
-            params.filterByFabric = mFabricFiltered.Value();
-        }
-        [cluster readAttributeNodeKeySetListWithParams:params completion:^(NSArray * _Nullable value, NSError * _Nullable error) {
+        [cluster readAttributeNodeKeySetListWithCompletion:^(NSArray * _Nullable value, NSError * _Nullable error) {
             NSLog(@"JointFabricDatastore.NodeKeySetList response %@", [value description]);
             if (error == nil) {
                 RemoteDataModelLogger::LogAttributeAsJSON(@(endpointId), @(clusterId), @(attributeId), value);
@@ -168950,11 +168922,7 @@ public:
 
         dispatch_queue_t callbackQueue = dispatch_queue_create("com.chip.command", DISPATCH_QUEUE_SERIAL_WITH_AUTORELEASE_POOL);
         __auto_type * cluster = [[MTRBaseClusterJointFabricDatastore alloc] initWithDevice:device endpointID:@(endpointId) queue:callbackQueue];
-        __auto_type * params = [[MTRReadParams alloc] init];
-        if (mFabricFiltered.HasValue()) {
-            params.filterByFabric = mFabricFiltered.Value();
-        }
-        [cluster readAttributeNodeACLListWithParams:params completion:^(NSArray * _Nullable value, NSError * _Nullable error) {
+        [cluster readAttributeNodeACLListWithCompletion:^(NSArray * _Nullable value, NSError * _Nullable error) {
             NSLog(@"JointFabricDatastore.NodeACLList response %@", [value description]);
             if (error == nil) {
                 RemoteDataModelLogger::LogAttributeAsJSON(@(endpointId), @(clusterId), @(attributeId), value);

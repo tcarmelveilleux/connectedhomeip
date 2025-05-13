@@ -105778,13 +105778,13 @@ public:
                                      completion:completion];
 }
 
-- (void)readAttributeGroupListWithParams:(MTRReadParams * _Nullable)params completion:(void (^)(NSArray * _Nullable value, NSError * _Nullable error))completion
+- (void)readAttributeGroupListWithCompletion:(void (^)(NSArray * _Nullable value, NSError * _Nullable error))completion
 {
     using TypeInfo = JointFabricDatastore::Attributes::GroupList::TypeInfo;
     [self.device _readKnownAttributeWithEndpointID:self.endpointID
                                          clusterID:@(TypeInfo::GetClusterId())
                                        attributeID:@(TypeInfo::GetAttributeId())
-                                            params:params
+                                            params:nil
                                              queue:self.callbackQueue
                                         completion:completion];
 }
@@ -105814,13 +105814,13 @@ public:
                                      completion:completion];
 }
 
-- (void)readAttributeNodeListWithParams:(MTRReadParams * _Nullable)params completion:(void (^)(NSArray * _Nullable value, NSError * _Nullable error))completion
+- (void)readAttributeNodeListWithCompletion:(void (^)(NSArray * _Nullable value, NSError * _Nullable error))completion
 {
     using TypeInfo = JointFabricDatastore::Attributes::NodeList::TypeInfo;
     [self.device _readKnownAttributeWithEndpointID:self.endpointID
                                          clusterID:@(TypeInfo::GetClusterId())
                                        attributeID:@(TypeInfo::GetAttributeId())
-                                            params:params
+                                            params:nil
                                              queue:self.callbackQueue
                                         completion:completion];
 }
@@ -105850,13 +105850,13 @@ public:
                                      completion:completion];
 }
 
-- (void)readAttributeAdminListWithParams:(MTRReadParams * _Nullable)params completion:(void (^)(NSArray * _Nullable value, NSError * _Nullable error))completion
+- (void)readAttributeAdminListWithCompletion:(void (^)(NSArray * _Nullable value, NSError * _Nullable error))completion
 {
     using TypeInfo = JointFabricDatastore::Attributes::AdminList::TypeInfo;
     [self.device _readKnownAttributeWithEndpointID:self.endpointID
                                          clusterID:@(TypeInfo::GetClusterId())
                                        attributeID:@(TypeInfo::GetAttributeId())
-                                            params:params
+                                            params:nil
                                              queue:self.callbackQueue
                                         completion:completion];
 }
@@ -105886,20 +105886,20 @@ public:
                                      completion:completion];
 }
 
-- (void)readAttributeStatusWithParams:(MTRReadParams * _Nullable)params completion:(void (^)(MTRJointFabricDatastoreClusterDatastoreStatusStruct * _Nullable value, NSError * _Nullable error))completion
+- (void)readAttributeStatusWithCompletion:(void (^)(MTRJointFabricDatastoreClusterDatastoreStatusEntryStruct * _Nullable value, NSError * _Nullable error))completion
 {
     using TypeInfo = JointFabricDatastore::Attributes::Status::TypeInfo;
     [self.device _readKnownAttributeWithEndpointID:self.endpointID
                                          clusterID:@(TypeInfo::GetClusterId())
                                        attributeID:@(TypeInfo::GetAttributeId())
-                                            params:params
+                                            params:nil
                                              queue:self.callbackQueue
                                         completion:completion];
 }
 
 - (void)subscribeAttributeStatusWithParams:(MTRSubscribeParams * _Nonnull)params
                    subscriptionEstablished:(MTRSubscriptionEstablishedHandler _Nullable)subscriptionEstablished
-                             reportHandler:(void (^)(MTRJointFabricDatastoreClusterDatastoreStatusStruct * _Nullable value, NSError * _Nullable error))reportHandler
+                             reportHandler:(void (^)(MTRJointFabricDatastoreClusterDatastoreStatusEntryStruct * _Nullable value, NSError * _Nullable error))reportHandler
 {
     using TypeInfo = JointFabricDatastore::Attributes::Status::TypeInfo;
     [self.device _subscribeToKnownAttributeWithEndpointID:self.endpointID
@@ -105911,7 +105911,7 @@ public:
                                   subscriptionEstablished:subscriptionEstablished];
 }
 
-+ (void)readAttributeStatusWithClusterStateCache:(MTRClusterStateCacheContainer *)clusterStateCacheContainer endpoint:(NSNumber *)endpoint queue:(dispatch_queue_t)queue completion:(void (^)(MTRJointFabricDatastoreClusterDatastoreStatusStruct * _Nullable value, NSError * _Nullable error))completion
++ (void)readAttributeStatusWithClusterStateCache:(MTRClusterStateCacheContainer *)clusterStateCacheContainer endpoint:(NSNumber *)endpoint queue:(dispatch_queue_t)queue completion:(void (^)(MTRJointFabricDatastoreClusterDatastoreStatusEntryStruct * _Nullable value, NSError * _Nullable error))completion
 {
     using TypeInfo = JointFabricDatastore::Attributes::Status::TypeInfo;
     [clusterStateCacheContainer
@@ -105922,13 +105922,13 @@ public:
                                      completion:completion];
 }
 
-- (void)readAttributeEndpointGroupIDListWithParams:(MTRReadParams * _Nullable)params completion:(void (^)(NSArray * _Nullable value, NSError * _Nullable error))completion
+- (void)readAttributeEndpointGroupIDListWithCompletion:(void (^)(NSArray * _Nullable value, NSError * _Nullable error))completion
 {
     using TypeInfo = JointFabricDatastore::Attributes::EndpointGroupIDList::TypeInfo;
     [self.device _readKnownAttributeWithEndpointID:self.endpointID
                                          clusterID:@(TypeInfo::GetClusterId())
                                        attributeID:@(TypeInfo::GetAttributeId())
-                                            params:params
+                                            params:nil
                                              queue:self.callbackQueue
                                         completion:completion];
 }
@@ -105958,13 +105958,13 @@ public:
                                      completion:completion];
 }
 
-- (void)readAttributeEndpointBindingListWithParams:(MTRReadParams * _Nullable)params completion:(void (^)(NSArray * _Nullable value, NSError * _Nullable error))completion
+- (void)readAttributeEndpointBindingListWithCompletion:(void (^)(NSArray * _Nullable value, NSError * _Nullable error))completion
 {
     using TypeInfo = JointFabricDatastore::Attributes::EndpointBindingList::TypeInfo;
     [self.device _readKnownAttributeWithEndpointID:self.endpointID
                                          clusterID:@(TypeInfo::GetClusterId())
                                        attributeID:@(TypeInfo::GetAttributeId())
-                                            params:params
+                                            params:nil
                                              queue:self.callbackQueue
                                         completion:completion];
 }
@@ -105994,13 +105994,13 @@ public:
                                      completion:completion];
 }
 
-- (void)readAttributeNodeKeySetListWithParams:(MTRReadParams * _Nullable)params completion:(void (^)(NSArray * _Nullable value, NSError * _Nullable error))completion
+- (void)readAttributeNodeKeySetListWithCompletion:(void (^)(NSArray * _Nullable value, NSError * _Nullable error))completion
 {
     using TypeInfo = JointFabricDatastore::Attributes::NodeKeySetList::TypeInfo;
     [self.device _readKnownAttributeWithEndpointID:self.endpointID
                                          clusterID:@(TypeInfo::GetClusterId())
                                        attributeID:@(TypeInfo::GetAttributeId())
-                                            params:params
+                                            params:nil
                                              queue:self.callbackQueue
                                         completion:completion];
 }
@@ -106030,13 +106030,13 @@ public:
                                      completion:completion];
 }
 
-- (void)readAttributeNodeACLListWithParams:(MTRReadParams * _Nullable)params completion:(void (^)(NSArray * _Nullable value, NSError * _Nullable error))completion
+- (void)readAttributeNodeACLListWithCompletion:(void (^)(NSArray * _Nullable value, NSError * _Nullable error))completion
 {
     using TypeInfo = JointFabricDatastore::Attributes::NodeACLList::TypeInfo;
     [self.device _readKnownAttributeWithEndpointID:self.endpointID
                                          clusterID:@(TypeInfo::GetClusterId())
                                        attributeID:@(TypeInfo::GetAttributeId())
-                                            params:params
+                                            params:nil
                                              queue:self.callbackQueue
                                         completion:completion];
 }
