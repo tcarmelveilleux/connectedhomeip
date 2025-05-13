@@ -54,7 +54,7 @@ enum AreaTypeTag : enum8 {
   kLibrary = 51;
   kLivingRoom = 52;
   kLounge = 53;
-  kMediaTVRoom = 54;
+  kMediaTVRoom = 54 [spec_name = "Media/TV Room"];
   kMudRoom = 55;
   kMusicRoom = 56;
   kNursery = 57;
@@ -384,8 +384,8 @@ cluster AccessControl = 31 {
   revision 2;
 
   enum AccessControlEntryAuthModeEnum : enum8 {
-    kPASE = 1;
-    kCASE = 2;
+    kPASE = 1 [spec_name = "PASE"];
+    kCASE = 2 [spec_name = "CASE"];
     kGroup = 3;
   }
 
@@ -599,10 +599,10 @@ cluster BasicInformation = 40 {
 
 /** This cluster is used to manage global aspects of the Commissioning flow. */
 cluster GeneralCommissioning = 48 {
-  revision 1; // NOTE: Default/not specifically set
+  revision 2;
 
   enum CommissioningErrorEnum : enum8 {
-    kOK = 0;
+    kOK = 0 [spec_name = "OK"];
     kValueOutsideRange = 1;
     kInvalidAuthentication = 2;
     kNoFailSafe = 3;
@@ -709,12 +709,12 @@ cluster NetworkCommissioning = 49 {
   }
 
   enum WiFiBandEnum : enum8 {
-    k2G4 = 0;
-    k3G65 = 1;
-    k5G = 2;
-    k6G = 3;
-    k60G = 4;
-    k1G = 5;
+    k2G4 = 0 [spec_name = "2G4"];
+    k3G65 = 1 [spec_name = "3G65"];
+    k5G = 2 [spec_name = "5G"];
+    k6G = 3 [spec_name = "6G"];
+    k60G = 4 [spec_name = "60G"];
+    k1G = 5 [spec_name = "1G"];
   }
 
   bitmap Feature : bitmap32 {
@@ -734,11 +734,11 @@ cluster NetworkCommissioning = 49 {
 
   bitmap WiFiSecurityBitmap : bitmap8 {
     kUnencrypted = 0x1;
-    kWEP = 0x2;
-    kWPAPersonal = 0x4;
-    kWPA2Personal = 0x8;
-    kWPA3Personal = 0x10;
-    kWPA3MatterPDC = 0x20;
+    kWEP = 0x2 [spec_name = "WEP"];
+    kWPAPersonal = 0x4 [spec_name = "WPA-PERSONAL"];
+    kWPA2Personal = 0x8 [spec_name = "WPA2-PERSONAL"];
+    kWPA3Personal = 0x10 [spec_name = "WPA3-PERSONAL"];
+    kWPA3MatterPDC = 0x20 [spec_name = "WPA3-Matter-PDC"];
   }
 
   struct NetworkInfoStruct {
@@ -887,7 +887,7 @@ cluster DiagnosticLogs = 50 {
 
   enum TransferProtocolEnum : enum8 {
     kResponsePayload = 0;
-    kBDX = 1;
+    kBDX = 1 [spec_name = "BDX"];
   }
 
   readonly attribute command_id generatedCommandList[] = 65528;
@@ -1293,7 +1293,7 @@ cluster OperationalCredentials = 62 {
   }
 
   enum NodeOperationalCertStatusEnum : enum8 {
-    kOK = 0;
+    kOK = 0 [spec_name = "OK"];
     kInvalidPublicKey = 1;
     kInvalidNodeOpId = 2;
     kInvalidNOC = 3;
@@ -1578,7 +1578,7 @@ cluster OccupancySensing = 1030 {
   revision 5;
 
   enum OccupancySensorTypeEnum : enum8 {
-    kPIR = 0;
+    kPIR = 0 [spec_name = "PIR"];
     kUltrasonic = 1;
     kPIRAndUltrasonic = 2;
     kPhysicalContact = 3;
@@ -1600,7 +1600,7 @@ cluster OccupancySensing = 1030 {
   }
 
   bitmap OccupancySensorTypeBitmap : bitmap8 {
-    kPIR = 0x1;
+    kPIR = 0x1 [spec_name = "PIR"];
     kUltrasonic = 0x2;
     kPhysicalContact = 0x4;
   }
@@ -1842,6 +1842,7 @@ endpoint 1 {
   }
 }
 endpoint 2 {
+  device type ma_bridgednode = 19, version 3;
   device type ma_genericswitch = 15, version 3;
 
 
@@ -1864,7 +1865,7 @@ endpoint 2 {
     ram      attribute reachable default = 1;
     ram      attribute uniqueID default = "09710cf2bdb2d13d70dab67633e7afb4";
     ram      attribute featureMap default = 0;
-    ram      attribute clusterRevision default = 4;
+    ram      attribute clusterRevision default = 0x0005;
   }
 
   server cluster Switch {
@@ -1877,6 +1878,7 @@ endpoint 2 {
   }
 }
 endpoint 3 {
+  device type ma_bridgednode = 19, version 3;
   device type ma_genericswitch = 15, version 3;
 
 
@@ -1899,7 +1901,7 @@ endpoint 3 {
     ram      attribute reachable default = 1;
     ram      attribute uniqueID default = "09710cf2bdb2d13d10dab67633e7afb4";
     ram      attribute featureMap default = 0;
-    ram      attribute clusterRevision default = 4;
+    ram      attribute clusterRevision default = 0x0005;
   }
 
   server cluster Switch {
@@ -1912,6 +1914,7 @@ endpoint 3 {
   }
 }
 endpoint 4 {
+  device type ma_bridgednode = 19, version 3;
   device type ma_genericswitch = 15, version 3;
 
 
@@ -1934,7 +1937,7 @@ endpoint 4 {
     ram      attribute reachable default = 1;
     ram      attribute uniqueID default = "09710cf2bdb2d13d70dab67633e7afb4";
     ram      attribute featureMap default = 0;
-    ram      attribute clusterRevision default = 4;
+    ram      attribute clusterRevision default = 0x0005;
   }
 
   server cluster Switch {
@@ -1946,6 +1949,7 @@ endpoint 4 {
   }
 }
 endpoint 5 {
+  device type ma_bridgednode = 19, version 3;
   device type ma_occupancysensor = 263, version 4;
 
 
@@ -1956,7 +1960,7 @@ endpoint 5 {
     callback attribute acceptedCommandList;
     callback attribute attributeList;
     ram      attribute featureMap default = 0;
-    ram      attribute clusterRevision default = 2;
+    ram      attribute clusterRevision default = 0x0005;
 
     handle command Identify;
   }
@@ -1980,7 +1984,7 @@ endpoint 5 {
     ram      attribute reachable default = 1;
     ram      attribute uniqueID default = "09710cf2bdb2d13d70dab67633e7afb5";
     ram      attribute featureMap default = 0;
-    ram      attribute clusterRevision default = 4;
+    ram      attribute clusterRevision default = 0x0005;
   }
 
   server cluster OccupancySensing {
@@ -1998,6 +2002,7 @@ endpoint 5 {
   }
 }
 endpoint 6 {
+  device type ma_bridgednode = 19, version 3;
   device type ma_dishwasher = 117, version 1;
 
 
@@ -2008,7 +2013,7 @@ endpoint 6 {
     callback attribute acceptedCommandList;
     callback attribute attributeList;
     ram      attribute featureMap default = 0;
-    ram      attribute clusterRevision default = 2;
+    ram      attribute clusterRevision default = 0x0005;
 
     handle command Identify;
   }
@@ -2032,7 +2037,7 @@ endpoint 6 {
     ram      attribute reachable default = 1;
     ram      attribute uniqueID default = "09710cf2bdb2d13d70dab67633e7afb6";
     ram      attribute featureMap default = 0;
-    ram      attribute clusterRevision default = 4;
+    ram      attribute clusterRevision default = 0x0005;
   }
 
   server cluster OperationalState {
