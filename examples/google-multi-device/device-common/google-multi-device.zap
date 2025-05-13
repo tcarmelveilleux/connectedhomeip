@@ -1135,7 +1135,6 @@
               "maxInterval": 65534,
               "reportableChange": 0
             },
-
             {
               "name": "FeatureMap",
               "code": 65532,
@@ -3317,7 +3316,6 @@
         }
       ]
     },
-
     {
       "id": 3,
       "name": "MA-genericswitch",
@@ -3332,14 +3330,24 @@
           "code": 15,
           "profileId": 259,
           "label": "MA-genericswitch",
-          "name": "MA-genericswitch"
+          "name": "MA-genericswitch",
+          "deviceTypeOrder": 0
+        },
+        {
+          "code": 19,
+          "profileId": 259,
+          "label": "MA-bridgednode",
+          "name": "MA-bridgednode",
+          "deviceTypeOrder": 1
         }
       ],
       "deviceVersions": [
+        3,
         3
       ],
       "deviceIdentifiers": [
-        15
+        15,
+        19
       ],
       "deviceTypeName": "MA-genericswitch",
       "deviceTypeCode": 15,
@@ -3711,10 +3719,8 @@
             }
           ]
         }
-
       ]
     },
-
     {
       "id": 4,
       "name": "MA-genericswitch",
@@ -3729,14 +3735,24 @@
           "code": 15,
           "profileId": 259,
           "label": "MA-genericswitch",
-          "name": "MA-genericswitch"
+          "name": "MA-genericswitch",
+          "deviceTypeOrder": 0
+        },
+        {
+          "code": 19,
+          "profileId": 259,
+          "label": "MA-bridgednode",
+          "name": "MA-bridgednode",
+          "deviceTypeOrder": 1
         }
       ],
       "deviceVersions": [
+        3,
         3
       ],
       "deviceIdentifiers": [
-        15
+        15,
+        19
       ],
       "deviceTypeName": "MA-genericswitch",
       "deviceTypeCode": 15,
@@ -4108,10 +4124,8 @@
             }
           ]
         }
-
       ]
     },
-
     {
       "id": 5,
       "name": "MA-genericswitch",
@@ -4126,14 +4140,24 @@
           "code": 15,
           "profileId": 259,
           "label": "MA-genericswitch",
-          "name": "MA-genericswitch"
+          "name": "MA-genericswitch",
+          "deviceTypeOrder": 0
+        },
+        {
+          "code": 19,
+          "profileId": 259,
+          "label": "MA-bridgednode",
+          "name": "MA-bridgednode",
+          "deviceTypeOrder": 1
         }
       ],
       "deviceVersions": [
+        3,
         3
       ],
       "deviceIdentifiers": [
-        15
+        15,
+        19
       ],
       "deviceTypeName": "MA-genericswitch",
       "deviceTypeCode": 15,
@@ -4505,10 +4529,8 @@
             }
           ]
         }
-
       ]
     },
-
     {
       "id": 6,
       "name": "MA-occupancysensor",
@@ -4523,14 +4545,24 @@
           "code": 263,
           "profileId": 259,
           "label": "MA-occupancysensor",
-          "name": "MA-occupancysensor"
+          "name": "MA-occupancysensor",
+          "deviceTypeOrder": 0
+        },
+        {
+          "code": 19,
+          "profileId": 259,
+          "label": "MA-bridgednode",
+          "name": "MA-bridgednode",
+          "deviceTypeOrder": 1
         }
       ],
       "deviceVersions": [
-        4
+        4,
+        3
       ],
       "deviceIdentifiers": [
-        263
+        263,
+        19
       ],
       "deviceTypeName": "MA-occupancysensor",
       "deviceTypeCode": 263,
@@ -5137,20 +5169,30 @@
           "code": 117,
           "profileId": 259,
           "label": "MA-dishwasher",
-          "name": "MA-dishwasher"
+          "name": "MA-dishwasher",
+          "deviceTypeOrder": 0
+        },
+        {
+          "code": 19,
+          "profileId": 259,
+          "label": "MA-bridgednode",
+          "name": "MA-bridgednode",
+          "deviceTypeOrder": 1
         }
       ],
       "deviceVersions": [
-        1
+        1,
+        3
       ],
       "deviceIdentifiers": [
-        117
+        117,
+        19
       ],
       "deviceTypeName": "MA-dishwasher",
       "deviceTypeCode": 117,
       "deviceTypeProfileId": 259,
       "clusters": [
-           {
+        {
           "name": "Descriptor",
           "code": 29,
           "mfgCode": null,
@@ -5632,7 +5674,6 @@
             }
           ]
         },
-
         {
           "name": "Bridged Device Basic Information",
           "code": 57,
@@ -5797,7 +5838,6 @@
       ]
     }
   ],
-
   "endpoints": [
     {
       "endpointTypeName": "MA-rootdevice",
