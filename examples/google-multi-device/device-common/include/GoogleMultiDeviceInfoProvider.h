@@ -47,7 +47,7 @@ class GoogleMultiDeviceInfoProvider : public chip::DeviceLayer::DeviceInstanceIn
 
     CHIP_ERROR GetPartNumber(char * buf, size_t bufSize) override
     {
-        chip::Platform::CopyString(buf, bufSize, "GMD-1.4");
+        chip::Platform::CopyString(buf, bufSize, "GMD-1.5");
         return CHIP_NO_ERROR;
     }
 
@@ -59,7 +59,7 @@ class GoogleMultiDeviceInfoProvider : public chip::DeviceLayer::DeviceInstanceIn
 
     CHIP_ERROR GetProductLabel(char * buf, size_t bufSize) override
     {
-        chip::Platform::CopyString(buf, bufSize, "GMD-1.4");
+        chip::Platform::CopyString(buf, bufSize, "GMD-1.5");
         return CHIP_NO_ERROR;
     }
 
