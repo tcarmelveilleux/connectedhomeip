@@ -27,61 +27,67 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <thread>
 
 #include <string>
 
 static constexpr const size_t kChipEventCmdBufSize = 256;
 
-CHIP_ERROR NamedPipeCommands::Start(const std::string & path, NamedPipeCommandDelegate * delegate)
-{
-    VerifyOrReturnError(!mStarted, CHIP_NO_ERROR);
-    VerifyOrReturnError(delegate != nullptr, CHIP_ERROR_INVALID_ARGUMENT);
-
-    mStarted              = true;
-    mDelegate             = delegate;
-    mChipEventFifoPath    = path;
-    mChipEventFifoPathOut = "";
-
-    // Creating the named file(FIFO)
-    VerifyOrReturnError((mkfifo(path.c_str(), 0666) == 0) || (errno == EEXIST), CHIP_ERROR_OPEN_FAILED);
-    VerifyOrReturnError(
-        pthread_create(&mChipEventCommandListener, nullptr, EventCommandListenerTask, reinterpret_cast<void *>(this)) == 0,
-        CHIP_ERROR_UNEXPECTED_EVENT);
-
-    return CHIP_NO_ERROR;
-}
-
 CHIP_ERROR NamedPipeCommands::Start(const std::string & path, const std::string & path_out, NamedPipeCommandDelegate * delegate)
 {
-    VerifyOrReturnError(!mStarted, CHIP_NO_ERROR);
     VerifyOrReturnError(delegate != nullptr, CHIP_ERROR_INVALID_ARGUMENT);
+    VerifyOrReturnError(!mStarted.exchange(true), CHIP_ERROR_INCORRECT_STATE);
 
-    mStarted              = true;
+    CHIP_ERROR err = CHIP_NO_ERROR;
+
     mDelegate             = delegate;
     mChipEventFifoPath    = path;
     mChipEventFifoPathOut = path_out;
 
     // Creating the named file(FIFO)
-    VerifyOrReturnError((mkfifo(path.c_str(), 0666) == 0) || (errno == EEXIST), CHIP_ERROR_OPEN_FAILED);
-    VerifyOrReturnError(
-        pthread_create(&mChipEventCommandListener, nullptr, EventCommandListenerTask, reinterpret_cast<void *>(this)) == 0,
-        CHIP_ERROR_UNEXPECTED_EVENT);
+    VerifyOrExit((mkfifo(path.c_str(), 0666) == 0) || (errno == EEXIST), err = CHIP_ERROR_OPEN_FAILED);
 
-    VerifyOrReturnError((mkfifo(path_out.c_str(), 0666) == 0) || (errno == EEXIST), CHIP_ERROR_OPEN_FAILED);
-    return CHIP_NO_ERROR;
+    VerifyOrExit(pthread_create(&mChipEventCommandListener, nullptr, EventCommandListenerTask, reinterpret_cast<void *>(this)) == 0,
+                 err = CHIP_ERROR_UNEXPECTED_EVENT);
+
+    if (!path_out.empty())
+    {
+        VerifyOrExit((mkfifo(path_out.c_str(), 0666) == 0) || (errno == EEXIST), err = CHIP_ERROR_OPEN_FAILED);
+    }
+
+exit:
+    if (err != CHIP_NO_ERROR)
+    {
+        mStarted = false;
+    }
+    return err;
+}
+
+CHIP_ERROR NamedPipeCommands::Start(const std::string & path, NamedPipeCommandDelegate * delegate)
+{
+    return Start(path, "", delegate);
 }
 
 CHIP_ERROR NamedPipeCommands::Stop()
 {
-    VerifyOrReturnError(mStarted, CHIP_NO_ERROR);
+    VerifyOrReturnError(mStarted.exchange(false), CHIP_NO_ERROR);
 
-    mDelegate = nullptr;
-    mStarted = false;
-
-//    VerifyOrReturnError(pthread_cancel(mChipEventCommandListener) == 0, CHIP_ERROR_CANCELLED);
+    // Unblock the listener thread by writing a dummy byte to the FIFO.
+    int fd = open(mChipEventFifoPath.c_str(), O_WRONLY | O_NONBLOCK);
+    if (fd != -1)
+    {
+        char dummy = '\0';
+        if (write(fd, &dummy, 1) != 1)
+        {
+            ChipLogError(NotSpecified, "Failed to write dummy byte to unblock listener");
+        }
+        close(fd);
+    }
 
     // Wait further for the thread to terminate if we had previously created it.
     VerifyOrReturnError(pthread_join(mChipEventCommandListener, nullptr) == 0, CHIP_ERROR_SHUT_DOWN);
+
+    mDelegate = nullptr;
 
     VerifyOrReturnError(unlink(mChipEventFifoPath.c_str()) == 0, CHIP_ERROR_WRITE_FAILED);
     mChipEventFifoPath.clear();
@@ -128,19 +134,14 @@ void NamedPipeCommands::WriteToOutPipe(const std::string & json)
             return;
         }
 
-        usleep(kRetrySleepMs * 1000);
+        std::this_thread::sleep_for(std::chrono::milliseconds(kRetrySleepMs));
     }
 
-    ssize_t written = write(fd, json.data(), json.size());
-    if (written < 0 || static_cast<size_t>(written) != json.size())
+    std::string payload = json + "\n";
+    ssize_t written = write(fd, payload.data(), payload.size());
+    if (written < 0 || static_cast<size_t>(written) != payload.size())
     {
-        ChipLogError(DeviceLayer, "Failed to write full JSON to out pipe");
-    }
-
-    written = write(fd, "\n", 1);
-    if (written != 1)
-    {
-        ChipLogError(DeviceLayer, "Failed to write newline to out pipe");
+        ChipLogError(DeviceLayer, "Failed to write JSON payload to out pipe");
     }
 
     close(fd);
@@ -152,7 +153,10 @@ void * NamedPipeCommands::EventCommandListenerTask(void * arg)
     NamedPipeCommands * self = reinterpret_cast<NamedPipeCommands *>(arg);
 
     ChipLogProgress(NotSpecified, "Starting named pipes handling on %s", self->mChipEventFifoPath.c_str());
-    int fd = open(self->mChipEventFifoPath.c_str(), O_RDONLY);
+
+    // Open with O_RDWR to prevent read() from returning 0 (EOF) and busy-looping when writers close the FIFO.
+    int fd = open(self->mChipEventFifoPath.c_str(), O_RDWR);
+
     if (fd == -1)
     {
         ChipLogError(NotSpecified, "Failed to open Event FIFO");
@@ -173,8 +177,11 @@ void * NamedPipeCommands::EventCommandListenerTask(void * arg)
             }
         }
     }
-    close(fd);
-    ChipLogError(NotSpecified, "Done with named pipes handling on %s", self->mChipEventFifoPath.c_str());
+    if (fd != -1)
+    {
+        close(fd);
+    }
+    ChipLogProgress(NotSpecified, "Done with named pipes handling on %s", self->mChipEventFifoPath.c_str());
 
     return nullptr;
 }
