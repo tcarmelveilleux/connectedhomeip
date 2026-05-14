@@ -70,7 +70,7 @@ public:
     const std::string & OutPath() const { return mFifoOutPath; }
 
 private:
-    std::atomic<bool> mStarted{false};
+    std::atomic<bool> mRunning{false};
     pthread_t mChipEventCommandListener;
     std::string mFifoInPath;
     std::string mFifoOutPath;

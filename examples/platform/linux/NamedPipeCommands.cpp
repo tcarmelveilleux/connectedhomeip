@@ -21,6 +21,7 @@
 #include <chrono>
 #include <errno.h>
 #include <fcntl.h>
+#include <lib/support/logging/CHIPLogging.h>
 #include <lib/support/CodeUtils.h>
 #include <poll.h>
 #include <pthread.h>
@@ -36,29 +37,29 @@ static constexpr const size_t kChipEventCmdBufSize = 256;
 CHIP_ERROR NamedPipeCommands::Start(const std::string & inPath, const std::string & outPath, NamedPipeCommandDelegate * delegate)
 {
     VerifyOrReturnError(delegate != nullptr, CHIP_ERROR_INVALID_ARGUMENT);
-    VerifyOrReturnError(!mStarted.exchange(true), CHIP_ERROR_INCORRECT_STATE);
+    VerifyOrReturnError(!mRunning.exchange(true), CHIP_ERROR_INCORRECT_STATE);
 
     CHIP_ERROR err = CHIP_NO_ERROR;
 
-    mDelegate             = delegate;
-    mFifoInPath    = inPath;
+    mDelegate    = delegate;
+    mFifoInPath  = inPath;
     mFifoOutPath = outPath;
 
     // Creating the named file(FIFO)
-    VerifyOrExit((mkfifo(inPath.c_str(), 0666) == 0) || (errno == EEXIST), err = CHIP_ERROR_OPEN_FAILED);
+    VerifyOrExit((mkfifo(inPath.c_str(), 0660) == 0) || (errno == EEXIST), err = CHIP_ERROR_OPEN_FAILED);
 
     VerifyOrExit(pthread_create(&mChipEventCommandListener, nullptr, EventCommandListenerTask, reinterpret_cast<void *>(this)) == 0,
                  err = CHIP_ERROR_UNEXPECTED_EVENT);
 
     if (!outPath.empty())
     {
-        VerifyOrExit((mkfifo(outPath.c_str(), 0666) == 0) || (errno == EEXIST), err = CHIP_ERROR_OPEN_FAILED);
+        VerifyOrExit((mkfifo(outPath.c_str(), 0660) == 0) || (errno == EEXIST), err = CHIP_ERROR_OPEN_FAILED);
     }
 
 exit:
     if (err != CHIP_NO_ERROR)
     {
-        mStarted = false;
+        mRunning = false;
     }
     return err;
 }
@@ -70,16 +71,16 @@ CHIP_ERROR NamedPipeCommands::Start(const std::string & inPath, NamedPipeCommand
 
 CHIP_ERROR NamedPipeCommands::Stop()
 {
-    VerifyOrReturnError(mStarted.exchange(false), CHIP_NO_ERROR);
+    VerifyOrReturnError(mRunning.exchange(false), CHIP_NO_ERROR);
 
-    // Unblock the listener thread by writing a dummy byte to the FIFO.
+    // Unblock the listener thread by writing a placeholder byte to the FIFO.
     int fd = open(mFifoInPath.c_str(), O_WRONLY | O_NONBLOCK);
     if (fd != -1)
     {
-        char dummy = '\0';
-        if (write(fd, &dummy, 1) != 1)
+        char placeholder = '\0';
+        if (write(fd, &placeholder, 1) != 1)
         {
-            ChipLogError(NotSpecified, "Failed to write dummy byte to unblock listener");
+            ChipLogError(NotSpecified, "Failed to write placeholder byte to unblock listener");
         }
         close(fd);
     }
@@ -160,10 +161,10 @@ void * NamedPipeCommands::EventCommandListenerTask(void * arg)
     if (fd == -1)
     {
         ChipLogError(NotSpecified, "Failed to open Event FIFO");
-        self->mStarted = false;
+        self->mRunning = false;
     }
 
-    while (self->mStarted)
+    while (self->mRunning)
     {
         ssize_t readBytes = read(fd, readbuf, kChipEventCmdBufSize);
         if (readBytes > 0)
