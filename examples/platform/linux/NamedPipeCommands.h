@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <lib/core/CHIPError.h>
 #include <atomic>
 #include <pthread.h>
@@ -26,7 +27,7 @@
 class NamedPipeCommandDelegate
 {
 public:
-    virtual ~NamedPipeCommandDelegate()                    = default;
+    virtual ~NamedPipeCommandDelegate() = default;
     /**
      * @brief Handle a single NamedPipeCommands payload.
      *
@@ -59,22 +60,61 @@ public:
  * Example of a typical command written to inPath of `/tmp/chip_all_clusters_fifo_1146610`:
  *
  *   echo '{"Name": "SimulateSwitchIdle", "EndpointId": 3}' > /tmp/chip_all_clusters_fifo_1146610
+ *
+ * NOTE: Start() and Stop() must be called from the same thread (e.g., during outer
+ * application initialization and shutdown sequencing) to ensure proper lifecycle
+ * and synchronization.
+ *
+ * NOTE: Instances of NamedPipeCommands are one-time use. Once Stop() is called,
+ * the instance cannot be restarted.
+ *
  */
 class NamedPipeCommands
 {
 public:
+    /**
+     * @brief Start listening for named pipe commands.
+     *
+     * @param[in] inPath Path to the input FIFO to create and listen on.
+     * @param[in] delegate Delegate to handle received commands.
+     */
     CHIP_ERROR Start(const std::string & inPath, NamedPipeCommandDelegate * delegate);
+
+    /**
+     * @brief Start listening for named pipe commands with an output pipe.
+     *
+     * @param[in] inPath Path to the input FIFO to create and listen on.
+     * @param[in] outPath Path to an output FIFO for sending responses.
+     * @param[in] delegate Delegate to handle received commands.
+     */
     CHIP_ERROR Start(const std::string & inPath, const std::string & outPath, NamedPipeCommandDelegate * delegate);
+
+    /**
+     * @brief Stop listening for commands and shut down the listener thread.
+     */
     CHIP_ERROR Stop();
+
+    /**
+     * @brief Write a JSON string to the output pipe.
+     *
+     * This method handles opening the pipe in a non-blocking fashion with retries
+     * to avoid deadlocking the application if the test side hasn't opened the
+     * pipe yet.
+     *
+     * @param[in] json JSON payload to write to the output pipe.
+     */
     void WriteToOutPipe(const std::string & json);
+
     const std::string & OutPath() const { return mFifoOutPath; }
 
 private:
-    std::atomic<bool> mRunning{false};
-    pthread_t mChipEventCommandListener;
+    std::atomic<bool> mRunning{ false };
+    std::atomic<bool> mDone{ false };
+    pthread_t mChipEventCommandListener{};
     std::string mFifoInPath;
     std::string mFifoOutPath;
     NamedPipeCommandDelegate * mDelegate = nullptr;
 
+    void Unlink();
     static void * EventCommandListenerTask(void * arg);
 };
