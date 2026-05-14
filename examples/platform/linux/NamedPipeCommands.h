@@ -67,13 +67,13 @@ public:
     CHIP_ERROR Start(const std::string & inPath, const std::string & outPath, NamedPipeCommandDelegate * delegate);
     CHIP_ERROR Stop();
     void WriteToOutPipe(const std::string & json);
-    const std::string & OutPath() const { return mChipEventFifoPathOut; }
+    const std::string & OutPath() const { return mFifoOutPath; }
 
 private:
     std::atomic<bool> mStarted{false};
     pthread_t mChipEventCommandListener;
-    std::string mChipEventFifoPath;
-    std::string mChipEventFifoPathOut;
+    std::string mFifoInPath;
+    std::string mFifoOutPath;
     NamedPipeCommandDelegate * mDelegate = nullptr;
 
     static void * EventCommandListenerTask(void * arg);

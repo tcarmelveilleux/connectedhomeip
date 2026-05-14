@@ -33,7 +33,7 @@
 
 static constexpr const size_t kChipEventCmdBufSize = 256;
 
-CHIP_ERROR NamedPipeCommands::Start(const std::string & path, const std::string & path_out, NamedPipeCommandDelegate * delegate)
+CHIP_ERROR NamedPipeCommands::Start(const std::string & inPath, const std::string & outPath, NamedPipeCommandDelegate * delegate)
 {
     VerifyOrReturnError(delegate != nullptr, CHIP_ERROR_INVALID_ARGUMENT);
     VerifyOrReturnError(!mStarted.exchange(true), CHIP_ERROR_INCORRECT_STATE);
@@ -41,18 +41,18 @@ CHIP_ERROR NamedPipeCommands::Start(const std::string & path, const std::string 
     CHIP_ERROR err = CHIP_NO_ERROR;
 
     mDelegate             = delegate;
-    mChipEventFifoPath    = path;
-    mChipEventFifoPathOut = path_out;
+    mFifoInPath    = inPath;
+    mFifoOutPath = outPath;
 
     // Creating the named file(FIFO)
-    VerifyOrExit((mkfifo(path.c_str(), 0666) == 0) || (errno == EEXIST), err = CHIP_ERROR_OPEN_FAILED);
+    VerifyOrExit((mkfifo(inPath.c_str(), 0666) == 0) || (errno == EEXIST), err = CHIP_ERROR_OPEN_FAILED);
 
     VerifyOrExit(pthread_create(&mChipEventCommandListener, nullptr, EventCommandListenerTask, reinterpret_cast<void *>(this)) == 0,
                  err = CHIP_ERROR_UNEXPECTED_EVENT);
 
-    if (!path_out.empty())
+    if (!outPath.empty())
     {
-        VerifyOrExit((mkfifo(path_out.c_str(), 0666) == 0) || (errno == EEXIST), err = CHIP_ERROR_OPEN_FAILED);
+        VerifyOrExit((mkfifo(outPath.c_str(), 0666) == 0) || (errno == EEXIST), err = CHIP_ERROR_OPEN_FAILED);
     }
 
 exit:
@@ -63,9 +63,9 @@ exit:
     return err;
 }
 
-CHIP_ERROR NamedPipeCommands::Start(const std::string & path, NamedPipeCommandDelegate * delegate)
+CHIP_ERROR NamedPipeCommands::Start(const std::string & inPath, NamedPipeCommandDelegate * delegate)
 {
-    return Start(path, "", delegate);
+    return Start(inPath, /*outPath=*/ "", delegate);
 }
 
 CHIP_ERROR NamedPipeCommands::Stop()
@@ -73,7 +73,7 @@ CHIP_ERROR NamedPipeCommands::Stop()
     VerifyOrReturnError(mStarted.exchange(false), CHIP_NO_ERROR);
 
     // Unblock the listener thread by writing a dummy byte to the FIFO.
-    int fd = open(mChipEventFifoPath.c_str(), O_WRONLY | O_NONBLOCK);
+    int fd = open(mFifoInPath.c_str(), O_WRONLY | O_NONBLOCK);
     if (fd != -1)
     {
         char dummy = '\0';
@@ -89,13 +89,13 @@ CHIP_ERROR NamedPipeCommands::Stop()
 
     mDelegate = nullptr;
 
-    VerifyOrReturnError(unlink(mChipEventFifoPath.c_str()) == 0, CHIP_ERROR_WRITE_FAILED);
-    mChipEventFifoPath.clear();
+    VerifyOrReturnError(unlink(mFifoInPath.c_str()) == 0, CHIP_ERROR_WRITE_FAILED);
+    mFifoInPath.clear();
 
-    if (!mChipEventFifoPathOut.empty())
+    if (!mFifoOutPath.empty())
     {
-        VerifyOrReturnError(unlink(mChipEventFifoPathOut.c_str()) == 0, CHIP_ERROR_WRITE_FAILED);
-        mChipEventFifoPathOut.clear();
+        VerifyOrReturnError(unlink(mFifoOutPath.c_str()) == 0, CHIP_ERROR_WRITE_FAILED);
+        mFifoOutPath.clear();
     }
 
     return CHIP_NO_ERROR;
@@ -114,7 +114,7 @@ void NamedPipeCommands::WriteToOutPipe(const std::string & json)
 
     while (true)
     {
-        fd = open(mChipEventFifoPathOut.c_str(), O_WRONLY | O_NONBLOCK);
+        fd = open(mFifoOutPath.c_str(), O_WRONLY | O_NONBLOCK);
         if (fd >= 0)
         {
             break;
@@ -122,7 +122,7 @@ void NamedPipeCommands::WriteToOutPipe(const std::string & json)
 
         if (errno != ENXIO) // ENXIO == no reader
         {
-            ChipLogError(NotSpecified, "Failed to open out FIFO '%s': errno=%d", mChipEventFifoPathOut.c_str(), errno);
+            ChipLogError(NotSpecified, "Failed to open out FIFO '%s': errno=%d", mFifoOutPath.c_str(), errno);
             return;
         }
 
@@ -130,7 +130,7 @@ void NamedPipeCommands::WriteToOutPipe(const std::string & json)
             std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
         if (elapsed >= kOpenTimeoutMs)
         {
-            ChipLogError(NotSpecified, "Timed out waiting for reader on out FIFO '%s'", mChipEventFifoPathOut.c_str());
+            ChipLogError(NotSpecified, "Timed out waiting for reader on out FIFO '%s'", mFifoOutPath.c_str());
             return;
         }
 
@@ -152,10 +152,10 @@ void * NamedPipeCommands::EventCommandListenerTask(void * arg)
     char readbuf[kChipEventCmdBufSize];
     NamedPipeCommands * self = reinterpret_cast<NamedPipeCommands *>(arg);
 
-    ChipLogProgress(NotSpecified, "Starting named pipes handling on %s", self->mChipEventFifoPath.c_str());
+    ChipLogProgress(NotSpecified, "Starting named pipe handling on %s", self->mFifoInPath.c_str());
 
     // Open with O_RDWR to prevent read() from returning 0 (EOF) and busy-looping when writers close the FIFO.
-    int fd = open(self->mChipEventFifoPath.c_str(), O_RDWR);
+    int fd = open(self->mFifoInPath.c_str(), O_RDWR);
 
     if (fd == -1)
     {
@@ -169,6 +169,11 @@ void * NamedPipeCommands::EventCommandListenerTask(void * arg)
         if (readBytes > 0)
         {
             readbuf[readBytes - 1] = '\0';
+            if (readbuf[0] == '\0')
+            {
+                continue;
+            }
+
             ChipLogProgress(NotSpecified, "Received payload: '%s'", readbuf);
 
             // Process the received command request from event fifo
@@ -181,7 +186,7 @@ void * NamedPipeCommands::EventCommandListenerTask(void * arg)
     {
         close(fd);
     }
-    ChipLogProgress(NotSpecified, "Done with named pipes handling on %s", self->mChipEventFifoPath.c_str());
+    ChipLogProgress(NotSpecified, "Done with named pipe handling on %s", self->mFifoInPath.c_str());
 
     return nullptr;
 }
