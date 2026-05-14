@@ -163,12 +163,8 @@ class AllDevicesAppInfoProvider : public chip::DeviceLayer::DeviceInstanceInfoPr
     }
 };
 
-void SetupNamedPipe(CodeDrivenDataModelDevices & devices)
+void SetupNamedPipe(CodeDrivenDataModelDevices & devices, const char * namedPipePath)
 {
-    const char * pipePath = AppOptions::GetNamedPipePath();
-
-    VerifyOrReturn(strlen(pipePath) > 0);
-
     auto deviceConfigs = AppOptions::GetDeviceTypeEntries();
     const auto & constructedDevices = devices.GetConstructedDevices();
     for (size_t i = 0; i < deviceConfigs.size(); i++)
@@ -193,7 +189,7 @@ void SetupNamedPipe(CodeDrivenDataModelDevices & devices)
         }
     }
 
-    sAllDevicesAppCommandDelegate.RegisterBasicInformationCluster(kRootEndpointId, &devices.RootNode().RootDeviceAsRootNode().BasicInformation());
+    sAllDevicesAppCommandDelegate.RegisterBasicInformationCluster(kRootEndpointId, &devices.RootNode().RootNodeDevice().BasicInformation());
     sAllDevicesAppCommandDelegate.RegisterCommandHandlers();
 
     CHIP_ERROR err = sChipNamedPipeCommands.Start(pipePath, &sAllDevicesAppCommandDelegate);
@@ -392,8 +388,12 @@ void RunApplication(AppMainLoopImplementation * mainLoop = nullptr)
 
     SuccessOrDie(devices.Startup());
 
-    // Set up named pipe commands
-    SetupNamedPipes(devices);
+    // Set up named pipe command handlers against the registered devices.
+    const char * namedPipePath = AppOptions::GetNamedPipePath();
+    if (strlen(pipePath) > 0)
+    {
+         SetupNamedPipes(devices, namePipePath);
+    }
 
     initParams.dataModelProvider      = &devices.DataModelProvider();
     initParams.groupDataProvider      = &gGroupDataProvider;

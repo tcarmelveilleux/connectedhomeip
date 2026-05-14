@@ -189,12 +189,12 @@ void AllDevicesAppCommandDelegate::OnEventCommandReceived(const char * json)
         return;
     }
 
-    auto * context = new CommandContext{ value, endpointId, this, handlerIt->second.get() };
+    auto * context = Platform::New<CommandContext>(value, endpointId, this, handlerIt->second.get());
     CHIP_ERROR err = DeviceLayer::PlatformMgr().ScheduleWork(DispatchCommand, reinterpret_cast<intptr_t>(context));
     if (err != CHIP_NO_ERROR)
     {
         ChipLogError(AppServer, "Failed to schedule work: %" CHIP_ERROR_FORMAT, err.Format());
-        delete context;
+        Platform::Delete(context);
     }
 }
 
@@ -284,5 +284,5 @@ void AllDevicesAppCommandDelegate::DispatchCommand(intptr_t context)
 {
     auto * cmdContext = reinterpret_cast<CommandContext *>(context);
     cmdContext->handler->Handle(cmdContext->value, cmdContext->delegate, cmdContext->endpointId);
-    delete cmdContext;
+    Platform::Delete(cmdContext);
 }
