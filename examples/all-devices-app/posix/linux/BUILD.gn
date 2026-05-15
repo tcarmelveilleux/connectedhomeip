@@ -39,8 +39,6 @@ source_set("linux") {
     "${chip_root}/examples/all-devices-app/all-devices-common/devices/root-node:wifi",
     "${chip_root}/examples/platform/linux:named-pipes",
     "${chip_root}/src/app:app_config",
-
-    #"${chip_root}/src/app/server-cluster-management",
     "${chip_root}/src/data-model-providers/codedriven",
     "${chip_root}/src/data-model-providers/codedriven/endpoint",
     "${chip_root}/src/platform/Linux",

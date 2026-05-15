@@ -189,13 +189,30 @@ void AllDevicesAppCommandDelegate::OnEventCommandReceived(const char * json)
         return;
     }
 
-    auto * context = Platform::New<CommandContext>(value, endpointId, this, handlerIt->second.get());
+    auto * context = Platform::New<CommandContext>();
+    if (context == nullptr)
+    {
+        ChipLogError(AppServer, "Failure to allocate command context! Ignoring comand.");
+        return;
+    }
+    context->value = value;
+    context->endpointId = endpointId;
+    context->delegate = this;
+    context->handler = handlerIt->second.get();
+
     CHIP_ERROR err = DeviceLayer::PlatformMgr().ScheduleWork(DispatchCommand, reinterpret_cast<intptr_t>(context));
     if (err != CHIP_NO_ERROR)
     {
         ChipLogError(AppServer, "Failed to schedule work: %" CHIP_ERROR_FORMAT, err.Format());
         Platform::Delete(context);
     }
+}
+
+void AllDevicesAppCommandDelegate::DispatchCommand(intptr_t context)
+{
+    auto * cmdContext = reinterpret_cast<CommandContext *>(context);
+    cmdContext->handler->Handle(cmdContext->value, cmdContext->delegate, cmdContext->endpointId);
+    Platform::Delete(cmdContext);
 }
 
 void AllDevicesAppCommandDelegate::RegisterOnOffCluster(chip::EndpointId endpoint, chip::app::Clusters::OnOffCluster * cluster)
@@ -278,11 +295,4 @@ void AllDevicesAppCommandDelegate::RegisterCommandHandlers()
     RegisterCommandHandler(std::make_unique<SetHoldTimeCommandHandler>());
     RegisterCommandHandler(std::make_unique<SetBooleanStateCommandHandler>());
     RegisterCommandHandler(std::make_unique<SetOnOffCommandHandler>());
-}
-
-void AllDevicesAppCommandDelegate::DispatchCommand(intptr_t context)
-{
-    auto * cmdContext = reinterpret_cast<CommandContext *>(context);
-    cmdContext->handler->Handle(cmdContext->value, cmdContext->delegate, cmdContext->endpointId);
-    Platform::Delete(cmdContext);
 }

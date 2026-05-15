@@ -123,6 +123,7 @@ bool AppOptions::AllDevicesAppOptionHandler(const char * program, OptionSet * op
     case kOptionNamedPipe:
         mNamedPipePath = value;
         ChipLogProgress(AppServer, "Named pipe path set to %s", value);
+        return true;
     default:
         ChipLogError(Support, "%s: INTERNAL ERROR: Unhandled option: %s\n", program, name);
         return false;

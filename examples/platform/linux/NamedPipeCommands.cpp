@@ -169,7 +169,7 @@ void NamedPipeCommands::WriteToOutPipe(const std::string & json)
     {
         ChipLogError(DeviceLayer,
                      "Failed to write full JSON payload to out pipe: %u written out of %u. Receiver will see truncated message.",
-                     static_cast<unsigned>(written), static_cast<unsigned>(payload.size));
+                     static_cast<unsigned>(written), static_cast<unsigned>(payload.size()));
     }
 
     close(fd);
@@ -196,7 +196,7 @@ void * NamedPipeCommands::EventCommandListenerTask(void * arg)
     NamedPipeCommands * self = reinterpret_cast<NamedPipeCommands *>(arg);
 
     ChipLogProgress(NotSpecified, "Starting named pipe handling on %s, max message size (%u)", self->mFifoInPath.c_str(),
-                    static_cast<unsigned>());
+                    static_cast<unsigned>(sizeof(readbuf) - 1));
 
     // Open with O_RDWR to prevent read() from returning 0 (EOF) and busy-looping when writers close the FIFO.
     int fd = open(self->mFifoInPath.c_str(), O_RDWR);

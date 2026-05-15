@@ -70,6 +70,9 @@ DefaultTimerDelegate gTimerDelegate;
 // To hold SPAKE2+ verifier, discriminator, passcode
 LinuxCommissionableDataProvider gCommissionableDataProvider;
 
+AllDevicesAppCommandDelegate gAllDevicesAppCommandDelegate;
+NamedPipeCommands gChipNamedPipeCommands;
+
 void StopSignalHandler(int /* signal */)
 {
     if (gMainLoopImplementation != nullptr)
@@ -163,42 +166,7 @@ class AllDevicesAppInfoProvider : public chip::DeviceLayer::DeviceInstanceInfoPr
     }
 };
 
-void SetupNamedPipe(CodeDrivenDataModelDevices & devices, const char * namedPipePath)
-{
-    auto deviceConfigs = AppOptions::GetDeviceTypeEntries();
-    const auto & constructedDevices = devices.GetConstructedDevices();
-    for (size_t i = 0; i < deviceConfigs.size(); i++)
-    {
-        const auto & config = deviceConfigs[i];
-        auto * device = constructedDevices[i].get();
 
-        if (config.type == "occupancy-sensor")
-        {
-            auto * occupancyDevice = static_cast<OccupancySensorDevice *>(device);
-            sAllDevicesAppCommandDelegate.RegisterOccupancySensingCluster(config.endpoint, &occupancyDevice->OccupancySensingCluster());
-        }
-        else if (config.type == "contact-sensor" || config.type == "water-leak-detector")
-        {
-            auto * booleanStateDevice = static_cast<BooleanStateSensorDevice *>(device);
-            sAllDevicesAppCommandDelegate.RegisterBooleanStateCluster(config.endpoint, &booleanStateDevice->BooleanState());
-        }
-        else if (config.type == "on-off-light")
-        {
-            auto * lightDevice = static_cast<LoggingOnOffLightDevice *>(device);
-            sAllDevicesAppCommandDelegate.RegisterOnOffCluster(config.endpoint, &lightDevice->OnOffCluster());
-        }
-    }
-
-    sAllDevicesAppCommandDelegate.RegisterBasicInformationCluster(kRootEndpointId, &devices.RootNode().RootNodeDevice().BasicInformation());
-    sAllDevicesAppCommandDelegate.RegisterCommandHandlers();
-
-    CHIP_ERROR err = sChipNamedPipeCommands.Start(pipePath, &sAllDevicesAppCommandDelegate);
-    if (err != CHIP_NO_ERROR)
-    {
-        ChipLogError(AppServer, "Failed to start named pipe at %s: %" CHIP_ERROR_FORMAT, pipePath, err);
-        (void)sChipNamedPipeCommands.Stop();
-    }
-}
 
 class CodeDrivenDataModelDevices
 {
@@ -310,10 +278,45 @@ private:
     std::vector<std::unique_ptr<DeviceInterface>> mConstructedDevices;
 };
 
+void SetupNamedPipe(CodeDrivenDataModelDevices & devices, const char * namedPipePath)
+{
+    auto deviceConfigs = AppOptions::GetDeviceTypeEntries();
+    const auto & constructedDevices = devices.GetConstructedDevices();
+    for (size_t i = 0; i < deviceConfigs.size(); i++)
+    {
+        const auto & config = deviceConfigs[i];
+        auto * device = constructedDevices[i].get();
+
+        if (config.type == "occupancy-sensor")
+        {
+            auto * occupancyDevice = static_cast<OccupancySensorDevice *>(device);
+            gAllDevicesAppCommandDelegate.RegisterOccupancySensingCluster(config.endpoint, &occupancyDevice->OccupancySensingCluster());
+        }
+        else if (config.type == "contact-sensor" || config.type == "water-leak-detector")
+        {
+            auto * booleanStateDevice = static_cast<BooleanStateSensorDevice *>(device);
+            gAllDevicesAppCommandDelegate.RegisterBooleanStateCluster(config.endpoint, &booleanStateDevice->BooleanState());
+        }
+        else if (config.type == "on-off-light")
+        {
+            auto * lightDevice = static_cast<LoggingOnOffLightDevice *>(device);
+            gAllDevicesAppCommandDelegate.RegisterOnOffCluster(config.endpoint, &lightDevice->OnOffCluster());
+        }
+    }
+
+    gAllDevicesAppCommandDelegate.RegisterBasicInformationCluster(kRootEndpointId, &devices.RootNode().GetRootNodeDevice().BasicInformation());
+    gAllDevicesAppCommandDelegate.RegisterCommandHandlers();
+
+    CHIP_ERROR err = gChipNamedPipeCommands.Start(namedPipePath, &gAllDevicesAppCommandDelegate);
+    if (err != CHIP_NO_ERROR)
+    {
+        ChipLogError(AppServer, "Failed to start named pipe at %s: %" CHIP_ERROR_FORMAT, namedPipePath, err.Format());
+        (void)gChipNamedPipeCommands.Stop();
+    }
+}
+
 void RunApplication(AppMainLoopImplementation * mainLoop = nullptr)
 {
-    static AllDevicesAppCommandDelegate sAllDevicesAppCommandDelegate;
-    static NamedPipeCommands sChipNamedPipeCommands;
     static AllDevicesAppInfoProvider sDeviceInstanceInfoProvider;
 
     gMainLoopImplementation = mainLoop;
@@ -394,9 +397,9 @@ void RunApplication(AppMainLoopImplementation * mainLoop = nullptr)
 
     // Set up named pipe command handlers against the registered devices.
     const char * namedPipePath = AppOptions::GetNamedPipePath();
-    if (strlen(pipePath) > 0)
+    if (strlen(namedPipePath) > 0)
     {
-         SetupNamedPipes(devices, namePipePath);
+         SetupNamedPipe(devices, namedPipePath);
     }
 
     initParams.dataModelProvider      = &devices.DataModelProvider();
@@ -469,7 +472,7 @@ void RunApplication(AppMainLoopImplementation * mainLoop = nullptr)
     }
     gMainLoopImplementation = nullptr;
 
-    (void)sChipNamedPipeCommands.Stop();
+    (void)gChipNamedPipeCommands.Stop();
     devices.Shutdown();
     Server::GetInstance().Shutdown();
     DeviceLayer::PlatformMgr().Shutdown();

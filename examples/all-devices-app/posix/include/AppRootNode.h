@@ -72,7 +72,7 @@ public:
         return mRootNodeDevice;
     }
 
-    RootNodeDevice & RootNodeDevice()
+    RootNodeDevice & GetRootNodeDevice()
     {
         return mRootNodeDevice;
     }
