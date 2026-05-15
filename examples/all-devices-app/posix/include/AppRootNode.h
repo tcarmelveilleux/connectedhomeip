@@ -72,6 +72,11 @@ public:
         return mRootNodeDevice;
     }
 
+    RootNodeDevice & RootNodeDevice()
+    {
+        return mRootNodeDevice;
+    }
+
 private:
     BitFlags<EnabledFeatures> mEnabledFeatures;
 

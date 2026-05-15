@@ -16,7 +16,6 @@
  *    limitations under the License.
  */
 
-#include <AllDevicesExampleDeviceInfoProviderImpl.h>
 #include <AppMainLoop.h>
 #include <AppRootNode.h>
 #include <DeviceFactoryPlatformOverride.h>
@@ -32,10 +31,15 @@
 #include <app/server-cluster/ServerClusterInterfaceRegistry.h>
 #include <app/server/Dnssd.h>
 #include <app/server/Server.h>
+#include <providers/AllDevicesExampleDeviceInfoProviderImpl.h>
+#include <providers/AllDevicesExampleDeviceInstanceInfoProviderImpl.h>
+
 #include <app_options/AppOptions.h>
 #include <credentials/examples/DeviceAttestationCredsExample.h>
 #include <devices/device-factory/DeviceFactory.h>
+#include <devices/device-type-parser/DeviceTypeParser.h>
 #include <platform/CommissionableDataProvider.h>
+#include <platform/DeviceInstanceInfoProvider.h>
 #include <platform/DiagnosticDataProvider.h>
 #include <platform/PlatformManager.h>
 #include <setup_payload/OnboardingCodesUtil.h>
@@ -59,7 +63,6 @@ using namespace chip::ArgParser;
 namespace {
 AppMainLoopImplementation * gMainLoopImplementation = nullptr;
 
-AllDevicesExampleDeviceInfoProviderImpl gExampleDeviceInfoProvider;
 Credentials::GroupDataProviderImpl gGroupDataProvider;
 chip::app::DefaultSafeAttributePersistenceProvider gSafeAttributePersistenceProvider;
 DefaultTimerDelegate gTimerDelegate;
@@ -160,6 +163,43 @@ class AllDevicesAppInfoProvider : public chip::DeviceLayer::DeviceInstanceInfoPr
     }
 };
 
+void SetupNamedPipe(CodeDrivenDataModelDevices & devices, const char * namedPipePath)
+{
+    auto deviceConfigs = AppOptions::GetDeviceTypeEntries();
+    const auto & constructedDevices = devices.GetConstructedDevices();
+    for (size_t i = 0; i < deviceConfigs.size(); i++)
+    {
+        const auto & config = deviceConfigs[i];
+        auto * device = constructedDevices[i].get();
+
+        if (config.type == "occupancy-sensor")
+        {
+            auto * occupancyDevice = static_cast<OccupancySensorDevice *>(device);
+            sAllDevicesAppCommandDelegate.RegisterOccupancySensingCluster(config.endpoint, &occupancyDevice->OccupancySensingCluster());
+        }
+        else if (config.type == "contact-sensor" || config.type == "water-leak-detector")
+        {
+            auto * booleanStateDevice = static_cast<BooleanStateSensorDevice *>(device);
+            sAllDevicesAppCommandDelegate.RegisterBooleanStateCluster(config.endpoint, &booleanStateDevice->BooleanState());
+        }
+        else if (config.type == "on-off-light")
+        {
+            auto * lightDevice = static_cast<LoggingOnOffLightDevice *>(device);
+            sAllDevicesAppCommandDelegate.RegisterOnOffCluster(config.endpoint, &lightDevice->OnOffCluster());
+        }
+    }
+
+    sAllDevicesAppCommandDelegate.RegisterBasicInformationCluster(kRootEndpointId, &devices.RootNode().RootNodeDevice().BasicInformation());
+    sAllDevicesAppCommandDelegate.RegisterCommandHandlers();
+
+    CHIP_ERROR err = sChipNamedPipeCommands.Start(pipePath, &sAllDevicesAppCommandDelegate);
+    if (err != CHIP_NO_ERROR)
+    {
+        ChipLogError(AppServer, "Failed to start named pipe at %s: %" CHIP_ERROR_FORMAT, pipePath, err);
+        (void)sChipNamedPipeCommands.Stop();
+    }
+}
+
 class CodeDrivenDataModelDevices
 {
 public:
@@ -220,7 +260,7 @@ public:
             []() {
                 BitFlags<AppRootNode::EnabledFeatures> features;
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFI
-                features.Set(AppRootNode::EnabledFeatures::kWiFi, AppOptions::EnableWiFi());
+                features.Set(AppRootNode::EnabledFeatures::kWiFi, AppOptions::GetConfig().enableWiFi);
 #endif
                 return features;
             }())
@@ -231,12 +271,13 @@ public:
         ReturnErrorOnFailure(mAttributePersistence.Init(&mContext.storageDelegate));
         ReturnErrorOnFailure(mRootNode.RootDevice().Register(kRootEndpointId, mDataModelProvider, kInvalidEndpointId));
 
-        for (const auto & config : AppOptions::GetDeviceConfigs())
+        for (const auto & entry : AppOptions::GetDeviceTypeEntries())
         {
-            auto device = DeviceFactory::GetInstance().Create(config.type);
+            auto device = DeviceFactory::GetInstance().Create(entry.type);
             VerifyOrReturnError(device, CHIP_ERROR_NO_MEMORY);
-            ReturnErrorOnFailure(device->Register(config.endpoint, mDataModelProvider, kInvalidEndpointId));
-            ChipLogProgress(AppServer, "Registered type %s on endpoint ID %u", config.type.c_str(), config.endpoint);
+            ChipLogProgress(AppServer, "Registering device %s on endpoint %u with parent 0x%04X", entry.type.c_str(),
+                            entry.endpoint, entry.parentId);
+            ReturnErrorOnFailure(device->Register(entry.endpoint, mDataModelProvider, entry.parentId));
             mConstructedDevices.push_back(std::move(device));
         }
 
@@ -254,6 +295,8 @@ public:
     }
 
     chip::app::CodeDrivenDataModelProvider & DataModelProvider() { return mDataModelProvider; }
+
+    AppRootNode & RootNode() { return mRootNode; }
 
     const std::vector<std::unique_ptr<DeviceInterface>> & GetConstructedDevices() const { return mConstructedDevices; }
 
@@ -288,10 +331,14 @@ void RunApplication(AppMainLoopImplementation * mainLoop = nullptr)
     SuccessOrDie(initParams.InitializeStaticResourcesBeforeServerInit());
 
 #if CHIP_CONFIG_ENABLE_GROUPCAST
-    static chip::Access::Examples::GroupAuxiliaryAccessControlDelegate groupAuxDelegate(&gGroupDataProvider,
-                                                                                        &Server::GetInstance().GetFabricTable());
-    initParams.groupAuxiliaryAccessControlDelegate = &groupAuxDelegate;
-    gGroupDataProvider.SetGroupcastEnabled(true);
+    // TODO(#72056): Once groupcast is enabled by default, this should not be dependent on the app argument.
+    if (AppOptions::GetConfig().enableGroupcast)
+    {
+        static chip::Access::Examples::GroupAuxiliaryAccessControlDelegate groupAuxDelegate(
+            &gGroupDataProvider, &Server::GetInstance().GetFabricTable());
+        initParams.groupAuxiliaryAccessControlDelegate = &groupAuxDelegate;
+        gGroupDataProvider.SetGroupcastEnabled(true);
+    }
 #endif // CHIP_CONFIG_ENABLE_GROUPCAST
 
     gGroupDataProvider.SetStorageDelegate(initParams.persistentStorageDelegate);
@@ -345,48 +392,29 @@ void RunApplication(AppMainLoopImplementation * mainLoop = nullptr)
 
     SuccessOrDie(devices.Startup());
 
-    // Set up named pipe for commands
-    const char * pipePath = AppOptions::GetNamedPipePath();
+    // Set up named pipe command handlers against the registered devices.
+    const char * namedPipePath = AppOptions::GetNamedPipePath();
     if (strlen(pipePath) > 0)
     {
-        auto deviceConfigs = AppOptions::GetDeviceConfigs();
-        const auto & constructedDevices = devices.GetConstructedDevices();
-        for (size_t i = 0; i < deviceConfigs.size(); i++)
-        {
-            const auto & config = deviceConfigs[i];
-            auto * device = constructedDevices[i].get();
-
-            if (config.type == "occupancy-sensor")
-            {
-                auto * occupancyDevice = static_cast<OccupancySensorDevice *>(device);
-                sAllDevicesAppCommandDelegate.RegisterOccupancySensingCluster(config.endpoint, &occupancyDevice->OccupancySensingCluster());
-            }
-            else if (config.type == "contact-sensor" || config.type == "water-leak-detector")
-            {
-                auto * booleanStateDevice = static_cast<BooleanStateSensorDevice *>(device);
-                sAllDevicesAppCommandDelegate.RegisterBooleanStateCluster(config.endpoint, &booleanStateDevice->BooleanState());
-            }
-            else if (config.type == "on-off-light")
-            {
-                auto * lightDevice = static_cast<LoggingOnOffLightDevice *>(device);
-                sAllDevicesAppCommandDelegate.RegisterOnOffCluster(config.endpoint, &lightDevice->OnOffCluster());
-            }
-        }
-        sAllDevicesAppCommandDelegate.RegisterCommandHandlers();
-
-        if (sChipNamedPipeCommands.Start(pipePath, &sAllDevicesAppCommandDelegate) != CHIP_NO_ERROR)
-        {
-            VerifyOrDie(false && "POW!");
-            ChipLogError(AppServer, "Failed to start named pipe at %s", pipePath);
-            (void)sChipNamedPipeCommands.Stop();
-        }
+         SetupNamedPipes(devices, namePipePath);
     }
 
-    initParams.dataModelProvider             = &devices.DataModelProvider();
-    initParams.groupDataProvider             = &gGroupDataProvider;
-    initParams.operationalServicePort        = CHIP_PORT;
+    initParams.dataModelProvider      = &devices.DataModelProvider();
+    initParams.groupDataProvider      = &gGroupDataProvider;
+    initParams.operationalServicePort = AppOptions::GetConfig().port.value_or(CHIP_PORT);
+    ChipLogProgress(AppServer, "Using operationalServicePort %u\n", initParams.operationalServicePort);
+
     initParams.userDirectedCommissioningPort = CHIP_UDC_PORT;
-    initParams.interfaceId                   = Inet::InterfaceId::Null();
+
+    if (AppOptions::GetConfig().interfaceId.has_value())
+    {
+        initParams.interfaceId =
+            Inet::InterfaceId(static_cast<Inet::InterfaceId::PlatformType>(AppOptions::GetConfig().interfaceId.value()));
+    }
+    else
+    {
+        initParams.interfaceId = Inet::InterfaceId::Null();
+    }
 
     chip::CommandLineApp::TracingSetup tracing_setup;
     tracing_setup.EnableTracingFor("json:log");
@@ -462,14 +490,9 @@ void EventHandler(const DeviceLayer::ChipDeviceEvent * event, intptr_t arg)
     }
 }
 
-CHIP_ERROR InitCommissionableDataProvider(LinuxCommissionableDataProvider & provider)
+CHIP_ERROR InitCommissionableDataProvider(LinuxCommissionableDataProvider & provider, const AppOptions::AppConfig & config)
 {
-    auto discriminator                              = static_cast<uint16_t>(CHIP_DEVICE_CONFIG_USE_TEST_SETUP_DISCRIMINATOR);
-    chip::Optional<uint16_t> discriminatorFromParam = LinuxDeviceOptions::GetInstance().discriminator;
-    if (discriminatorFromParam.HasValue())
-    {
-        discriminator = discriminatorFromParam.Value();
-    }
+    auto discriminator = config.discriminator.value_or(static_cast<uint16_t>(CHIP_DEVICE_CONFIG_USE_TEST_SETUP_DISCRIMINATOR));
 
     const auto setupPasscode             = MakeOptional(static_cast<uint32_t>(CHIP_DEVICE_CONFIG_USE_TEST_SETUP_PIN_CODE));
     const uint32_t spake2pIterationCount = Crypto::kSpake2p_Min_PBKDF_Iterations;
@@ -490,20 +513,35 @@ CHIP_ERROR Initialize(int argc, char * argv[])
 {
     ChipLogProgress(AppServer, "Initializing...");
     ReturnErrorOnFailure(Platform::MemoryInit());
-    ReturnErrorOnFailure(ParseArguments(argc, argv, AppOptions::GetOptions()));
-    ReturnErrorOnFailure(DeviceLayer::PersistedStorage::KeyValueStoreMgrImpl().Init(CHIP_CONFIG_KVS_PATH));
+
+    static OptionSet * sAppOptionSets[] = { AppOptions::GetOptions(), nullptr };
+    if (!ArgParser::ParseArgs(argv[0], argc, argv, sAppOptionSets))
+    {
+        return CHIP_ERROR_INVALID_ARGUMENT;
+    }
+
+    const char * kvsPath = AppOptions::GetConfig().kvsPath.empty() ? CHIP_CONFIG_KVS_PATH : AppOptions::GetConfig().kvsPath.c_str();
+    ReturnErrorOnFailure(DeviceLayer::PersistedStorage::KeyValueStoreMgrImpl().Init(kvsPath));
     ReturnErrorOnFailure(DeviceLayer::PlatformMgr().InitChipStack());
 
-    ReturnErrorOnFailure(InitCommissionableDataProvider(gCommissionableDataProvider));
+    ReturnErrorOnFailure(InitCommissionableDataProvider(gCommissionableDataProvider, AppOptions::GetConfig()));
     DeviceLayer::SetCommissionableDataProvider(&gCommissionableDataProvider);
-    DeviceLayer::SetDeviceInfoProvider(&gExampleDeviceInfoProvider);
+
+    static AllDevicesExampleDeviceInfoProviderImpl sExampleDeviceInfoProvider;
+    DeviceLayer::SetDeviceInfoProvider(&sExampleDeviceInfoProvider);
+
+    const auto & config = AppOptions::GetConfig();
+    static AllDevicesExampleDeviceInstanceInfoProviderImpl sAppDeviceInstanceInfoProvider(
+        DeviceLayer::GetDeviceInstanceInfoProvider(), config.vendorId, config.productId);
+    DeviceLayer::SetDeviceInstanceInfoProvider(&sAppDeviceInstanceInfoProvider);
+
     ConfigurationMgr().LogDeviceConfig();
 
     ReturnErrorOnFailure(DeviceLayer::PlatformMgrImpl().AddEventHandler(EventHandler, 0));
 
 #if CONFIG_NETWORK_LAYER_BLE
     ReturnErrorOnFailure(DeviceLayer::ConnectivityMgr().SetBLEDeviceName(nullptr));
-    ReturnErrorOnFailure(DeviceLayer::Internal::BLEMgrImpl().ConfigureBle(0, false));
+    ReturnErrorOnFailure(DeviceLayer::Internal::BLEMgrImpl().ConfigureBle(AppOptions::GetConfig().bleController, false));
     ReturnErrorOnFailure(DeviceLayer::ConnectivityMgr().SetBLEAdvertisingEnabled(true));
 #endif
 

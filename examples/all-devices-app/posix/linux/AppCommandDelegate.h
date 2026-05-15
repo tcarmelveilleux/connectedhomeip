@@ -31,6 +31,14 @@ namespace Clusters {
 class OnOffCluster;
 class OccupancySensingCluster;
 class BooleanStateCluster;
+
+namespace BasicInformation {
+template <typename Policy>
+class PolicyBased;
+}
+class DeviceLayerBasicInformationPolicy;
+using BasicInformationCluster = BasicInformation::PolicyBased<DeviceLayerBasicInformationPolicy>;
+
 } // namespace Clusters
 } // namespace app
 } // namespace chip
@@ -53,10 +61,12 @@ public:
     void RegisterOnOffCluster(chip::EndpointId endpoint, chip::app::Clusters::OnOffCluster * cluster);
     void RegisterOccupancySensingCluster(chip::EndpointId endpoint, chip::app::Clusters::OccupancySensingCluster * cluster);
     void RegisterBooleanStateCluster(chip::EndpointId endpoint, chip::app::Clusters::BooleanStateCluster * cluster);
+    void RegisterBasicInformationCluster(chip::EndpointId endpoint, chip::app::Clusters::BasicInformationCluster * cluster);
 
     chip::app::Clusters::OnOffCluster * GetOnOffClusterByEndpoint(chip::EndpointId endpoint);
     chip::app::Clusters::OccupancySensingCluster * GetOccupancySensingClusterByEndpoint(chip::EndpointId endpoint);
     chip::app::Clusters::BooleanStateCluster * GetBooleanStateClusterByEndpoint(chip::EndpointId endpoint);
+    chip::app::Clusters::BasicInformationCluster * GetBasicInformationClusterByEndpoint(chip::EndpointId endpoint);
 
     void RegisterCommandHandler(std::unique_ptr<NamedPipeCommandHandler> handler);
     void RegisterCommandHandlers();
@@ -67,10 +77,12 @@ private:
     struct OnOffClusterEntry { chip::EndpointId endpoint; chip::app::Clusters::OnOffCluster * cluster; };
     struct OccupancySensingClusterEntry { chip::EndpointId endpoint; chip::app::Clusters::OccupancySensingCluster * cluster; };
     struct BooleanStateClusterEntry { chip::EndpointId endpoint; chip::app::Clusters::BooleanStateCluster * cluster; };
+    struct BasicInformationClusterEntry { chip::EndpointId endpoint; chip::app::Clusters::BasicInformationCluster * cluster; };
 
     std::vector<OnOffClusterEntry> mOnOffClusters;
     std::vector<OccupancySensingClusterEntry> mOccupancySensingClusters;
     std::vector<BooleanStateClusterEntry> mBooleanStateClusters;
+    std::vector<BasicInformationClusterEntry> mBasicInformationClusters;
 
     std::map<std::string, std::unique_ptr<NamedPipeCommandHandler>> mCommandHandlers;
 };
